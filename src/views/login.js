@@ -29,9 +29,9 @@ function Login() {
 
         // Redirect based on role
         if (response.data.role === 'admin') {
-          navigate('/admin-dashboard');
+          navigate('/admindashboard');
         } else {
-          navigate('/new-connection');
+          navigate('/userdashboard');
         }
       }
     } catch (error) {

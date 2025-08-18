@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './views/login';
+import Home from './views/Home';
 import Register from './views/Register';
-import Home from './views/home';
-import GasMonitorDashboard from './views/userdash';
+import Login from './views/Login';
+import userDashboard from './views/UserDashboard';
+
 
 function App() {
   return (
@@ -12,7 +13,7 @@ function App() {
         <Route path="/" element={<Home />} />               {/* Home page */}
         <Route path="/register" element={<Register />} />   {/* Register page */}
         <Route path="/login" element={<Login />} />         {/* Login page */}
-        <Route path="/userdash" element={<GasMonitorDashboard />} />
+        <Route path="/userdash" element={<userDashboard />} />
       </Routes>
     </Router>
   );

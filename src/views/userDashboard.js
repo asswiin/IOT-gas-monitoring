@@ -1,63 +1,83 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/userDashboard.css';
 
-const GasMonitorDashboard = () => {
+const UserDashboard = () => {
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    navigate("/gasbook")
+  };
+
+  // ✅ Navigate to gasbook page
+  const handleBookGas = () => {navigate("/newconnection") };
+
+  // ✅ Navigate to gasbook page
+  const handleGasLevelClick = () => {
+    navigate("/gasbook");
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
         <h1>Gas Monitor</h1>
-        <nav>
-          <ul>
-            <li><a href="/userdash">Dashboard</a></li>
-            <li><a href="/history">History</a></li>
-            <li><a href="/payment">Payment</a></li>
-            <li><a href="/feedback">Feedback</a></li>
-          </ul>
-        </nav>
-        <div className="profile-picture">
-          <img src="profile-picture.jpg" alt="Profile" />
+
+        {/* ✅ Navigation buttons */}
+        <div className="nav-actions">
+          <button className="nav-btn" onClick={() => navigate("/gasbook")}>Dashboard</button>
+          <button className="nav-btn" onClick={() => navigate("/gasbook")}>History</button>
+          <button className="nav-btn" onClick={() => navigate("/gasbook")}>Payment</button>
+          <button className="nav-btn" onClick={() => navigate("/gasbook")}>Feedback</button>
+
+          <button className="profile-button" onClick={handleProfileClick}>
+            <img src="/profileicon.jpg" alt="Profile" />
+          </button>
         </div>
       </header>
+
       <main className="dashboard-main">
         <h2>Dashboard</h2>
         <div className="stats-container">
-          <div className="stat-box">
+
+          {/* ✅ Current Gas Level button goes to GasBook */}
+          <button className="stat-box gas-level-button" onClick={handleGasLevelClick}>
             <h3>Current Gas Level</h3>
-            <p>75%</p>
-          </div>
+          </button>
+
           <div className="stat-box">
             <h3>Estimated Refill Date</h3>
-            <p>2024-08-15</p>
           </div>
+
           <div className="stat-box">
             <h3>Tube Expiry Date</h3>
-            <p>2025-01-01</p>
           </div>
         </div>
+
         <div className="alerts-container">
           <h3>Alerts</h3>
           <div className="alert-box warning">
             <i className="warning-icon"></i>
-            <p>Low Gas Level</p>
-            <p>Gas level is below 20%</p>
+            <p>Low Gas Warning</p>
           </div>
         </div>
+
         <div className="notifications-container">
           <h3>Notifications</h3>
           <div className="notification-box success">
             <i className="success-icon"></i>
-            <p>Cylinder booked successfully</p>
-            <p>2024-07-20 10:00 AM</p>
-          </div>
-          <div className="notification-box success">
-            <i className="success-icon"></i>
-            <p>Payment received</p>
-            <p>2024-07-15 02:30 PM</p>
+            <p>Gas booked successfully</p>
           </div>
         </div>
       </main>
+
+      {/* ✅ Book Gas Now Button also goes to GasBook */}
+      <div className="book-gas-container">
+        <button className="book-gas-button" onClick={handleBookGas}>
+          Book Gas Now
+        </button>
+      </div>
     </div>
   );
 };
 
-export default GasMonitorDashboard;
+export default UserDashboard;
