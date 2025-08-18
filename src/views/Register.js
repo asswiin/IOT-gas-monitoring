@@ -16,6 +16,10 @@ export default function Registration() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  // ✅ Global messages
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,9 +30,9 @@ export default function Registration() {
       if (digits.startsWith("91")) digits = digits.slice(2);
 
       if (digits.length > 0 && !/^[6-9]/.test(digits)) {
-        setPhoneError("Phone number must start with 6,7,8, or 9.");
+        setPhoneError("start with 6,7,8, or 9.");
       } else if (digits.length > 10) {
-        setPhoneError("Phone number cannot exceed 10 digits.");
+        setPhoneError("Phone must be 10 digits.");
       } else {
         setPhoneError("");
       }
@@ -38,19 +42,22 @@ export default function Registration() {
     }
 
     if (name === "email") {
-      if (value && !/^[^\s@]+@gmail\.com$/.test(value)) {
-        setEmailError("Email must end with @gmail.com.");
-      } else {
-        setEmailError("");
-      }
-    }
+  const lowerCaseEmail = value.toLowerCase(); // force lowercase
+  if (lowerCaseEmail && !/^[^\s@]+@gmail\.com$/.test(lowerCaseEmail)) {
+    setEmailError("End with @gmail.com.");
+  } else {
+    setEmailError("");
+  }
+  setFormData({ ...formData, email: lowerCaseEmail });
+  return;
+}
 
     if (name === "password") {
       const pattern =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_\-+=<>?{}[\]~]).{8,}$/;
       if (value && !pattern.test(value)) {
         setPasswordError(
-          "Password must have uppercase, lowercase, special character, and be at least 8 chars."
+          "Password must at least 8 chars including  uppercase, lowercase, special character."
         );
       } else {
         setPasswordError("");
@@ -66,41 +73,45 @@ export default function Registration() {
     if (name === "fullName") {
       if (!value.trim()) e.target.setCustomValidity("Full name is required.");
       else if (!/^[A-Za-z\s]+$/.test(value))
-        e.target.setCustomValidity("Full name can only contain letters and spaces.");
+        e.target.setCustomValidity(
+          "Full name can only contain letters and spaces."
+        );
       else e.target.setCustomValidity("");
     }
 
-     if (name === "phone") {
-    // Extract digits and remove leading 91 if typed again
-    const digits = value.replace(/\D/g, "").startsWith("91") ? value.replace(/\D/g, "").slice(2) : value.replace(/\D/g, "");
+    if (name === "phone") {
+      const digits = value.replace(/\D/g, "").startsWith("91")
+        ? value.replace(/\D/g, "").slice(2)
+        : value.replace(/\D/g, "");
 
-    if (!digits) {
-    } else if (digits.length < 10) {
-      setPhoneError("Phone number must be 10 digits.");
-      e.target.setCustomValidity("Phone number must be 10 digits.");
-    } else if (!/^[6-9]/.test(digits)) {
-      setPhoneError("Phone number must start with 6,7,8, or 9.");
-      e.target.setCustomValidity("Phone number must start with 6,7,8, or 9.");
-    } else {
-      setPhoneError("");
-      e.target.setCustomValidity("");
+      if (!digits) {
+      } else if (digits.length < 10) {
+        setPhoneError("Phone number must be 10 digits.");
+        e.target.setCustomValidity("Phone number must be 10 digits.");
+      } else if (!/^[6-9]/.test(digits)) {
+        setPhoneError("Phone number must start with 6,7,8, or 9.");
+        e.target.setCustomValidity(
+          "Phone number must start with 6,7,8, or 9."
+        );
+      } else {
+        setPhoneError("");
+        e.target.setCustomValidity("");
+      }
     }
-  }
 
+    if (name === "email") {
+      if (!value) {
+        setEmailError("Email is required.");
+        e.target.setCustomValidity("Email is required.");
+      } else if (!value.endsWith("@gmail.com")) {
+        setEmailError("Email must end with @gmail.com");
+        e.target.setCustomValidity("Email must end with @gmail.com");
+      } else {
+        setEmailError("");
+        e.target.setCustomValidity("");
+      }
+    }
 
-if (name === "email") {
-  if (!value) {
-    setEmailError("Email is required.");
-    e.target.setCustomValidity("Email is required.");
-  } else if (!value.endsWith("@gmail.com")) {
-    setEmailError("Email must end with @gmail.com");
-    e.target.setCustomValidity("Email must end with @gmail.com");
-  } else {
-    setEmailError("");
-    e.target.setCustomValidity("");
-  }
-}
-    
     if (name === "password") e.target.setCustomValidity(passwordError || "");
 
     if (name === "confirmPassword") {
@@ -112,15 +123,28 @@ if (name === "email") {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!e.target.reportValidity()) return;
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/register", formData);
-      alert(res.data.message);
-      navigate("/login");
+      const dataToSend = { ...formData, phone: "+91" + formData.phone };
+
+      const res = await axios.post(
+        "http://localhost:5000/api/register",
+        dataToSend
+      );
+
+      // ✅ Show success below button
+      setSuccessMessage(res.data.message || "Registration successful!");
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500); // small delay before redirect
     } catch (error) {
-      console.error(error);
-      alert("Error registering user");
+      if (error.response && error.response.data.message) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage("Error registering user. Please try again.");
+      }
     }
   };
 
@@ -177,6 +201,7 @@ if (name === "email") {
                 onBlur={validateField}
                 placeholder=" "
                 required
+                style={{ textTransform: "lowercase" }}
               />
               <label htmlFor="email">Email</label>
               {emailError && <span className="error-text">{emailError}</span>}
@@ -194,7 +219,9 @@ if (name === "email") {
                 required
               />
               <label htmlFor="password">Password</label>
-              {passwordError && <span className="error-text">{passwordError}</span>}
+              {passwordError && (
+                <span className="error-text">{passwordError}</span>
+              )}
             </div>
 
             <div className="input-group">
@@ -211,6 +238,10 @@ if (name === "email") {
               <label htmlFor="confirmPassword">Confirm Password</label>
             </div>
 
+            {/* ✅ Show global error/success above button */}
+            {errorMessage && <p className="error-text">{errorMessage}</p>}
+            {successMessage && <p className="success-text">{successMessage}</p>}
+
             <button type="submit">Register</button>
           </form>
 
@@ -222,4 +253,3 @@ if (name === "email") {
     </div>
   );
 }
-  

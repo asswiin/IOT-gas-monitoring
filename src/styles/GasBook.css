@@ -9,14 +9,14 @@
 
 .book-page-container h2 {
   font-size: 22px;
-  margin-bottom: 20px;
+  margin-bottom: 0px;
   color: #333;
 }
 
 .book-gas-button {
-  background: #ff6600;
+  background: rgb(155, 36, 36);
   color: white;
-  padding: 12px 24px;
+  padding: 18px;
   font-size: 16px;
   border: none;
   border-radius: 8px;
@@ -25,5 +25,5 @@
 }
 
 .book-gas-button:hover {
-  background: #e65c00;
+  background: green;
 }

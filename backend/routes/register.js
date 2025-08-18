@@ -14,12 +14,15 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // 2️⃣ Clean phone number (remove +91 and spaces)
-    const cleanedPhone = phone.replace("+91", "").replace(/\s/g, "");
+// 2️⃣ Clean phone number (keep only digits)
+     let formattedPhone = phone.trim();
+    if (!formattedPhone.startsWith("+91")) {
+      formattedPhone = "+91" + formattedPhone.replace(/\s/g, "");
+    }
 
-    // 3️⃣ Phone validation (must start with 6-9 and have 10 digits)
-    const phonePattern = /^[6-9][0-9]{9}$/;
-    if (!phonePattern.test(cleanedPhone)) {
+    // 3️⃣ Phone validation (must be +91 and then 10 digits starting 6-9)
+    const phonePattern = /^\+91[6-9][0-9]{9}$/;
+    if (!phonePattern.test(formattedPhone)) {
       return res.status(400).json({ message: "Invalid phone number format" });
     }
 
@@ -41,7 +44,7 @@ router.post("/", async (req, res) => {
     }
 
     // 7️⃣ Check if phone number already exists
-    const existingPhone = await User.findOne({ phone: cleanedPhone });
+    const existingPhone = await User.findOne({ phone: formattedPhone });
     if (existingPhone) {
       return res.status(400).json({ message: "Phone number already registered" });
     }
@@ -52,7 +55,7 @@ router.post("/", async (req, res) => {
     // 9️⃣ Create new user
     const newUser = new User({
       fullName,
-      phone: cleanedPhone, // store only digits in DB
+      phone: formattedPhone, // store only digits in DB
       email,
       password: hashedPassword
     });

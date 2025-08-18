@@ -98,8 +98,15 @@
 /* Error text */
 .error-text {
   color: red;
-  font-size: 12px;
-  margin-top: 12px;
+  font-size: 14px;
+  margin-top: 15px;
+  display: block;
+}
+
+.success-text {
+  color: #0ea513;
+  font-size: 16px;
+  margin-top: 5px;
   display: block;
 }
 
