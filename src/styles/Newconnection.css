@@ -4,154 +4,89 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
+ background-color: rgb(38, 14, 90);}
+
 
 /* Styling for the form container */
 form {
   max-width: 900px;
   margin: 40px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 6px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); /* softer shadow */
+  border: 1px solid #e3e8ef;  /* subtle border */
 }
 
 /* Heading and subtitle */
 h2 {
   text-align: center;
-  color: #1a237e;
+  color: #1565c0; /* softer blue */
+  margin-bottom: 10px;
 }
 
 p {
   text-align: center;
-  font-size: 0.9rem;
-  color: #444;
+  font-size: 0.95rem;
+  color: #555;
 }
 
-p.red-text {
-  color: red;
-}
-
-p.blue-link {
-  color: #1a73e8;
-  cursor: pointer;
-  margin-bottom: 20px;
-}
-
-a {
-  text-decoration: none;
-}
-
-/* Section styling */
-fieldset {
-  margin-bottom: 30px;
-  border: none;
-}
-
+/* Legends with lighter look */
 legend {
-  background-color: #1a237e;
-  color: #fff;
-  padding: 10px;
-  font-weight: bold;
-  font-size: 1.1rem;
-  border-radius: 5px;
+  background-color: #e3f2fd; /* very light blue */
+  color: #1565c0;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #bbdefb;
 }
 
 /* Input fields */
-label {
-  display: block;
-  margin-top: 10px;
-}
-
 input,
 select {
   width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-input[type="date"] {
-  padding: 8px;
-}
-
-input[type="tel"] {
-  padding: 8px;
-}
-
-input[type="email"] {
-  padding: 8px;
-}
-
-select {
-  padding: 8px;
+  padding: 10px;
+  margin-top: 6px;
+  border: 1px solid #ccd6e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background-color: #fafbfc;  /* light background */
 }
 
 input:focus,
 select:focus {
-  outline: 2px solid #1a73e8;
-}
-
-/* Flex layout for responsive form items */
-div.flex-container {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-div.flex-container label {
-  flex: 1 1 300px;
-}
-
-div.flex-container label.short-label {
-  flex: 1 1 150px;
-}
-
-/* Close relative section */
-fieldset > div {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-fieldset > div span {
-  font-weight: bold;
-  color: #1a73e8;
-}
-
-/* Additional Styling for mobile responsiveness */
-@media (max-width: 768px) {
-  div.flex-container label {
-    flex: 1 1 100%;
-  }
-
-  div.flex-container label.short-label {
-    flex: 1 1 100%;
-  }
+  outline: none;
+  border-color: #64b5f6;  /* light blue border */
+  box-shadow: 0 0 5px rgba(100, 181, 246, 0.4);
 }
 
 /* Button styling */
 button {
-  padding: 10px 30px;
-  background-color: #1a237e;
+  padding: 12px 28px;
+  background-color: #42a5f5; /* lighter blue */
   color: #fff;
+  font-weight: 600;
+  font-size: 15px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 button:hover {
-  background-color: #0c1e6f;
+  background-color: #1e88e5; /* darker shade */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3);
 }
 
-/* Styling for the "Already have a connection?" link */
-p.blue-link {
-  margin-top: 20px;
-}
-
+/* Subtle link styling */
 p.blue-link a {
+  color: #1e88e5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+p.blue-link a:hover {
   text-decoration: underline;
 }
-

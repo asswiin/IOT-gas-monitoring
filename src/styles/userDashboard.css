@@ -99,7 +99,7 @@
 .stat-box {
   background-color: #1a1a1a;
   padding: 24px;
-  border: 1px solid #333;
+  border: 3px solid #fff;   /* ⬅️ Thick white border */
   border-radius: 12px;
   width: calc(33.33% - 20px);
   color: #ddd;
@@ -137,7 +137,7 @@
 .alert-box, .notification-box {
   background-color: #1a1a1a;
   padding: 20px;
-  border: 1px solid #333;
+  border: 3px solid #fff;   /* ⬅️ Thick white border */
   border-radius: 10px;
   margin-bottom: 10px;
   color: #ccc;
@@ -161,16 +161,15 @@
 .book-gas-button {
   background-color: #ff5722;
   color: white;
-  border: none;
-  width: 200px;   /* fixed smaller width */
-  height: 70px;   /* reduced height */
+  border: 3px solid #fff;   /* ⬅️ White border */
+  width: 200px;
+  height: 70px;
   font-size: 14px;
   font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
-
 .book-gas-button:hover {
   background-color: #e64a19;
   transform: scale(1.05);
