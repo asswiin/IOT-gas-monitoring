@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 
 const loginRoute = require('./routes/login');
 const registerRoute = require('./routes/register');
+const newConnectionRoute = require('./routes/newConnection');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +18,8 @@ app.use(express.json());
 // Routes
 app.use('/api/login', loginRoute);
 app.use('/api/register', registerRoute);
+app.use('/api/newconnection', newConnectionRoute);
+
 
 // Simple health check
 app.get('/', (req, res) => res.send('API running'));

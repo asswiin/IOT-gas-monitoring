@@ -7,6 +7,7 @@ import AdminDashboard from './views/AdminDashboard';
 import NewConnection from './views/NewConnection';
 import UserDashboard from './views/UserDashboard';
 import GasBook from './views/GasBook'; // Assuming you have a GasBook component
+import PaymentPage from './views/Payment';  
 
 
 function AppRoutes() {
@@ -19,6 +20,7 @@ function AppRoutes() {
       <Route path="/newconnection" element={<NewConnection />} />
       <Route path="/userdashboard" element={<UserDashboard />} />
       <Route path="/gasbook" element={<GasBook />} />
+      <Route path="/payment" element={<PaymentPage />} />
      
     </Routes>
   );

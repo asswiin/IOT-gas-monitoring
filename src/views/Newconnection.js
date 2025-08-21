@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/Newconnection.css'; // ✅ Ensure correct path
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
 
 function KYCForm() {
   const [formData, setFormData] = useState({
@@ -25,20 +28,32 @@ function KYCForm() {
     email: '',
   });
 
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errors, setErrors] = useState({});
   const salutations = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
+  const navigate = useNavigate();
+
+  // ✅ Auto-fill email + phone from localStorage
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      email: localStorage.getItem("userEmail") || "",
+      mobileNumber: localStorage.getItem("userPhone") || "",
+    }));
+  }, []);
 
   const handleChange = (e) => {
     let { name, value } = e.target;
 
     // 🔹 Restrict PIN code to max 6 digits
     if (name === "pinCode") {
-      value = value.replace(/\D/g, ""); // only numbers
+      value = value.replace(/\D/g, "");
       if (value.length > 6) return;
     }
 
     // 🔹 Restrict mobile number to max 10 digits
     if (name === "mobileNumber") {
-      value = value.replace(/\D/g, ""); // only numbers
+      value = value.replace(/\D/g, "");
       if (value.length > 10) return;
     }
 
@@ -50,33 +65,66 @@ function KYCForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    let newErrors = {};
 
-    // ✅ Validation: At least one of Father/Spouse/Mother must be filled
+    // ✅ validation (your same rules)
     if (
       !formData.fatherName.trim() &&
       !formData.spouseName.trim() &&
       !formData.motherName.trim()
     ) {
-      alert("Please enter at least one of Father’s Name, Spouse Name, or Mother’s Name.");
+      newErrors.relative = "Fill in the necessary information";
+    }
+    if (!/^[6-9]\d{9}$/.test(formData.mobileNumber)) {
+      newErrors.mobileNumber = "Invalid Phone number";
+    }
+    if (!/^\d{6}$/.test(formData.pinCode)) {
+      newErrors.pinCode = "Invalid pincode.";
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(formData.email)) {
+      newErrors.email = "Invalid email";
+    }
+    if (formData.dob) {
+      const today = new Date();
+      const birthDate = new Date(formData.dob);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+      if (age < 18) newErrors.dob = "You must be at least 18 years old.";
+    } else {
+      newErrors.dob = "Date of Birth is required.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSuccessMessage("");
       return;
     }
 
-    // ✅ Validation: Mobile must be exactly 10 digits
-    if (formData.mobileNumber.length !== 10) {
-      alert("Mobile number must be exactly 10 digits.");
-      return;
-    }
+    try {
+      // ✅ Send to backend (Node/Express)
+      const res = await axios.post("http://localhost:5000/api/newconnection", formData);
 
-    // ✅ Validation: PIN code must be exactly 6 digits
-    if (formData.pinCode.length !== 6) {
-      alert("PIN code must be exactly 6 digits.");
-      return;
-    }
+      setSuccessMessage("Form submitted successfully! ✅");
+      setErrors({});
+      console.log("Saved:", res.data);
 
-    console.log('Form Data:', formData);
-    alert('Form submitted successfully!');
+      setTimeout(() => {
+        navigate("/payment");
+      }, 1500);
+
+    } catch (err) {
+      console.error("Error:", err);
+      setSuccessMessage("");
+      setErrors({ api: "Failed to submit form. Try again." });
+    }
   };
 
   return (
@@ -94,20 +142,6 @@ function KYCForm() {
     >
       <h2 style={{ textAlign: 'center' }}>Know Your Customer (KYC) Form</h2>
       <p style={{ textAlign: 'center', color: 'red' }}>*Mandatory Fields</p>
-      <p style={{ textAlign: 'center', fontSize: '0.9rem', color: '#444' }}>
-        Only A-Z, a-z, 0-9, Comma (,), Hyphen (-) and Slash (/) are allowed. No
-        other special character is allowed in any entry field.
-      </p>
-      <p
-        style={{
-          textAlign: 'center',
-          color: '#1a73e8',
-          cursor: 'pointer',
-          marginBottom: '20px',
-        }}
-      >
-        Request For New Connection
-      </p>
 
       {/* 1) Personal Details */}
       <fieldset style={{ marginBottom: '30px', border: 'none' }}>
@@ -181,6 +215,7 @@ function KYCForm() {
             onChange={handleChange}
             required
           />
+          {errors.dob && <p style={{ color: "red", fontSize: "12px" }}>{errors.dob}</p>}
         </label>
 
         <fieldset
@@ -220,6 +255,7 @@ function KYCForm() {
           <small style={{ color: '#555' }}>
             (At least one of Father, Spouse, or Mother name is required)
           </small>
+          {errors.relative && <p style={{ color: "red", fontSize: "12px" }}>{errors.relative}</p>}
         </fieldset>
       </fieldset>
 
@@ -248,7 +284,6 @@ function KYCForm() {
               required
             />
           </label>
-
           <label style={{ flex: '1 1 150px' }}>
             Floor No:
             <input
@@ -258,7 +293,6 @@ function KYCForm() {
               onChange={handleChange}
             />
           </label>
-
           <label style={{ flex: '1 1 300px' }}>
             Housing Complex/Building:
             <input
@@ -281,7 +315,6 @@ function KYCForm() {
               required
             />
           </label>
-
           <label style={{ flex: '1 1 300px' }}>
             Land Mark*:
             <input
@@ -292,7 +325,6 @@ function KYCForm() {
               required
             />
           </label>
-
           <label style={{ flex: '1 1 300px' }}>
             City/Town/Village*:
             <input
@@ -316,7 +348,6 @@ function KYCForm() {
               required
             />
           </label>
-
           <label style={{ flex: '1 1 300px' }}>
             District*:
             <input
@@ -340,8 +371,8 @@ function KYCForm() {
               required
               placeholder="Enter 6-digit PIN"
             />
+            {errors.pinCode && <p style={{ color: "red", fontSize: "12px" }}>{errors.pinCode}</p>}
           </label>
-
           <label style={{ flex: '1 1 300px' }}>
             Mobile Number*:
             <input
@@ -352,8 +383,8 @@ function KYCForm() {
               required
               placeholder="10-digit Mobile Number"
             />
+            {errors.mobileNumber && <p style={{ color: "red", fontSize: "12px" }}>{errors.mobileNumber}</p>}
           </label>
-
           <label style={{ flex: '1 1 300px' }}>
             Telephone Number:
             <input
@@ -369,17 +400,15 @@ function KYCForm() {
         <label style={{ display: 'block', marginTop: '10px' }}>
           Email ID*:
           <input
-            type="email"
+            type="text"
             name="email"
             value={formData.email}
             onChange={handleChange}
             required
             placeholder="example@gmail.com"
-            pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
-            title="Email must end with @gmail.com"
           />
+          {errors.email && <p style={{ color: "red", fontSize: "12px" }}>{errors.email}</p>}
         </label>
-
       </fieldset>
 
       <div style={{ textAlign: 'center', marginTop: '20px' }}>
@@ -396,6 +425,9 @@ function KYCForm() {
         >
           Submit
         </button>
+        {successMessage && (
+          <p style={{ color: "green", marginTop: "10px" }}>{successMessage}</p>
+        )}
       </div>
     </form>
   );

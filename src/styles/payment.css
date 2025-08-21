@@ -1,0 +1,117 @@
+/* Container */
+.payment-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f8fa;
+}
+
+/* Card */
+.payment-card {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+}
+
+.payment-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+/* Form */
+.payment-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.payment-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #444;
+}
+
+.payment-form input {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.payment-form input:focus {
+  border-color: #2563eb;
+}
+
+/* Amount Due */
+.amount-due {
+  margin: 1.2rem 0;
+}
+
+.amount-due h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.amount-due p {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+/* Payment Methods */
+.payment-method h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.method-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.method-buttons button {
+  padding: 0.6rem 1rem;
+  border: 1px solid #ccc;
+  background: #f0f0f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.method-buttons button:hover {
+  background: #e0e0e0;
+}
+
+.method-buttons .active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* Pay Button */
+.pay-btn {
+  width: 100%;
+  padding: 0.8rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: 0.3s;
+}
+
+.pay-btn:hover {
+  background: #1e4ed8;
+}

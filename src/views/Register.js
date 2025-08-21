@@ -134,6 +134,13 @@ export default function Registration() {
         dataToSend
       );
 
+
+  // ✅ Save email + phone in localStorage
+    localStorage.setItem("userEmail", formData.email);
+    localStorage.setItem("userPhone", formData.phone);
+
+
+
       // ✅ Show success below button
       setSuccessMessage(res.data.message || "Registration successful!");
       setTimeout(() => {
