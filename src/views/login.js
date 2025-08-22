@@ -57,9 +57,9 @@ function Login() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              style={{ textTransform: "lowercase" }}
+              placeholder="Enter Your Email"
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
+              
               required
             />
           </div>
