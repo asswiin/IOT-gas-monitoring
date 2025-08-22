@@ -49,7 +49,7 @@ export default function Dashboard() {
           {/* System Overview */}
           <h2 className="section-title">System Overview</h2>
           <div className="card-grid">
-            <Card title="User Growth"></Card>
+            <Card title="User Growth">h</Card>
             <Card title="Connection Activity"> </Card>
           </div>
         </div>
