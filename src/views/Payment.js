@@ -163,7 +163,7 @@ export default function PaymentPage() {
               <h4>Enter Your Card Details</h4>
               <div className="form-group">
                 <label>Card Number</label>
-                <input type="text" name="cardNumber" placeholder="1234 5678 9101 1121" value={cardDetails.cardNumber} onChange={handleCardChange} required />
+                <input type="text" name="cardNumber" placeholder="xxxx xxxx xxxx xxxx" value={cardDetails.cardNumber} onChange={handleCardChange} required />
                 {errors.cardNumber && <p className="error">{errors.cardNumber}</p>}
               </div>
               <div className="expiry-cvv-group">

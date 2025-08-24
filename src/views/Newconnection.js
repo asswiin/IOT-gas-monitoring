@@ -69,6 +69,10 @@ function KYCForm() {
       value = value.replace(/\D/g, "");
       if (value.length > 10) return;
     }
+     if (name === "telephoneNumber") {
+      value = value.replace(/\D/g, "");
+      if (value.length > 11) return;
+    }
 
     if (name === "email") {
       value = value.toLowerCase();
@@ -145,8 +149,7 @@ function KYCForm() {
       <h2>Know Your Customer (KYC) Form</h2>
       <p className="subtitle">*Mandatory Fields</p>
 
-      {successMessage && <div className="success-box">{successMessage}</div>}
-      {errors.api && <p className="error api-error">{errors.api}</p>}
+      {/* --- ✅ MESSAGES ARE REMOVED FROM HERE --- */}
 
       {/* Personal Details */}
       <fieldset>
@@ -209,17 +212,23 @@ function KYCForm() {
             <input type="tel" name="mobileNumber" value={formData.mobileNumber || ''} onChange={handleChange} required />
             {errors.mobileNumber && <p className="error">{errors.mobileNumber}</p>}
           </div>
-          <div className="form-group">
+           <div className="form-group">
             <label>Email*</label>
             <input type="email" name="email" value={formData.email || ''} onChange={handleChange} required />
             {errors.email && <p className="error">{errors.email}</p>}
           </div>
         </div>
-
+        
       </fieldset>
 
       <div className="submit-container">
         <button type="submit">Submit</button>
+        
+        {/* --- ✅ MESSAGES ARE MOVED HERE --- */}
+        <div className="submit-feedback">
+            {successMessage && <div className="success-box">{successMessage}</div>}
+            {errors.api && <p className="error api-error">{errors.api}</p>}
+        </div>
       </div>
     </form>
   );
