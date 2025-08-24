@@ -88,16 +88,16 @@ function KYCForm() {
 
     // --- Validation Logic ---
     if (!formData.fatherName?.trim() && !formData.spouseName?.trim() && !formData.motherName?.trim()) {
-      newErrors.relative = "At least one relative's name is required.";
+      newErrors.relative = "Fill the necessary field .";
     }
     if (!/^[6-9]\d{9}$/.test(formData.mobileNumber)) {
-      newErrors.mobileNumber = "Please enter a valid 10-digit mobile number.";
+      newErrors.mobileNumber = "Invalid Number.";
     }
     if (!/^\d{6}$/.test(formData.pinCode)) {
-      newErrors.pinCode = "PIN code must be exactly 6 digits.";
+      newErrors.pinCode = "Invalid pincode.";
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address.";
+      newErrors.email = "Invalid Email.";
     }
     if (formData.dob) {
       const today = new Date();

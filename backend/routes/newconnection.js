@@ -26,7 +26,7 @@ router.post("/", async (req, res) => {
 
     if (existingConnection) {
       // ✅ Return a 409 Conflict status
-      return res.status(409).json({ message: "A connection already exists with this email or mobile number." });
+      return res.status(409).json({ message: "connection already exists" });
     }
 
     // If no existing connection, create a new one

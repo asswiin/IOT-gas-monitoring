@@ -6,15 +6,15 @@ const UserDashboard = () => {
   const navigate = useNavigate();
 
   const handleProfileClick = () => {
-    navigate("/gasbook")
+    navigate("")
   };
 
   // ✅ Navigate to gasbook page
-  const handleBookGas = () => {navigate("/newconnection") };
+  const handleBookGas = () => {navigate("") };
 
   // ✅ Navigate to gasbook page
   const handleGasLevelClick = () => {
-    navigate("/gasbook");
+    navigate("");
   };
 
   return (
@@ -24,10 +24,10 @@ const UserDashboard = () => {
 
         {/* ✅ Navigation buttons */}
         <div className="nav-actions">
-          <button className="nav-btn" onClick={() => navigate("/gasbook")}>Dashboard</button>
-          <button className="nav-btn" onClick={() => navigate("/gasbook")}>History</button>
-          <button className="nav-btn" onClick={() => navigate("/gasbook")}>Payment</button>
-          <button className="nav-btn" onClick={() => navigate("/gasbook")}>Feedback</button>
+          <button className="nav-btn" onClick={() => navigate("")}>Dashboard</button>
+          <button className="nav-btn" onClick={() => navigate("")}>History</button>
+          <button className="nav-btn" onClick={() => navigate("")}>Payment</button>
+          <button className="nav-btn" onClick={() => navigate("")}>Feedback</button>
 
           <button className="profile-button" onClick={handleProfileClick}>
             <img src="/profileicon.jpg" alt="Profile" />
