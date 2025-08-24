@@ -1,6 +1,7 @@
 // src/views/PaymentPage.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "../styles/Payment.css";
 
 export default function PaymentPage() {
@@ -12,6 +13,9 @@ export default function PaymentPage() {
     dateOfPayment: "",
     amountDue: 900, // example fixed
   });
+
+  const [message, setMessage ] = useState("");
+  const navigate = useNavigate();
 
   // Load data from KYC or Registration
   useEffect(() => {
@@ -47,14 +51,21 @@ export default function PaymentPage() {
       amountDue: formData.amountDue,
     };
 
+
       await axios.post("http://localhost:5000/api/payment", finalData);
 
-      alert(`✅ Payment successful!\nAmount Paid: ₹${formData.amountDue}`);
+      setMessage(`✅ Payment successful! Amount Paid: ₹${formData.amountDue}`);
       localStorage.removeItem("kycFormData");
+
+     setTimeout(() => {
+      navigate("/userdashboard");
+    }, 2000);
+    
+
     } catch (error) {
       console.error(error);
-      alert("❌ Payment failed or could not save data.");
-    }
+setMessage("❌ Payment failed ");   
+ }
   };
 
   return (
@@ -92,7 +103,15 @@ export default function PaymentPage() {
             <h3>Amount Due: ₹{formData.amountDue}</h3>
           </div>
 
-          <button type="submit" className="pay-btn">Pay Now</button>
+         <div>
+  <button type="submit" className="pay-btn">Pay Now</button>
+
+  {message && (
+    <p className={`payment-message ${message.includes("✅") ? "success" : "error"}`}>
+      {message}
+    </p>
+  )}
+</div>
         </form>
       </div>
     </div>
