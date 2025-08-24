@@ -6,67 +6,70 @@ import "../styles/Payment.css";
 
 export default function PaymentPage() {
   const [formData, setFormData] = useState({
+    kycId: null, // ✅ To store the ID of the connection application
     customerName: "",
     email: "",
     mobileNumber: "",
     address: "",
     dateOfPayment: "",
-    amountDue: 900, // example fixed
+    amountDue: 900,
   });
 
-  const [message, setMessage ] = useState("");
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
-  // Load data from KYC or Registration
   useEffect(() => {
     const savedData = JSON.parse(localStorage.getItem("kycFormData"));
-    const email = localStorage.getItem("userEmail") || "";
-    const phone = localStorage.getItem("userPhone") || "";
     const today = new Date().toISOString().split("T")[0];
 
     if (savedData) {
-      const fullAddress = `${savedData.houseName || ""}, ${savedData.streetName || ""}, ${savedData.city || ""}, ${savedData.district || ""}, ${savedData.state || ""}, ${savedData.pinCode || ""}`;
+      // ✅ Defensive coding to prevent "undefined". Use empty strings as a fallback.
+      const fullName = `${savedData.firstName || ''} ${savedData.lastName || ''}`.trim();
+      const fullAddress = [
+        savedData.houseName,
+        savedData.streetName,
+        savedData.city,
+        savedData.district,
+        savedData.state,
+        savedData.pinCode,
+      ].filter(Boolean).join(', '); // Joins only the parts that exist
 
-      setFormData((prev) => ({
-        ...prev,
-        customerName: savedData.firstName + " " + (savedData.lastName || ""),
-        email: email,
-        mobileNumber: phone,
+      setFormData({
+        kycId: savedData._id, // ✅ Extract the unique ID from the saved data
+        customerName: fullName,
+        email: savedData.email || '',
+        mobileNumber: savedData.mobileNumber || '',
         address: fullAddress,
         dateOfPayment: today,
-      }));
+        amountDue: 900,
+      });
     }
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-   try {
-    const finalData = {
-      customerName: formData.customerName,
-      email: formData.email,
-      mobileNumber: formData.mobileNumber,
-      address: formData.address,
-      dateOfPayment: formData.dateOfPayment,
-      amountDue: formData.amountDue,
-    };
-
-
-      await axios.post("http://localhost:5000/api/payment", finalData);
+    try {
+      // ✅ The formData state now contains all required fields, including kycId
+      await axios.post("http://localhost:5000/api/payment", formData);
+      
+      const userEmail = localStorage.getItem("userEmail");
+      if (userEmail) {
+        await axios.put(`http://localhost:5000/api/newconnection/${userEmail}/status`, { status: 'active' });
+      }
 
       setMessage(`✅ Payment successful! Amount Paid: ₹${formData.amountDue}`);
       localStorage.removeItem("kycFormData");
 
-     setTimeout(() => {
-      navigate("/userdashboard");
-    }, 2000);
-    
+      setTimeout(() => {
+        navigate("/userdashboard");
+      }, 2000);
 
     } catch (error) {
       console.error(error);
-setMessage("❌ Payment failed ");   
- }
+      setMessage("❌ Payment failed. Please try again.");
+    }
   };
+
 
   return (
     <div className="payment-container">
@@ -117,4 +120,5 @@ setMessage("❌ Payment failed ");
     </div>
   );
 }
+
 

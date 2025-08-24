@@ -23,7 +23,6 @@ app.use('/api/newconnection',newconnectionRoute)
 app.use('/api/payment', paymentRoute);
 
 
-
 // Simple health check
 app.get('/', (req, res) => res.send('API running'));
 

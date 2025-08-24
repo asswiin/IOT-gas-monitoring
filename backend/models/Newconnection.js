@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const kycSchema = new mongoose.Schema({
@@ -18,9 +19,13 @@ const kycSchema = new mongoose.Schema({
   state: String,
   district: String,
   pinCode: String,
-  mobileNumber: String,
+  // ✅ Ensures each mobile number is unique
+  mobileNumber: { type: String, unique: true, required: true }, 
   telephoneNumber: String,
-  email: String,
+  // ✅ Ensures each email is unique
+  email: { type: String, unique: true, required: true },
+  // ✅ New field to track application status
+  status: { type: String, default: 'pending_payment' }, 
   dateOfPayment: String,
   amountDue: Number,
 });
