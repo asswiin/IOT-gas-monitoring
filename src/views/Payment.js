@@ -37,13 +37,15 @@ export default function PaymentPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const connectionData = JSON.parse(localStorage.getItem("kycFormData"));
-      const finalData = {
-        ...connectionData,
-        dateOfPayment: formData.dateOfPayment,
-        amountDue: formData.amountDue,
-      };
+   try {
+    const finalData = {
+      customerName: formData.customerName,
+      email: formData.email,
+      mobileNumber: formData.mobileNumber,
+      address: formData.address,
+      dateOfPayment: formData.dateOfPayment,
+      amountDue: formData.amountDue,
+    };
 
       await axios.post("http://localhost:5000/api/payment", finalData);
 
