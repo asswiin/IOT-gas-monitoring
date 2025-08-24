@@ -1,175 +1,117 @@
-/* Apply dark background to entire page */
 .home-page {
   min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  background-color: #0f172a;
-  /* Dark navy blue */
-  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, var(--dark-bg), #1e293b);
+  color: var(--light-text);
+  font-family: 'Poppins', sans-serif;
 }
 
-
-
-
-/* Container */
 .container {
   max-width: 1200px;
   margin: auto;
-  padding: 0;
-  text-align: center;
+  padding: 0 1rem;
 }
 
-/* Navbar */
 .navbar {
-  padding: 15px;
-  background-color: #1e293b;
-  color: white;
-  border: none;
-  /* remove any border */
+  padding: 1rem 0;
+  background-color: transparent;
 }
 
 .navbar h1 {
-  font-size: 24px;
-  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
 }
 
-/* Hero Section - Image on top, content below */
 .hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 40px;
-  background-color: #0f172a;
-  /* Matches full page background */
-  border: none;
-  /* remove any border */
+  padding: 4rem 1rem;
 }
 
 .hero-image {
   width: 100%;
-  height: 300px;
-  background-image: url('/public/home.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  margin-bottom: 30px;
-  border: none;
-  /* remove border */
-}
-
-/* Content */
-.hero-content {
-  max-width: 700px;
+  max-width: 500px;
+  height: auto;
+  margin-bottom: 2rem;
 }
 
 .hero-content h2 {
-  font-size: 36px;
-  margin-bottom: 15px;
-  color: #60a5fa;
-  /* Light blue */
-  border: none;
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #fff;
+  line-height: 1.2;
 }
 
 .hero-content p {
-  font-size: 16px;
-  color: #d1d5db;
-  /* Light gray text */
-  margin-bottom: 25px;
-  border: none;
+  font-size: 1.1rem;
+  color: #a7b3c4;
+  margin-bottom: 2rem;
+  max-width: 600px;
 }
 
-/* Get Started Button */
 .get-started {
-  background: linear-gradient(135deg, #a0e9ff, #70cfff);
-  color: #003366;
-  padding: 14px 36px;
+  background: linear-gradient(90deg, #007bff, #00c6ff);
+  color: white;
+  padding: 1rem 2.5rem;
   border: none;
-  /* remove border */
   border-radius: 50px;
   cursor: pointer;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 1.1rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 6px 20px rgba(112, 207, 255, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
   transition: all 0.3s ease;
-  outline: none;
-  /* remove focus outline */
 }
 
 .get-started:hover {
-  background: linear-gradient(135deg, #70cfff, #4db8e6);
-  box-shadow: 0 8px 25px rgba(112, 207, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 198, 255, 0.5);
   transform: translateY(-3px) scale(1.05);
 }
 
-/* Features Section */
 .features {
-  padding: 50px;
+  padding: 4rem 1rem;
   text-align: center;
-  background-color: #0f172a;
-  /* Match full page background */
-  border: none;
 }
 
 .features h3 {
-  font-size: 28px;
-  margin-bottom: 20px;
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
   color: #facc15;
-  /* Yellow */
-  border: none;
 }
 
 .feature-grid {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
 }
 
 .feature-card {
-  background: #1e293b;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  border-radius: var(--border-radius);
   color: #d1d5db;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-  border: none;
-  /* remove border */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, background 0.3s ease;
 }
 
-/* Footer */
+.feature-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .footer {
   background-color: #1e293b;
-  padding: 15px;
+  padding: 1.5rem;
   text-align: center;
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #9ca3af;
-  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .footer a {
-  color: #93c5fd;
+  color: var(--primary-color);
   text-decoration: none;
-}
-
-.footer a:hover {
-  text-decoration: underline;
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .hero-image {
-    height: 200px;
-  }
-
-  .hero-content h2 {
-    font-size: 28px;
-  }
-
-  .get-started {
-    font-size: 16px;
-    padding: 12px 28px;
-  }
 }

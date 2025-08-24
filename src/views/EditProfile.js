@@ -1,153 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/Newconnection.css';
+import '../styles/Newconnection.css'; // You can reuse the same styles
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import '../styles/editProfile.css'; // Optional: separate styles if needed
 
-function KYCForm() {
-  // State for all form fields, initialized properly
-  const [formData, setFormData] = useState({
-    salutation: '',
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    dob: '',
-    fatherName: '',
-    spouseName: '',
-    motherName: '',
-    houseName: '',
-    floorNo: '',
-    housingComplex: '',
-    streetName: '',
-    landmark: '',
-    city: '',
-    state: '',
-    district: '',
-    pinCode: '',
-    mobileNumber: '',
-    telephoneNumber: '',
-    email: '',
-  });
-
+function EditProfile() {
+  const [formData, setFormData] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errors, setErrors] = useState({});
-  const [isExistingUser, setIsExistingUser] = useState(false);
-  const salutations = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
   const navigate = useNavigate();
 
-  // Effect to fetch and pre-fill user data
+  // 1. Fetch current user data when the component loads
   useEffect(() => {
     const userEmail = localStorage.getItem("userEmail");
-    const userPhone = localStorage.getItem("userPhone");
-
-    setFormData(prev => ({ ...prev, email: userEmail || "", mobileNumber: userPhone || "" }));
-
     if (userEmail) {
       axios.get(`http://localhost:5000/api/newconnection/${userEmail}`)
         .then(res => {
-          if (res.data) {
-            setFormData(res.data);
-            setIsExistingUser(true);
-          }
+          setFormData(res.data); // Pre-fill the form with existing data
         })
-        .catch(() => {
-          console.log("No existing KYC record found. Starting a new application.");
-          setIsExistingUser(false);
+        .catch(err => {
+          console.error("Failed to fetch user data:", err);
+          setErrors({ api: "Could not load your profile data." });
         });
+    } else {
+      navigate("/login"); // Redirect if user is not logged in
     }
-  }, []);
+  }, [navigate]);
 
-  // Handler for all form input changes
+  // Handler for form input changes (can be the same as NewConnection)
   const handleChange = (e) => {
     let { name, value } = e.target;
-
-    if (name === "pinCode") {
-      value = value.replace(/\D/g, "");
-      if (value.length > 6) return;
-    }
-
-    if (name === "mobileNumber") {
-      value = value.replace(/\D/g, "");
-      if (value.length > 10) return;
-    }
-     if (name === "telephoneNumber") {
-      value = value.replace(/\D/g, "");
-      if (value.length > 11) return;
-    }
-
-    if (name === "email") {
-      value = value.toLowerCase();
-    }
-
+    // (Add any input restrictions like for pinCode or mobileNumber if needed)
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handler for form submission with validation
+  // 2. Handler for form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = {};
-
-    // --- Validation Logic ---
-    if (!formData.fatherName?.trim() && !formData.spouseName?.trim() && !formData.motherName?.trim()) {
-      newErrors.relative = "Fill the necessary field .";
-    }
-    if (!/^[6-9]\d{9}$/.test(formData.mobileNumber)) {
-      newErrors.mobileNumber = "Invalid Number.";
-    }
-    if (!/^\d{6}$/.test(formData.pinCode)) {
-      newErrors.pinCode = "Invalid pincode.";
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid Email.";
-    }
-    if (formData.dob) {
-      const today = new Date();
-      const birthDate = new Date(formData.dob);
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      if (age < 18) {
-        newErrors.dob = "You must be at least 18 years old to apply.";
-      }
-    } else {
-      newErrors.dob = "Date of Birth is required.";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setSuccessMessage("");
-      return;
-    }
-
-    setErrors({});
-
-    if (isExistingUser) {
-      localStorage.setItem("kycFormData", JSON.stringify(formData));
-      navigate("/payment");
-      return;
-    }
+    // (Add validation logic here if you want to re-validate on update)
+    
+    const userEmail = localStorage.getItem("userEmail");
+    if (!userEmail) return;
 
     try {
-      const res = await axios.post("http://localhost:5000/api/newconnection", formData);
-      setSuccessMessage("Form submitted successfully! Proceeding to payment...");
-      localStorage.setItem("kycFormData", JSON.stringify(res.data.kycData));
-      setTimeout(() => navigate("/payment"), 1500);
+      // 3. Send a PUT request to update the data
+      await axios.put(`http://localhost:5000/api/newconnection/${userEmail}`, formData);
+      setSuccessMessage("Profile updated successfully!");
+      setErrors({});
+      
+      setTimeout(() => {
+        navigate("/userdashboard"); // Go back to dashboard after update
+      }, 2000);
+
     } catch (err) {
-      console.error("Submission Error:", err);
+      console.error("Update Error:", err);
       setSuccessMessage("");
-      if (err.response && err.response.status === 409) {
-        setErrors({ api: err.response.data.message });
-      } else {
-        setErrors({ api: "Failed to submit form. Please try again." });
-      }
+      setErrors({ api: "Failed to update profile. Please try again." });
     }
   };
 
   return (
+    // The form is almost identical to NewConnection, but points to a different handler
     <form onSubmit={handleSubmit} className="kyc-form">
-      <h2>Know Your Customer (KYC) Form</h2>
-      <p className="subtitle">*Mandatory Fields</p>
+      <h2>Edit Your Profile</h2>
+ <p className="subtitle">*Mandatory Fields</p>
 
       {/* --- ✅ MESSAGES ARE REMOVED FROM HERE --- */}
 
@@ -156,10 +72,7 @@ function KYCForm() {
         <legend>1) Personal Details</legend>
         <div className="form-group">
           <label>Salutation*</label>
-          <select name="salutation" value={formData.salutation || ''} onChange={handleChange} required>
-            <option value="">--Select--</option>
-            {salutations.map((s) => (<option key={s} value={s}>{s}</option>))}
-          </select>
+    
         </div>
         <div className="grid-3">
           <div className="form-group"><label>First Name*</label><input type="text" name="firstName" value={formData.firstName || ''} onChange={handleChange} required /></div>
@@ -216,22 +129,21 @@ function KYCForm() {
             <label>Email*</label>
             <input type="email" name="email" value={formData.email || ''} onChange={handleChange} required />
             {errors.email && <p className="error">{errors.email}</p>}
-          </div>
+          </div> 
         </div>
         
       </fieldset>
+     
 
       <div className="submit-container">
-        <button type="submit">Submit</button>
-        
-        {/* --- ✅ MESSAGES ARE MOVED HERE --- */}
+        <button type="submit">Update Profile</button>
         <div className="submit-feedback">
             {successMessage && <div className="success-box">{successMessage}</div>}
             {errors.api && <p className="error api-error">{errors.api}</p>}
         </div>
       </div>
-    </form> 
+    </form>
   );
 }
 
-export default KYCForm;
+export default EditProfile;

@@ -1,0 +1,146 @@
+/* Container for the entire page */
+.edit-profile-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Aligns form to the top */
+  min-height: 100vh;
+  background-color: #f8f9fa; /* A light grey background */
+  padding: 2rem 1rem;
+}
+
+/* The form itself */
+.edit-profile-form {
+  background: #ffffff;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px; /* A bit wider for a profile page */
+  border-top: 5px solid #007bff; /* Blue accent color */
+}
+
+.edit-profile-form h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+/* Fieldset and Legend styles (similar to NewConnection for consistency) */
+.edit-profile-form fieldset {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.edit-profile-form legend {
+  padding: 0 0.5rem;
+  font-weight: 600;
+  color: #007bff;
+}
+
+/* Form Groups and Layout Grids */
+.edit-profile-form .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.edit-profile-form .grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.edit-profile-form .grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Labels and Inputs */
+.edit-profile-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.edit-profile-form input[type="text"],
+.edit-profile-form input[type="email"],
+.edit-profile-form input[type="tel"],
+.edit-profile-form input[type="date"],
+.edit-profile-form select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.edit-profile-form input:focus,
+.edit-profile-form select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+/* Read-only fields styling */
+.edit-profile-form input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    color: #6c757d;
+}
+
+/* Submit Button Container */
+.submit-container {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.submit-container button {
+  padding: 0.8rem 2.5rem;
+  background-color: #28a745; /* Green for update/success */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-container button:hover {
+  background-color: #218838;
+}
+
+/* Feedback Messages (Success/Error) */
+.submit-feedback {
+    margin-top: 1rem;
+    min-height: 24px; /* Prevents layout shift when message appears */
+}
+
+.success-box {
+  color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.error.api-error {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.error {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}

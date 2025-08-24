@@ -62,4 +62,29 @@ router.put("/:email/status", async (req, res) => {
 });
 
 
+// ✅ ADD THIS NEW ROUTE FOR UPDATING A USER'S PROFILE
+router.put("/:email", async (req, res) => {
+  try {
+    const userEmail = req.params.email;
+    const updatedData = req.body;
+
+    // Find the user by email and update their data
+    // { new: true } ensures the updated document is returned
+    const updatedUser = await KYC.findOneAndUpdate(
+      { email: userEmail },
+      updatedData,
+      { new: true, runValidators: true } // runValidators ensures schema rules are checked
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User profile not found." });
+    }
+
+    res.json({ message: "Profile updated successfully!", kycData: updatedUser });
+  } catch (err) {
+    console.error("❌ Profile Update Error:", err);
+    res.status(500).json({ message: "Error updating profile" });
+  }
+});
+
 module.exports = router;
