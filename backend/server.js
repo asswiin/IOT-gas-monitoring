@@ -5,7 +5,8 @@ const mongoose = require('mongoose');
 
 const loginRoute = require('./routes/login');
 const registerRoute = require('./routes/register');
-const newConnectionRoute = require('./routes/newConnection');
+const newconnectionRoute = require('./routes/newconnection')
+const paymentRoute = require('./routes/payment');
 
 
 const app = express();
@@ -18,14 +19,16 @@ app.use(express.json());
 // Routes
 app.use('/api/login', loginRoute);
 app.use('/api/register', registerRoute);
-app.use('/api/newconnection', newConnectionRoute);
+app.use('/api/newconnection',newconnectionRoute)
+app.use('/api/payment', paymentRoute);
+
 
 
 // Simple health check
 app.get('/', (req, res) => res.send('API running'));
 
 // MongoDB URI from .env
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/yourdb';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mydatabase';
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI)

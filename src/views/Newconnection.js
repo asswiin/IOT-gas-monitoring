@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import '../styles/Newconnection.css'; // ✅ Ensure correct path
 import axios from "axios";
@@ -115,6 +116,10 @@ function KYCForm() {
       setSuccessMessage("Form submitted successfully! ✅");
       setErrors({});
       console.log("Saved:", res.data);
+
+  // ✅ Save to localStorage so Payment page can load it
+  localStorage.setItem("kycFormData", JSON.stringify(formData));
+
 
       setTimeout(() => {
         navigate("/payment");

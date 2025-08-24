@@ -31,7 +31,7 @@ function Login() {
         if (response.data.role === 'admin') {
           navigate('/admindashboard');
         } else {
-          navigate('/userdashboard');
+          navigate('/newconnection');
         }
       }
     } catch (error) {

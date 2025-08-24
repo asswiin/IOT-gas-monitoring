@@ -21,6 +21,8 @@ const kycSchema = new mongoose.Schema({
   mobileNumber: String,
   telephoneNumber: String,
   email: String,
+  dateOfPayment: String,
+  amountDue: Number,
 });
 
 module.exports = mongoose.model("KYC", kycSchema);

@@ -1,28 +1,58 @@
-import React, { useState } from "react";
-// import { useNavigate } from 'react-router-dom';
-import "../styles/Payment.css"; // ✅ Import CSS file
+// src/views/PaymentPage.js
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "../styles/Payment.css";
 
 export default function PaymentPage() {
   const [formData, setFormData] = useState({
-    connectionId: "",
+    customerName: "",
+    email: "",
+    mobileNumber: "",
     address: "",
-    dateOfConnection: "",
-    paymentMethod: "Credit Card",
+    dateOfPayment: "",
+    amountDue: 900, // example fixed
   });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // Load data from KYC or Registration
+  useEffect(() => {
+    const savedData = JSON.parse(localStorage.getItem("kycFormData"));
+    const email = localStorage.getItem("userEmail") || "";
+    const phone = localStorage.getItem("userPhone") || "";
+    const today = new Date().toISOString().split("T")[0];
 
-  const handlePaymentMethod = (method) => {
-    setFormData({ ...formData, paymentMethod: method });
-  };
+    if (savedData) {
+      const fullAddress = `${savedData.houseName || ""}, ${savedData.streetName || ""}, ${savedData.city || ""}, ${savedData.district || ""}, ${savedData.state || ""}, ${savedData.pinCode || ""}`;
 
-  const handleSubmit = (e) => {
+      setFormData((prev) => ({
+        ...prev,
+        customerName: savedData.firstName + " " + (savedData.lastName || ""),
+        email: email,
+        mobileNumber: phone,
+        address: fullAddress,
+        dateOfPayment: today,
+      }));
+    }
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(
-      `Payment initiated!\nConnection ID: ${formData.connectionId}\nPayment Method: ${formData.paymentMethod}`
-    );
+
+    try {
+      const connectionData = JSON.parse(localStorage.getItem("kycFormData"));
+      const finalData = {
+        ...connectionData,
+        dateOfPayment: formData.dateOfPayment,
+        amountDue: formData.amountDue,
+      };
+
+      await axios.post("http://localhost:5000/api/payment", finalData);
+
+      alert(`✅ Payment successful!\nAmount Paid: ₹${formData.amountDue}`);
+      localStorage.removeItem("kycFormData");
+    } catch (error) {
+      console.error(error);
+      alert("❌ Payment failed or could not save data.");
+    }
   };
 
   return (
@@ -32,67 +62,38 @@ export default function PaymentPage() {
 
         <form onSubmit={handleSubmit} className="payment-form">
           <div className="form-group">
-            <label>Connection ID</label>
-            <input
-              type="text"
-              name="connectionId"
-              value={formData.connectionId}
-              onChange={handleChange}
-              required
-            />
+            <label>Customer Name</label>
+            <input type="text" value={formData.customerName} readOnly />
+          </div>
+
+          <div className="form-group">
+            <label>Email</label>
+            <input type="email" value={formData.email} readOnly />
+          </div>
+
+          <div className="form-group">
+            <label>Mobile Number</label>
+            <input type="text" value={formData.mobileNumber} readOnly />
           </div>
 
           <div className="form-group">
             <label>Address</label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              required
-            />
+            <textarea value={formData.address} readOnly />
           </div>
 
           <div className="form-group">
-            <label>Date of Connection</label>
-            <input
-              type="date"
-              name="dateOfConnection"
-              value={formData.dateOfConnection}
-              onChange={handleChange}
-              required
-            />
+            <label>Date of Payment</label>
+            <input type="date" value={formData.dateOfPayment} readOnly />
           </div>
 
           <div className="amount-due">
-            <h3>Amount Due</h3>
+            <h3>Amount Due: ₹{formData.amountDue}</h3>
           </div>
 
-          <div className="payment-method">
-            <h3>Payment Method</h3>
-            <div className="method-buttons">
-              {["Credit Card", "Debit Card", "Net Banking", "UPI"].map(
-                (method) => (
-                  <button
-                    key={method}
-                    type="button"
-                    onClick={() => handlePaymentMethod(method)}
-                    className={
-                      formData.paymentMethod === method ? "active" : ""
-                    }
-                  >
-                    {method}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-
-          <button type="submit" className="pay-btn">
-            Pay Now
-          </button>
+          <button type="submit" className="pay-btn">Pay Now</button>
         </form>
       </div>
     </div>
   );
 }
+
