@@ -49,7 +49,7 @@ function EditProfile() {
       setErrors({});
       
       setTimeout(() => {
-        navigate("/userdashboard"); // Go back to dashboard after update
+        navigate("/profile"); // Go back to dashboard after update
       }, 2000);
 
     } catch (err) {

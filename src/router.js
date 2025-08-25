@@ -9,6 +9,7 @@ import NewConnection from './views/NewConnection';
 import UserDashboard from './views/UserDashboard';
 import PaymentPage from './views/Payment';
 import EditProfile from './views/EditProfile';
+import Profile from './views/Profile';
 
 function AppRoutes() {
   return (
@@ -23,6 +24,7 @@ function AppRoutes() {
         <Route path="/userdashboard" element={<UserDashboard />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/editprofile" element={<EditProfile />} />
+        <Route path="/profile" element={<Profile />} />
       </Route>
     </Routes>
   );

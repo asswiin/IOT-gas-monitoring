@@ -4,10 +4,10 @@ import '../styles/userDashboard.css';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const [showDropdown, setShowDropdown] = useState(false); // State to control dropdown visibility
+  const [showDropdown] = useState(false); // State to control dropdown visibility
 
   const handleProfileClick = () => {
-    setShowDropdown(!showDropdown); // Toggle dropdown on/off
+    navigate('/profile'); // Toggle dropdown on/off
   };
 
   const handleEditProfile = () => {
