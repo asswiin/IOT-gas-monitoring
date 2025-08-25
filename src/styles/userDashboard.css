@@ -1,81 +1,100 @@
+/* --- Revamped userDashboard.css with pastel theme --- */
+
 .dashboard-container {
   min-height: 100vh;
   padding: 2rem;
-  background: #111827; /* Darker background */
-  background-image: radial-gradient(circle at top right, rgba(0, 123, 255, 0.3), transparent 40%);
-  color: var(--light-text);
+  background: linear-gradient(135deg, #f0f8ff, #eaf6ff);
+  /* light gradient */
+  color: #212529;
+  font-family: 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
 }
 
+/* ---------------- HEADER ---------------- */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ffffff, #f9fcff);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #dee2e6;
+  margin-bottom: 2rem;
+  transition: transform 0.3s ease;
+}
+
+.dashboard-header:hover {
+  transform: translateY(-3px);
 }
 
 .dashboard-header h1 {
-  font-size: 2rem;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #2c3e50;
 }
 
-.nav-actions { display: flex; align-items: center; }
-
+/* ---------------- NAV BUTTONS ---------------- */
 .nav-btn {
-  background: transparent;
+  background: #eaf3ff;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.2rem;
   font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  color: #a7b3c4;
-  transition: color 0.2s ease;
+  color: #007bff;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
-.nav-btn:hover { color: #fff; }
+.nav-btn:hover {
+  background-color: #d6e9ff;
+  color: #0056b3;
+}
 
-.profile-section { position: relative; }
-
+/* ---------------- PROFILE SECTION ---------------- */
 .profile-button img {
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  border: 2px solid transparent;
-  transition: border-color 0.3s ease;
+  border: 2px solid #dee2e6;
+  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .profile-button:hover img {
-  border-color: var(--primary-color);
+  border-color: #133aff;
+  /* pastel lavender */
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(165, 180, 252, 0.6);
+  /* soft glow */
 }
 
 .profile-dropdown {
   position: absolute;
   top: 60px;
   right: 0;
-  background-color: #1f2937;
-  border-radius: var(--border-radius);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   width: 180px;
-  z-index: 100;
   overflow: hidden;
 }
 
-.dropdown-item {
-  padding: 0.75rem 1rem;
-  color: var(--light-text);
-  background: none;
-  border: none;
-  width: 100%;
-  text-align: left;
+/* ---------------- DASHBOARD CONTENT ---------------- */
+.dashboard-main h2 {
+  font-size: 2.3rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #2c3e50;
+  text-align: center;
+  background: linear-gradient(to right, #4facfe, #00f2fe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.dropdown-item:hover { background-color: rgba(255, 255, 255, 0.05); }
-
-.dashboard-main { flex: 1; padding-top: 2rem; }
-
-.dashboard-main h2 { font-size: 2.5rem; margin-bottom: 2rem; }
-
+/* ---------------- STATS BOXES ---------------- */
 .stats-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -84,29 +103,38 @@
 }
 
 .stat-box {
-  background: rgba(31, 41, 55, 0.5);
-  backdrop-filter: blur(10px);
-  padding: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--border-radius);
-  transition: transform 0.3s ease, background 0.3s ease;
+  background: linear-gradient(135deg, #ffffff, #f6faff);
+  padding: 1.8rem;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
 }
 
 .stat-box:hover {
-  transform: translateY(-5px);
-  background: rgba(31, 41, 55, 0.8);
+  transform: translateY(-7px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .stat-box h3 {
   margin-top: 0;
-  font-size: 1.1rem;
-  color: #a7b3c4;
+  font-size: 1.15rem;
+  color: #6c757d;
+  font-weight: 600;
 }
 
-.book-gas-container { text-align: center; margin: 2rem 0; }
+/* ---------------- BOOK GAS ---------------- */
+.book-gas-container {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 2.5rem;
+  background: linear-gradient(135deg, #e8fff3, #f9fffc);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+}
 
 .book-gas-button {
-  background: linear-gradient(90deg, #ff5722, #ff9800);
+  background: linear-gradient(135deg, #28a745, #5dd98b);
   color: white;
   border: none;
   padding: 1rem 3rem;
@@ -115,10 +143,103 @@
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 25px rgba(255, 87, 34, 0.3);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
 }
 
 .book-gas-button:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4);
+  transform: translateY(-4px) scale(1.05);
+  background: linear-gradient(135deg, #218838, #45c96d);
+  box-shadow: 0 10px 30px rgba(33, 136, 56, 0.4);
+}
+
+/* ---------------- ALERTS & NOTIFICATIONS ---------------- */
+.alerts-container h3,
+.notifications-container h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.alert-box,
+.notification-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.alert-box:hover,
+.notification-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* Variants */
+.alert-box.warning {
+  background: #fff8e6;
+  border-left: 6px solid #ffc107;
+  color: #856404;
+}
+
+.alert-box.danger {
+  background: #ffeaea;
+  border-left: 6px solid #dc3545;
+  color: #721c24;
+}
+
+.notification-box.success {
+  background: #e6ffee;
+  border-left: 6px solid #22bc46;
+  color: #155724;
+}
+
+.notification-box.info {
+  background: #e6f7ff;
+  border-left: 6px solid #17a2b8;
+  color: #0c5460;
+}
+
+/* Icons */
+.alert-box i,
+.notification-box i {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.nav-actions {
+  display: flex;
+  flex-direction: row;
+  /* ensure everything is side by side */
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  /* prevent wrapping to new line */
+}
+
+.nav-btn {
+  white-space: nowrap;
+  /* keep text in one line */
+}
+
+/* Special styling for Current Gas Level button */
+.gas-level-button {
+  background: linear-gradient(135deg, #f0f8ff, #eaf6ff);
+  /* light sky blue */
+  border: 1px solid #d0e2ff;
+}
+
+.gas-level-button:hover {
+  background: linear-gradient(135deg, #187ac1, #f0faff);
+  /* softer hover */
+  transform: translateY(-7px);
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.15);
+  /* light blue glow */
 }
