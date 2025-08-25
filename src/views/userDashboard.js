@@ -21,7 +21,7 @@ const UserDashboard = () => {
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userPhone');
     // Navigate to the login page
-    navigate("/login");
+    navigate("/login",{replcae:true});
   };
 
   // Other navigation handlers
