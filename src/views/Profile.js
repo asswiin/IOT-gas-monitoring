@@ -7,6 +7,7 @@ const Profile = () => {
   const [profileData, setProfileData] = useState(null);
   const [showFullDetails, setShowFullDetails] = useState(false);
   const [error, setError] = useState('');
+  const [showSignOutPopup, setShowSignOutPopup] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,9 +28,17 @@ const Profile = () => {
       });
   }, [navigate]);
 
-  const handleSignOut = () => {
+  const handleSignOutClick = () => {
+    setShowSignOutPopup(true);
+  };
+
+  const handleSignOutConfirm = () => {
     localStorage.clear(); // Clears all session data
     navigate("/login", { replace: true });
+  };
+
+  const handleSignOutCancel = () => {
+    setShowSignOutPopup(false);
   };
 
   // Show a loading or error message while data is being fetched
@@ -121,11 +130,25 @@ const Profile = () => {
           <button onClick={() => navigate('/editprofile')} className="action-btn edit-btn">
             Edit Profile
           </button>
-          <button onClick={handleSignOut} className="action-btn signout-btn">
+          <button onClick={handleSignOutClick} className="action-btn signout-btn">
             Sign Out
           </button>
         </div>
       </div>
+
+      {/* Sign Out Confirmation Popup */}
+      {showSignOutPopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h3>Sign Out Confirmation</h3>
+            <p>Are you sure you want to sign out?</p>
+            <div className="popup-buttons">
+              <button onClick={handleSignOutConfirm} className="confirm-yes">Yes</button>
+              <button onClick={handleSignOutCancel} className="confirm-no">No</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

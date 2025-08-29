@@ -31,7 +31,7 @@ function KYCForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errors, setErrors] = useState({});
   const [isExistingUser, setIsExistingUser] = useState(false);
-  const salutations = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
+  const salutations = ['Mr.', 'Mrs.'];
   const navigate = useNavigate();
 
   // Effect to fetch and pre-fill user data

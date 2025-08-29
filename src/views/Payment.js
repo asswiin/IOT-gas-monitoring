@@ -1,3 +1,4 @@
+
 // src/views/PaymentPage.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
@@ -15,7 +16,6 @@ export default function PaymentPage() {
     amountDue: 900,
   });
 
-  // --- ✅ NEW STATE FOR PAYMENT METHOD AND CARD DETAILS ---
   const [paymentMethod, setPaymentMethod] = useState(''); // 'credit' or 'debit'
   const [cardDetails, setCardDetails] = useState({
     cardNumber: '',
@@ -27,8 +27,11 @@ export default function PaymentPage() {
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
+  // --- ✅ NEW STATE FOR POP-UP VISIBILITY ---
+  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
   useEffect(() => {
-    // ... (your existing useEffect logic remains the same)
     const savedData = JSON.parse(localStorage.getItem("kycFormData"));
     const today = new Date().toISOString().split("T")[0];
 
@@ -51,16 +54,13 @@ export default function PaymentPage() {
     }
   }, []);
 
-  // --- ✅ NEW HANDLER FOR CARD DETAIL INPUTS ---
   const handleCardChange = (e) => {
     let { name, value } = e.target;
 
-    // Remove non-numeric characters for card number and cvv
     if (name === 'cardNumber' || name === 'cvv' || name === 'expiryMonth' || name === 'expiryYear') {
       value = value.replace(/\D/g, '');
     }
 
-    // Enforce max length
     if (name === 'cardNumber' && value.length > 16) value = value.slice(0, 16);
     if (name === 'expiryMonth' && value.length > 2) value = value.slice(0, 2);
     if (name === 'expiryYear' && value.length > 4) value = value.slice(0, 4);
@@ -69,7 +69,6 @@ export default function PaymentPage() {
     setCardDetails(prev => ({ ...prev, [name]: value }));
   };
 
-  // --- ✅ NEW VALIDATION FUNCTION ---
   const validateCardDetails = () => {
     const newErrors = {};
     const { cardNumber, expiryMonth, expiryYear, cvv } = cardDetails;
@@ -81,9 +80,14 @@ export default function PaymentPage() {
       newErrors.expiryMonth = "Invalid month (MM).";
     }
     const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1; // Month is 0-indexed
+    
     if (!/^\d{4}$/.test(expiryYear) || parseInt(expiryYear) < currentYear) {
       newErrors.expiryYear = "Invalid year (YYYY).";
+    } else if (parseInt(expiryYear) === currentYear && parseInt(expiryMonth) < currentMonth) {
+        newErrors.expiryMonth = "Card has expired.";
     }
+
     if (!/^\d{3}$/.test(cvv)) {
       newErrors.cvv = "CVV must be 3 digits.";
     }
@@ -92,23 +96,27 @@ export default function PaymentPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // --- ✅ UPDATED SUBMIT HANDLER WITH VALIDATION ---
+  // --- ✅ MODIFIED SUBMIT HANDLER TO SHOW CONFIRMATION POPUP ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // First, check if a payment method is selected
     if (!paymentMethod) {
       setErrors({ form: "Please select a payment method." });
       return;
     }
     
-    // Then, validate card details
     if (!validateCardDetails()) {
       return;
     }
     
     setErrors({}); // Clear errors if validation passes
+    setShowConfirmationPopup(true); // Show confirmation popup
+  };
 
+  // --- ✅ NEW FUNCTION TO HANDLE CONFIRMATION YES ---
+  const handleConfirmPayment = async () => {
+    setShowConfirmationPopup(false); // Close confirmation popup
+    
     try {
       await axios.post("http://localhost:5000/api/payment", formData);
       
@@ -119,10 +127,7 @@ export default function PaymentPage() {
 
       setMessage(`✅ Payment successful! Amount Paid: ₹${formData.amountDue}`);
       localStorage.removeItem("kycFormData");
-
-      setTimeout(() => {
-        navigate("/userdashboard");
-      }, 2000);
+      setShowSuccessPopup(true); // Show success popup
 
     } catch (error) {
       console.error(error);
@@ -130,12 +135,17 @@ export default function PaymentPage() {
     }
   };
 
+  // --- ✅ NEW FUNCTION TO HANDLE SUCCESS OK ---
+  const handleSuccessOk = () => {
+    setShowSuccessPopup(false); // Close success popup
+    navigate("/userdashboard"); // Navigate to dashboard
+  };
+
   return (
     <div className="payment-container">
       <div className="payment-card">
         <h2 className="payment-title">Payment</h2>
         <form onSubmit={handleSubmit} className="payment-form">
-          {/* ... (Your existing read-only fields for name, email, etc.) ... */}
           <div className="form-group"><label>Customer Name</label><input type="text" value={formData.customerName} readOnly /></div>
           <div className="form-group"><label>Email</label><input type="email" value={formData.email} readOnly /></div>
           <div className="form-group"><label>Mobile Number</label><input type="text" value={formData.mobileNumber} readOnly /></div>
@@ -144,7 +154,6 @@ export default function PaymentPage() {
           
           <div className="amount-due"><h3>Amount Due: ₹{formData.amountDue}</h3></div>
           
-          {/* --- ✅ NEW PAYMENT METHOD SELECTION --- */}
           <div className="payment-method">
             <h3>Select Payment Method</h3>
             <div className="method-buttons">
@@ -157,7 +166,6 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          {/* --- ✅ NEW CONDITIONALLY RENDERED CARD DETAILS FORM --- */}
           {paymentMethod && (
             <div className="card-details-form">
               <h4>Enter Your Card Details</h4>
@@ -197,6 +205,31 @@ export default function PaymentPage() {
           </div>
         </form>
       </div>
+
+      {/* --- ✅ CONFIRMATION POPUP --- */}
+      {showConfirmationPopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h3>Proceed to Payment?</h3>
+            <div className="popup-buttons">
+              <button onClick={handleConfirmPayment} className="popup-yes">Yes</button>
+              <button onClick={() => setShowConfirmationPopup(false)} className="popup-no">No</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- ✅ SUCCESS POPUP --- */}
+      {showSuccessPopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h3>Payment is Successful!</h3>
+            <div className="popup-buttons">
+              <button onClick={handleSuccessOk} className="popup-ok">OK</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
