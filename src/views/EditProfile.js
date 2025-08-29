@@ -16,7 +16,12 @@ function EditProfile() {
     if (userEmail) {
       axios.get(`http://localhost:5000/api/newconnection/${userEmail}`)
         .then(res => {
-          setFormData(res.data); // Pre-fill the form with existing data
+          // Format the date before setting it in the form
+          const formattedData = {
+            ...res.data,
+            dob: res.data.dob ? new Date(res.data.dob).toISOString().split('T')[0] : ''
+          };
+          setFormData(formattedData); // Pre-fill the form with existing data
         })
         .catch(err => {
           console.error("Failed to fetch user data:", err);
