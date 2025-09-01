@@ -29,7 +29,8 @@ router.post('/', async (req, res) => {
       success: true,
       message: "Login successful",
       role: user.role, // should be 'admin' or 'user' in DB
-      email: user.email
+      email: user.email,
+      phone: user.phone
     });
 
   } catch (error) {

@@ -1,99 +1,3 @@
-
-// const express = require("express");
-// const router = express.Router();
-// const KYC = require("../models/Newconnection");
-
-// // GET existing KYC data by email
-// router.get("/:email", async (req, res) => {
-//   try {
-//     const kycData = await KYC.findOne({ email: req.params.email });
-//     if (kycData) {
-//       return res.json(kycData);
-//     }
-//     return res.status(404).json({ message: "No KYC data found." });
-//   } catch (err) {
-//     res.status(500).json({ message: "Server error while fetching KYC data" });
-//   }
-// });
-
-// // POST new KYC form (with improved duplicate check)
-// router.post("/", async (req, res) => {
-//   try {
-//     const { email, mobileNumber } = req.body;
-
-//     // ✅ Explicitly check if email or mobile number is already in use
-//     const existingConnection = await KYC.findOne({ $or: [{ email }, { mobileNumber }] });
-
-//     if (existingConnection) {
-//       // ✅ Return a 409 Conflict status
-//       return res.status(409).json({ message: "connection already exists" });
-//     }
-
-//     // If no existing connection, create a new one
-//     const newForm = new KYC(req.body);
-//     await newForm.save();
-//     res.status(201).json({ message: "KYC Form saved successfully!", kycData: newForm });
-//   } catch (err) {
-//     // This will catch other database errors, including the unique index violation
-//     console.error("❌ Save Error:", err);
-//     res.status(500).json({ message: "Error saving form" });
-//   }
-// });
-
-// // PUT to update KYC status after payment
-// router.put("/:email/status", async (req, res) => {
-//     try {
-//       const { status } = req.body; // Expecting { "status": "active" } in the body
-//       const updatedKYC = await KYC.findOneAndUpdate(
-//         { email: req.params.email },
-//         { $set: { status: status } }, // Use $set for better practice
-//         { new: true }
-//       );
-  
-//       if (!updatedKYC) {
-//         return res.status(404).json({ message: "KYC record not found." });
-//       }
-  
-//       res.json({ message: "KYC status updated.", kycData: updatedKYC });
-//     } catch (err) {
-//       console.error("❌ Status Update Error:", err);
-//       res.status(500).json({ message: "Error updating KYC status" });
-//     }
-// });
-
-
-// // ✅ ADD THIS NEW ROUTE FOR UPDATING A USER'S PROFILE
-// router.put("/:email", async (req, res) => {
-//   try {
-//     const userEmail = req.params.email;
-//     const updatedData = req.body;
-
-//     // Find the user by email and update their data
-//     // { new: true } ensures the updated document is returned
-//     const updatedUser = await KYC.findOneAndUpdate(
-//       { email: userEmail },
-//       updatedData,
-//       { new: true, runValidators: true } // runValidators ensures schema rules are checked
-//     );
-
-//     if (!updatedUser) {
-//       return res.status(404).json({ message: "User profile not found." });
-//     }
-
-//     res.json({ message: "Profile updated successfully!", kycData: updatedUser });
-//   } catch (err) {
-//     console.error("❌ Profile Update Error:", err);
-//     res.status(500).json({ message: "Error updating profile" });
-//   }
-// });
-
-// module.exports = router;
-
-
-
-
-// --- START OF FILE newconnection.js ---
-
 const express = require("express");
 const router = express.Router();
 const KYC = require("../models/Newconnection"); // Assuming this is your Mongoose model
@@ -150,21 +54,30 @@ router.post("/", async (req, res) => {
 // PUT to update KYC status after payment (or admin approval/rejection)
 router.put("/:email/status", async (req, res) => {
     try {
-      const { status } = req.body; // Expecting { "status": "active" }, { "status": "approved" }, or { "status": "rejected" }
-      const updatedKYC = await KYC.findOneAndUpdate(
-        { email: req.params.email },
-        { $set: { status: status } },
-        { new: true }
-      );
-  
-      if (!updatedKYC) {
-        return res.status(404).json({ message: "KYC record not found." });
+      const { status } = req.body;
+      const userEmail = req.params.email;
+
+      if (status === 'rejected') {
+        const deletedKYC = await KYC.findOneAndDelete({ email: userEmail });
+        if (!deletedKYC) {
+          return res.status(404).json({ message: "KYC record not found for rejection." });
+        }
+        return res.json({ message: "KYC request rejected and data removed.", status: 'rejected' });
+      } else {
+        const updatedKYC = await KYC.findOneAndUpdate(
+          { email: userEmail },
+          { $set: { status: status } },
+          { new: true }
+        );
+        if (!updatedKYC) {
+          return res.status(404).json({ message: "KYC record not found for update." });
+        }
+        res.json({ message: "KYC status updated.", kycData: updatedKYC });
       }
-  
-      res.json({ message: "KYC status updated.", kycData: updatedKYC });
+
     } catch (err) {
-      console.error("❌ Status Update Error:", err);
-      res.status(500).json({ message: "Error updating KYC status" });
+      console.error("❌ Status Update/Deletion Error:", err);
+      res.status(500).json({ message: "Error updating/deleting KYC status" });
     }
 });
 
@@ -172,7 +85,10 @@ router.put("/:email/status", async (req, res) => {
 router.put("/:email", async (req, res) => {
   try {
     const userEmail = req.params.email;
-    const updatedData = { ...req.body, status: 'pending_approval' }; // ✅ Ensure status is set to pending on update too
+    // For general application updates, it's reasonable to send it back for review.
+    // However, for an already approved user, this route generally shouldn't be called for minor edits.
+    // The `EditProfile.js` component will now use the new `/profile` route.
+    const updatedData = { ...req.body, status: 'pending_approval' }; // Keep this for application re-submission context
 
     const updatedUser = await KYC.findOneAndUpdate(
       { email: userEmail },
@@ -184,11 +100,44 @@ router.put("/:email", async (req, res) => {
       return res.status(404).json({ message: "User profile not found." });
     }
 
-    res.json({ message: "Profile updated successfully! Awaiting admin approval.", kycData: updatedUser });
+    res.json({ message: "Application updated successfully! Awaiting admin approval.", kycData: updatedUser });
   } catch (err) {
-    console.error("❌ Profile Update Error:", err);
-    res.status(500).json({ message: "Error updating profile" });
+    console.error("❌ Application Update Error:", err);
+    res.status(500).json({ message: "Error updating application" });
   }
 });
+
+// ✅ NEW ROUTE: For logged-in users to update their profile *without* changing status
+router.put("/:email/profile", async (req, res) => {
+  try {
+    const userEmail = req.params.email;
+    // Destructure req.body to exclude 'status' or only include allowed fields
+    const { status, ...updateFields } = req.body; // Prevent status from being updated through this route
+
+    // Find the current user to get their existing status
+    const existingUser = await KYC.findOne({ email: userEmail });
+    if (!existingUser) {
+      return res.status(404).json({ message: "User profile not found for update." });
+    }
+
+    // Only update allowed fields, and do NOT touch the status field.
+    // You might want to explicitly list fields that can be updated for security.
+    const updatedUser = await KYC.findOneAndUpdate(
+      { email: userEmail },
+      { $set: updateFields }, // Only set the fields from updateFields
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User profile not found after update attempt." });
+    }
+
+    res.json({ message: "Profile updated successfully!", kycData: updatedUser });
+  } catch (err) {
+    console.error("❌ Profile Update Error:", err);
+    res.status(500).json({ message: "Error updating profile." });
+  }
+});
+
 
 module.exports = router;

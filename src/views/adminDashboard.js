@@ -1,77 +1,3 @@
-// import React from "react";
-// import "../styles/adminDashboard.css";
-
-// function Card({ title, children }) {
-//   return (
-//     <div className="card">
-//       <h3>{title}</h3>
-//       <div>{children}</div>
-//     </div>
-//   );
-// }
-
-// export default function Dashboard() {
-//   return (
-//     <div className="dashboard">
-//       {/* Sidebar */}
-//       <aside className="sidebar">
-//         <h2 className="logo">Admin</h2>
-//         <nav>
-//           <ul>
-//             <li className="active">Dashboard</li>
-//             <li>Users</li>
-//             <li>Requests</li>
-//             <li>Payments</li>
-//             <li>Reports</li>
-//             <li>Settings</li>
-//           </ul>
-//         </nav>
-//         <div className="user-info">
-//           <div className="avatar"></div>
-//           <div>
-//             <p className="username">Admin User</p>
-//             <p className="signout">Sign Out</p>
-//           </div>
-//         </div>
-//       </aside>
-
-//       {/* Main Content */}
-//       <main className="main-content">
-//         <div className="content-center">
-//           <h1 className="page-title">Dashboard</h1>
-
-//           {/* Stats */}
-//           <div className="card-grid">
-//             <Card title="Total Users"></Card>
-//             <Card title="Active Connections"></Card>
-//           </div>
-
-//           {/* System Overview */}
-//           <h2 className="section-title">System Overview</h2>
-//           <div className="card-grid">
-//             <Card title="User Growth">h</Card>
-//             <Card title="Connection Activity"> </Card>
-//           </div>
-//         </div>
-//       </main>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-// --- START OF FILE AdminDashboard.js ---
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/adminDashboard.css";
@@ -107,11 +33,11 @@ export default function Dashboard() {
     }
   };
 
-  const handleApprove = async (kycId, userEmail) => {
+   const handleApprove = async (kycId, userEmail) => {
     try {
       await axios.put(`http://localhost:5000/api/newconnection/${userEmail}/status`, { status: 'approved' });
       alert("Request approved successfully!");
-      fetchPendingRequests(); // Refresh the list
+      fetchPendingRequests(); // Refresh the list for the admin
     } catch (err) {
       console.error("Error approving request:", err);
       alert("Failed to approve request.");
@@ -120,9 +46,17 @@ export default function Dashboard() {
 
   const handleReject = async (kycId, userEmail) => {
     try {
-      await axios.put(`http://localhost:5000/api/newconnection/${userEmail}/status`, { status: 'rejected' });
-      alert("Request rejected!");
-      fetchPendingRequests(); // Refresh the list
+      // ✅ MODIFIED: The backend now deletes on 'rejected' status.
+      // The response will confirm the deletion.
+      const response = await axios.put(`http://localhost:5000/api/newconnection/${userEmail}/status`, { status: 'rejected' });
+      
+      if (response.data.status === 'rejected') { // Check the status in the response
+          alert("Request rejected and data removed successfully!");
+          fetchPendingRequests(); // Refresh the list to show the item is gone
+      } else {
+          alert("Request rejected (but data not explicitly removed from database)."); // Fallback
+          fetchPendingRequests();
+      }
     } catch (err) {
       console.error("Error rejecting request:", err);
       alert("Failed to reject request.");

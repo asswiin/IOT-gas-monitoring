@@ -28,10 +28,8 @@ function Login() {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('userRole', response.data.role);
         localStorage.setItem('userEmail', response.data.email);
-        // Assuming your login response also includes the phone number
-        // If not, you may need to adjust your backend to send it
-        // localStorage.setItem('userPhone', response.data.phone);
-
+        localStorage.setItem('userPhone', response.data.phone);
+        
         // Step 2: Redirect based on role
         if (response.data.role === 'admin') {
           navigate('/admindashboard');

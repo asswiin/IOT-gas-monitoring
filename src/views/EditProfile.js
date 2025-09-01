@@ -1,25 +1,39 @@
+// --- START OF FILE EditProfile.js ---
+
 import React, { useState, useEffect } from 'react';
-import '../styles/Newconnection.css'; // You can reuse the same styles
+import '../styles/Newconnection.css';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import '../styles/editProfile.css'; // Optional: separate styles if needed
+import '../styles/editProfile.css';
 
 function EditProfile() {
   const [formData, setFormData] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const salutations = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.']; // Added for the select dropdown
 
   // 1. Fetch current user data when the component loads
   useEffect(() => {
     const userEmail = localStorage.getItem("userEmail");
+    let userPhone = localStorage.getItem("userPhone"); // Get phone as well
+
+    if (userPhone && userPhone.startsWith("+91")) {
+      userPhone = userPhone.substring(3);
+    }
+
     if (userEmail) {
       axios.get(`http://localhost:5000/api/newconnection/${userEmail}`)
         .then(res => {
+          const fetchedData = res.data;
+          // Clean mobile number from fetched data too if it has +91 for the form
+          if (fetchedData.mobileNumber && fetchedData.mobileNumber.startsWith("+91")) {
+            fetchedData.mobileNumber = fetchedData.mobileNumber.substring(3);
+          }
           // Format the date before setting it in the form
           const formattedData = {
-            ...res.data,
-            dob: res.data.dob ? new Date(res.data.dob).toISOString().split('T')[0] : ''
+            ...fetchedData,
+            dob: fetchedData.dob ? new Date(fetchedData.dob).toISOString().split('T')[0] : ''
           };
           setFormData(formattedData); // Pre-fill the form with existing data
         })
@@ -32,52 +46,110 @@ function EditProfile() {
     }
   }, [navigate]);
 
-  // Handler for form input changes (can be the same as NewConnection)
+  // Handler for form input changes
   const handleChange = (e) => {
     let { name, value } = e.target;
-    // (Add any input restrictions like for pinCode or mobileNumber if needed)
+
+    if (name === "pinCode") {
+      value = value.replace(/\D/g, "");
+      if (value.length > 6) return;
+    }
+    if (name === "mobileNumber") {
+      value = value.replace(/\D/g, "");
+      if (value.length > 10) return;
+    }
+    if (name === "telephoneNumber") {
+      value = value.replace(/\D/g, "");
+      if (value.length > 11) return;
+    }
+    if (name === "email") {
+      value = value.toLowerCase();
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // 2. Handler for form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // (Add validation logic here if you want to re-validate on update)
-    
+    const newErrors = {};
+
+    // --- Validation Logic (can be the same as NewConnection, adapted for edit) ---
+    if (!formData.fatherName?.trim() && !formData.spouseName?.trim() && !formData.motherName?.trim()) {
+      newErrors.relative = "Fill the necessary field .";
+    }
+    if (!/^[6-9]\d{9}$/.test(formData.mobileNumber)) {
+      newErrors.mobileNumber = "Invalid Number.";
+    }
+    if (!/^\d{6}$/.test(formData.pinCode)) {
+      newErrors.pinCode = "Invalid pincode.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Invalid Email.";
+    }
+    if (formData.dob) {
+      const today = new Date();
+      const birthDate = new Date(formData.dob);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        newErrors.dob = "You must be at least 18 years old to apply.";
+      }
+    } else {
+      newErrors.dob = "Date of Birth is required.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSuccessMessage("");
+      return;
+    }
+
+    setErrors({}); // Clear previous errors
+
     const userEmail = localStorage.getItem("userEmail");
     if (!userEmail) return;
 
+    const dataToSend = {
+        ...formData,
+        mobileNumber: "+91" + formData.mobileNumber // Re-add +91 for backend
+    };
+
     try {
-      // 3. Send a PUT request to update the data
-      await axios.put(`http://localhost:5000/api/newconnection/${userEmail}`, formData);
+      // ✅ CHANGE THIS LINE TO USE THE NEW PROFILE UPDATE ENDPOINT
+      await axios.put(`http://localhost:5000/api/newconnection/${userEmail}/profile`, dataToSend);
       setSuccessMessage("Profile updated successfully!");
       setErrors({});
-      
+
       setTimeout(() => {
-        navigate("/profile"); // Go back to dashboard after update
+        navigate("/profile"); // Go back to profile page after update
       }, 2000);
 
     } catch (err) {
       console.error("Update Error:", err);
       setSuccessMessage("");
-      setErrors({ api: "Failed to update profile. Please try again." });
+      setErrors({ api: err.response?.data?.message || "Failed to update profile. Please try again." });
     }
   };
 
   return (
-    // The form is almost identical to NewConnection, but points to a different handler
     <form onSubmit={handleSubmit} className="kyc-form">
       <h2>Edit Your Profile</h2>
- <p className="subtitle">*Mandatory Fields</p>
-
-      {/* --- ✅ MESSAGES ARE REMOVED FROM HERE --- */}
+      <p className="subtitle">*Mandatory Fields</p>
 
       {/* Personal Details */}
       <fieldset>
         <legend>1) Personal Details</legend>
         <div className="form-group">
           <label>Salutation*</label>
-    
+          {/* ✅ ADD SELECT FOR SALUTATION */}
+          <select name="salutation" value={formData.salutation || ''} onChange={handleChange} required>
+            <option value="">--Select--</option>
+            {salutations.map((s) => (<option key={s} value={s}>{s}</option>))}
+          </select>
         </div>
         <div className="grid-3">
           <div className="form-group"><label>First Name*</label><input type="text" name="firstName" value={formData.firstName || ''} onChange={handleChange} required /></div>
@@ -127,18 +199,18 @@ function EditProfile() {
         <div className="grid-2">
           <div className="form-group">
             <label>Mobile Number*</label>
-            <input type="tel" name="mobileNumber" value={formData.mobileNumber || ''} onChange={handleChange} required />
+            <input type="tel" name="mobileNumber" value={formData.mobileNumber || ''} onChange={handleChange} required readOnly /> {/* Make mobile and email readOnly for security/consistency */}
             {errors.mobileNumber && <p className="error">{errors.mobileNumber}</p>}
           </div>
            <div className="form-group">
             <label>Email*</label>
-            <input type="email" name="email" value={formData.email || ''} onChange={handleChange} required />
+            <input type="email" name="email" value={formData.email || ''} onChange={handleChange} required readOnly />
             {errors.email && <p className="error">{errors.email}</p>}
-          </div> 
+          </div>
         </div>
-        
+
       </fieldset>
-     
+
 
       <div className="submit-container">
         <button type="submit">Update Profile</button>

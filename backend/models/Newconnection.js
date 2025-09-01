@@ -1,44 +1,4 @@
-
-// const mongoose = require("mongoose");
-
-// const kycSchema = new mongoose.Schema({
-//   salutation: String,
-//   firstName: String,
-//   middleName: String,
-//   lastName: String,
-//   dob: String,
-//   fatherName: String,
-//   spouseName: String,
-//   motherName: String,
-//   houseName: String,
-//   floorNo: String,
-//   housingComplex: String,
-//   streetName: String,
-//   landmark: String,
-//   city: String,
-//   state: String,
-//   district: String,
-//   pinCode: String,
-//   // ✅ Ensures each mobile number is unique
-//   mobileNumber: { type: String, unique: true, required: true }, 
-//   telephoneNumber: String,
-//   // ✅ Ensures each email is unique
-//   email: { type: String, unique: true, required: true },
-//   // ✅ New field to track application status
-//   status: { type: String, default: 'pending_payment' }, 
-//   dateOfPayment: String,
-//   amountDue: Number,
-// });
-
-// module.exports = mongoose.model("KYC", kycSchema);
-
-
-
-
-
-
-
-// Example of how your models/Newconnection.js should look (add 'status' field)
+// models/Newconnection.js
 const mongoose = require('mongoose');
 
 const kycSchema = new mongoose.Schema({
@@ -59,16 +19,19 @@ const kycSchema = new mongoose.Schema({
   state: { type: String, required: true },
   district: { type: String, required: true },
   pinCode: { type: String, required: true, match: /^\d{6}$/ },
-  mobileNumber: { type: String, required: true, unique: true, match: /^[6-9]\d{9}$/ },
+  // ✅ MODIFIED: Mobile number regex should expect the full +91XXXXXXXXXX format
+  mobileNumber: { type: String, required: true, unique: true, match: /^\+91[6-9]\d{9}$/,
+    message: "Invalid Indian mobile number format (must be +91 followed by 10 digits starting with 6-9)."
+  },
   telephoneNumber: String,
   email: { type: String, required: true, unique: true, lowercase: true, match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
   
-  // ✅ NEW STATUS FIELD
   status: { 
     type: String, 
-    enum: ['pending_approval', 'approved', 'rejected', 'active'], // 'active' for after payment
+    enum: ['pending_approval', 'approved', 'rejected', 'active'],
     default: 'pending_approval' 
   },
-}, { timestamps: true }); // timestamps will add createdAt and updatedAt fields automatically
+}, { timestamps: true });
 
-module.exports = mongoose.model('KYC', kycSchema);
+// It's good practice to name your model singular
+module.exports = mongoose.model('KYC', kycSchema); // or 'NewConnection'
