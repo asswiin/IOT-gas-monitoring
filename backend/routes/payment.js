@@ -16,7 +16,7 @@ res.status(200).json({ message: "✅ Payment saved successfully!" });
 
 router.get("/", async (req, res) => {
   try {
-    const allPayments = await Payment.find({}); // Fetch all payment records
+    const allPayments = await Payment.find({ status: 'completed' }); // Only fetch completed
     res.json(allPayments);
   } catch (err) {
     console.error("❌ Error fetching all payments:", err);
