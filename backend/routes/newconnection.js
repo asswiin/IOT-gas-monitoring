@@ -13,6 +13,18 @@ router.get("/requests/pending", async (req, res) => {
   }
 });
 
+// ✅ NEW: GET all users/KYC records for admin 'Users' section
+router.get("/", async (req, res) => { // This will now handle requests to /api/newconnection
+  try {
+    const allUsers = await KYC.find({}); // Fetch all KYC records
+    res.json(allUsers);
+  } catch (err) {
+    console.error("❌ Error fetching all users:", err);
+    res.status(500).json({ message: "Server error while fetching all user data" });
+  }
+});
+
+
 // GET existing KYC data by email
 router.get("/:email", async (req, res) => {
   try {

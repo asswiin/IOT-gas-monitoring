@@ -327,3 +327,64 @@
   color: #2980b9;
   text-decoration: underline;
 }
+
+/* Existing styles for requests list/item and detail card */
+.requests-list, .users-list, .payments-list {
+  display: grid;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.request-item, .user-item, .payment-item {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.request-item:hover, .user-item:hover, .payment-item:hover {
+  background-color: #e0f7fa; /* Light blue hover */
+}
+
+.request-item h4, .user-item h4, .payment-item h4 {
+  margin-top: 0;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.request-item p, .user-item p, .payment-item p {
+  margin-bottom: 3px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.request-detail-card, .user-detail-card, .payment-detail-card {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #ddd;
+  margin-top: 20px;
+}
+
+.request-detail-card .back-btn,
+.user-detail-card .back-btn,
+.payment-detail-card .back-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.request-detail-card .back-btn:hover,
+.user-detail-card .back-btn:hover,
+.payment-detail-card .back-btn:hover {
+    background-color: #0056b3;
+}

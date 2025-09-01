@@ -14,5 +14,15 @@ res.status(200).json({ message: "✅ Payment saved successfully!" });
   }
 });
 
+router.get("/", async (req, res) => {
+  try {
+    const allPayments = await Payment.find({}); // Fetch all payment records
+    res.json(allPayments);
+  } catch (err) {
+    console.error("❌ Error fetching all payments:", err);
+    res.status(500).json({ message: "Server error while fetching all payment data" });
+  }
+});
+
 module.exports = router;
 

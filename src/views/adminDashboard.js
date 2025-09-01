@@ -1,5 +1,3 @@
-// --- START OF FILE AdminDashboard.js ---
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/adminDashboard.css"; // Ensure your CSS is correctly linked
@@ -58,37 +56,125 @@ function RequestDetail({ request, onApprove, onReject, onBack }) {
   );
 }
 
+// ✅ NEW: UserDetail component
+function UserDetail({ user, onBack }) {
+  if (!user) return null;
+
+  return (
+    <div className="user-detail-card card">
+      <button onClick={onBack} className="back-btn">← Back to Users List</button>
+      <h3>User Details</h3>
+      <div className="detail-section">
+        <h4>Personal Information</h4>
+        <p><strong>Full Name:</strong> {user.firstName} {user.middleName} {user.lastName}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>Mobile:</strong> {user.mobileNumber}</p>
+        <p><strong>Date of Birth:</strong> {new Date(user.dob).toLocaleDateString()}</p>
+        <p><strong>Status:</strong> <span className={`status ${user.status}`}>{user.status.replace(/_/g, ' ')}</span></p>
+      </div>
+      <div className="detail-section">
+        <h4>Address</h4>
+        <p><strong>Address:</strong> {user.houseName}, {user.streetName}, {user.landmark}, {user.city}, {user.district}, {user.state} - {user.pinCode}</p>
+      </div>
+      <p><strong>Joined On:</strong> {new Date(user.createdAt).toLocaleDateString()} at {new Date(user.createdAt).toLocaleTimeString()}</p>
+      {user.updatedAt && <p><strong>Last Updated:</strong> {new Date(user.updatedAt).toLocaleDateString()} at {new Date(user.updatedAt).toLocaleTimeString()}</p>}
+    </div>
+  );
+}
+
+// ✅ NEW: PaymentDetail component
+function PaymentDetail({ payment, onBack }) {
+  if (!payment) return null;
+
+  return (
+    <div className="payment-detail-card card">
+      <button onClick={onBack} className="back-btn">← Back to Payments List</button>
+      <h3>Payment Details</h3>
+      <div className="detail-section">
+        <p><strong>Customer Name:</strong> {payment.customerName}</p>
+        <p><strong>Email:</strong> {payment.email}</p>
+        <p><strong>Mobile Number:</strong> {payment.mobileNumber}</p>
+        <p><strong>Amount Paid:</strong> ₹{payment.amountDue}</p>
+        <p><strong>Date of Payment:</strong> {new Date(payment.dateOfPayment).toLocaleDateString()}</p>
+        <p><strong>Payment ID:</strong> {payment._id}</p>
+      </div>
+      <p><strong>Recorded On:</strong> {new Date(payment.createdAt).toLocaleDateString()} at {new Date(payment.createdAt).toLocaleTimeString()}</p>
+    </div>
+  );
+}
+
 
 export default function Dashboard() {
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [allUsers, setAllUsers] = useState([]); // ✅ NEW state for all users
+  const [allPayments, setAllPayments] = useState([]); // ✅ NEW state for all payments
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null); // ✅ NEW state for selected user
+  const [selectedPayment, setSelectedPayment] = useState(null); // ✅ NEW state for selected payment
+
 
   // NEW STATE: Controls which main content section is active
   const [activeSection, setActiveSection] = useState('dashboard-summary'); // Default view
 
   useEffect(() => {
-    // Only fetch requests if we are in a section that requires them
-    if (activeSection === 'requests-list' || activeSection === 'dashboard-summary') {
-      fetchPendingRequests();
-    }
+    setLoading(true);
+    setError(null); // Clear previous errors
+
+    const fetchData = async () => {
+      try {
+        if (activeSection === 'requests-list' || activeSection === 'dashboard-summary') {
+          await fetchPendingRequests();
+        } else if (activeSection === 'users') {
+          await fetchAllUsers();
+        } else if (activeSection === 'payments') {
+          await fetchAllPayments();
+        }
+      } catch (err) {
+        console.error("Error in useEffect fetchData:", err);
+        setError("Failed to load data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [activeSection]); // Fetch when activeSection changes
 
   const fetchPendingRequests = async () => {
     try {
-      setLoading(true);
       const response = await axios.get("http://localhost:5000/api/newconnection/requests/pending");
       setPendingRequests(response.data);
-      setLoading(false);
-      // Do NOT clear selectedRequest here if we're currently in a detail view,
-      // only clear it if we're explicitly returning to the list or dashboard summary.
     } catch (err) {
       console.error("Error fetching pending requests:", err);
       setError("Failed to load pending requests.");
-      setLoading(false);
     }
   };
+
+  // ✅ NEW: Function to fetch all users
+  const fetchAllUsers = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/newconnection"); // Using the new root GET endpoint
+      setAllUsers(response.data);
+    } catch (err) {
+      console.error("Error fetching all users:", err);
+      setError("Failed to load user data.");
+    }
+  };
+
+  // ✅ NEW: Function to fetch all payments
+  const fetchAllPayments = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/payment"); // Using the new root GET endpoint
+      setAllPayments(response.data);
+    } catch (err) {
+      console.error("Error fetching all payments:", err);
+      setError("Failed to load payment data.");
+    }
+  };
+
 
   const handleApprove = async (kycId, userEmail) => {
     try {
@@ -125,21 +211,50 @@ export default function Dashboard() {
   };
 
   // Handler for clicking a request in the list to view details
-  const handleViewDetails = (request) => {
+  const handleViewRequestDetails = (request) => {
     setSelectedRequest(request);
     setActiveSection('request-detail'); // Change active section to detail view
   };
 
-  // Handler to go back to the list from the detail view
-  const handleBackToList = () => {
+  // Handler to go back to the requests list from the detail view
+  const handleBackToRequestsList = () => {
     setSelectedRequest(null); // Clear selected request
     setActiveSection('requests-list'); // Go back to the requests list
     fetchPendingRequests(); // Refresh the list in case something changed while in detail view
   };
 
+  // ✅ NEW: Handler for clicking a user in the list to view details
+  const handleViewUserDetails = (user) => {
+    setSelectedUser(user);
+    setActiveSection('user-detail'); // Change active section to user detail view
+  };
+
+  // ✅ NEW: Handler to go back to the users list from the detail view
+  const handleBackToUsersList = () => {
+    setSelectedUser(null);
+    setActiveSection('users');
+    fetchAllUsers(); // Refresh list
+  };
+
+  // ✅ NEW: Handler for clicking a payment in the list to view details
+  const handleViewPaymentDetails = (payment) => {
+    setSelectedPayment(payment);
+    setActiveSection('payment-detail'); // Change active section to payment detail view
+  };
+
+  // ✅ NEW: Handler to go back to the payments list from the detail view
+  const handleBackToPaymentsList = () => {
+    setSelectedPayment(null);
+    setActiveSection('payments');
+    fetchAllPayments(); // Refresh list
+  };
+
+
   // Handler for sidebar navigation
   const handleSidebarNav = (section) => {
     setSelectedRequest(null); // Always clear selected request when navigating sidebar
+    setSelectedUser(null); // ✅ Clear selected user
+    setSelectedPayment(null); // ✅ Clear selected payment
     setActiveSection(section);
   };
 
@@ -157,7 +272,7 @@ export default function Dashboard() {
               Dashboard
             </li>
             <li
-              className={activeSection === 'users' ? 'active' : ''}
+              className={activeSection === 'users' || activeSection === 'user-detail' ? 'active' : ''}
               onClick={() => handleSidebarNav('users')}
             >
               Users
@@ -169,7 +284,7 @@ export default function Dashboard() {
               Requests {pendingRequests.length > 0 && <span className="pending-count">({pendingRequests.length})</span>}
             </li>
             <li
-              className={activeSection === 'payments' ? 'active' : ''}
+              className={activeSection === 'payments' || activeSection === 'payment-detail' ? 'active' : ''}
               onClick={() => handleSidebarNav('payments')}
             >
               Payments
@@ -208,13 +323,16 @@ export default function Dashboard() {
               {/* Stats */}
               <div className="card-grid">
                 <Card title="Total Users">
-                  <p>...</p>
+                  <p>{loading ? '...' : allUsers.length}</p> {/* Use actual count */}
                 </Card>
                 <Card title="Active Connections">
-                  <p>...</p>
+                  <p>{loading ? '...' : allUsers.filter(u => u.status === 'active').length}</p>
                 </Card>
                 <Card title="Pending Requests">
-                  <p>{pendingRequests.length}</p>
+                  <p>{loading ? '...' : pendingRequests.length}</p>
+                </Card>
+                 <Card title="Total Payments">
+                  <p>{loading ? '...' : allPayments.length}</p>
                 </Card>
               </div>
 
@@ -230,6 +348,7 @@ export default function Dashboard() {
             </>
           )}
 
+          {/* Requests List View */}
           {activeSection === 'requests-list' && (
             <>
               <h2 className="section-title">Pending Connection Requests</h2>
@@ -243,7 +362,7 @@ export default function Dashboard() {
                     <div
                       key={request._id}
                       className="request-item card clickable"
-                      onClick={() => handleViewDetails(request)}
+                      onClick={() => handleViewRequestDetails(request)}
                     >
                       <h4>{request.firstName} {request.lastName} ({request.email})</h4>
                       <p><strong>Mobile:</strong> {request.mobileNumber}</p>
@@ -257,18 +376,82 @@ export default function Dashboard() {
             </>
           )}
 
+          {/* Request Detail View */}
           {activeSection === 'request-detail' && selectedRequest && (
             <RequestDetail
               request={selectedRequest}
               onApprove={handleApprove}
               onReject={handleReject}
-              onBack={handleBackToList}
+              onBack={handleBackToRequestsList}
             />
           )}
 
+          {/* ✅ NEW: Users List View */}
+          {activeSection === 'users' && (
+            <>
+              <h2 className="section-title">All Users</h2>
+              {loading && <p>Loading users...</p>}
+              {error && <p className="error-message">{error}</p>}
+              {!loading && allUsers.length === 0 && <p>No users found.</p>}
+
+              {!loading && allUsers.length > 0 && (
+                <div className="users-list">
+                  {allUsers.map((user) => (
+                    <div
+                      key={user._id}
+                      className="user-item card clickable"
+                      onClick={() => handleViewUserDetails(user)}
+                    >
+                      <h4>{user.firstName} {user.lastName} ({user.email})</h4>
+                      <p><strong>Mobile:</strong> {user.mobileNumber}</p>
+                      <p><strong>Status:</strong> <span className={`status ${user.status}`}>{user.status.replace(/_/g, ' ')}</span></p>
+                      <p><em>Click to view full profile</em></p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ✅ NEW: User Detail View */}
+          {activeSection === 'user-detail' && selectedUser && (
+            <UserDetail user={selectedUser} onBack={handleBackToUsersList} />
+          )}
+
+          {/* ✅ NEW: Payments List View */}
+          {activeSection === 'payments' && (
+            <>
+              <h2 className="section-title">All Payments</h2>
+              {loading && <p>Loading payments...</p>}
+              {error && <p className="error-message">{error}</p>}
+              {!loading && allPayments.length === 0 && <p>No payment records found.</p>}
+
+              {!loading && allPayments.length > 0 && (
+                <div className="payments-list">
+                  {allPayments.map((payment) => (
+                    <div
+                      key={payment._id}
+                      className="payment-item card clickable"
+                      onClick={() => handleViewPaymentDetails(payment)}
+                    >
+                      <h4>{payment.customerName} ({payment.email})</h4>
+                      <p><strong>Amount:</strong> ₹{payment.amountDue}</p>
+                      <p><strong>Date:</strong> {new Date(payment.dateOfPayment).toLocaleDateString()}</p>
+                      <p><em>Click to view full details</em></p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ✅ NEW: Payment Detail View */}
+          {activeSection === 'payment-detail' && selectedPayment && (
+            <PaymentDetail payment={selectedPayment} onBack={handleBackToPaymentsList} />
+          )}
+
+
           {/* Placeholders for other sections if needed */}
-          {activeSection === 'users' && <h2 className="section-title">Users Management (Coming Soon)</h2>}
-          {activeSection === 'payments' && <h2 className="section-title">Payments Overview (Coming Soon)</h2>}
           {activeSection === 'reports' && <h2 className="section-title">Reports (Coming Soon)</h2>}
           {activeSection === 'settings' && <h2 className="section-title">Settings (Coming Soon)</h2>}
 
