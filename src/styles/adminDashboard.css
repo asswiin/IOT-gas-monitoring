@@ -444,6 +444,49 @@
   transform: translateY(-2px);
 }
 
+/* Notification Popup Styles */
+.popup-content.notification {
+  max-width: 400px;
+  padding: 25px;
+  text-align: center;
+}
+
+.popup-content.notification.success {
+  border-top: 5px solid #2ecc71;
+}
+
+.popup-content.notification.error {
+  border-top: 5px solid #e74c3c;
+}
+
+.popup-content.notification h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.4em;
+  margin-bottom: 15px;
+}
+
+.popup-content.notification p {
+  color: #444;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.popup-ok {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s ease;
+}
+
+.popup-ok:hover {
+  background-color: #2980b9;
+}
+
 @keyframes fadeInScale {
   from {
     opacity: 0;
