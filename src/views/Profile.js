@@ -8,6 +8,7 @@ const Profile = () => {
   const [showFullDetails, setShowFullDetails] = useState(false);
   const [error, setError] = useState('');
   const [showSignOutPopup, setShowSignOutPopup] = useState(false);
+  const [showDeactivatePopup, setShowDeactivatePopup] = useState(false); // ✅ Completed useState declaration
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,6 +42,28 @@ const Profile = () => {
     setShowSignOutPopup(false);
   };
 
+  // ✅ NEW: Handle Deactivate Account Logic
+  const handleDeactivateAccountConfirm = async () => {
+    try {
+      if (!profileData || !profileData.email) {
+        setError("User email not found for deactivation.");
+        return;
+      }
+      await axios.put(`http://localhost:5000/api/newconnection/${profileData.email}/deactivate`);
+      localStorage.clear(); // Clear session data
+      navigate("/login", { replace: true }); // Redirect to login
+    } catch (error) {
+      console.error("Failed to deactivate account:", error);
+      setError("Failed to deactivate account. Please try again.");
+    } finally {
+      setShowDeactivatePopup(false); // Close popup regardless of success/failure
+    }
+  };
+
+  const handleDeactivateAccountCancel = () => {
+    setShowDeactivatePopup(false);
+  };
+
   // Show a loading or error message while data is being fetched
   if (error) {
     return <div className="profile-container"><p className="error">{error}</p></div>;
@@ -56,7 +79,7 @@ const Profile = () => {
     firstName,
     middleName,
     lastName,
-    email,
+    email, 
     mobileNumber,
     dob,
     fatherName,
@@ -99,6 +122,7 @@ const Profile = () => {
           <h3>{fullName}</h3>
           <p><strong>Email:</strong> {email}</p>
           <p><strong>Phone:</strong> {mobileNumber}</p>
+          <p><strong>Status:</strong> <span className={`status ${profileData.status}`}>{profileData.status.replace(/_/g, ' ')}</span></p> {/* ✅ Show status */}
         </div>
 
         <button onClick={() => setShowFullDetails(!showFullDetails)} className="view-more-btn">
@@ -124,19 +148,39 @@ const Profile = () => {
             </div>
           </div>
         )}
-
+ 
         {/* --- ACTION BUTTONS --- */}
         <div className="profile-actions">
           <button onClick={() => navigate('/editprofile')} className="action-btn edit-btn">
             Edit Profile
           </button>
+          {/* ✅ NEW: Deactivate Account Button */}
+          {profileData.status !== 'deactivated' && ( // Only show if not already deactivated
+            <button onClick={() => setShowDeactivatePopup(true)} className="action-btn deactivate-btn">
+              Deactivate Account
+            </button>
+          )}
           <button onClick={handleSignOutClick} className="action-btn signout-btn">
             Sign Out
           </button>
         </div>
       </div>
 
-      {/* Sign Out Confirmation Popup */}
+      {/* ✅ NEW: Deactivate Confirmation Popup */}
+      {showDeactivatePopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h3>Deactivate Account</h3>
+            <p>Are you sure you want to deactivate your account? Your connection will be marked as 'deactivated' and you will be logged out. You can reactivate by contacting support.</p>
+            <div className="popup-buttons">
+              <button onClick={handleDeactivateAccountConfirm} className="confirm-yes">Yes, Deactivate</button>
+              <button onClick={handleDeactivateAccountCancel} className="confirm-no">No, Keep Active</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sign Out Confirmation Popup (from original code) */}
       {showSignOutPopup && (
         <div className="popup-overlay">
           <div className="popup-content">

@@ -4,10 +4,9 @@ const express = require("express");
 const router = express.Router();
 const Payment = require("../models/Payment");
 
-// POST new KYC form
+// POST new Payment
 router.post("/", async (req, res) => {
   try {
-    // ✅ Add a default status for the payment when it's saved
     const newForm = new Payment({ ...req.body, status: 'completed' }); 
     await newForm.save();
     res.status(200).json({ message: "✅ Payment saved successfully!" });
@@ -17,11 +16,9 @@ router.post("/", async (req, res) => {
   }
 });
 
+// GET all Payments
 router.get("/", async (req, res) => {
   try {
-    // ✅ Remove the status filter here, as we want to see all recorded payments
-    // We're now setting the status on creation. If you want to filter later,
-    // you can re-add it or add more specific GET endpoints.
     const allPayments = await Payment.find({}); 
     res.json(allPayments);
   } catch (err) {
@@ -30,10 +27,20 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ✅ NEW: DELETE Payment records by KYC ID
+router.delete("/kyc/:kycId", async (req, res) => {
+  try {
+    const kycId = req.params.kycId;
+    const result = await Payment.deleteMany({ kycId: kycId }); // Delete all payments associated with this KYC ID
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "No payment records found for this KYC ID." });
+    }
+    res.json({ message: `Successfully deleted ${result.deletedCount} payment records for KYC ID: ${kycId}` });
+  } catch (err) {
+    console.error("❌ Error deleting payment records:", err);
+    res.status(500).json({ message: "Server error while deleting payment records" });
+  }
+});
+
 module.exports = router;
-
-
-
-
-
-

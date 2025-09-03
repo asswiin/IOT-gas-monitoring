@@ -1,3 +1,4 @@
+
 // models/Newconnection.js
 const mongoose = require('mongoose');
 
@@ -19,8 +20,11 @@ const kycSchema = new mongoose.Schema({
   state: { type: String, required: true },
   district: { type: String, required: true },
   pinCode: { type: String, required: true, match: /^\d{6}$/ },
-  // ✅ MODIFIED: Mobile number regex should expect the full +91XXXXXXXXXX format
-  mobileNumber: { type: String, required: true, unique: true, match: /^\+91[6-9]\d{9}$/,
+  mobileNumber: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    match: /^\+91[6-9]\d{9}$/,
     message: "Invalid Indian mobile number format (must be +91 followed by 10 digits starting with 6-9)."
   },
   telephoneNumber: String,
@@ -28,10 +32,9 @@ const kycSchema = new mongoose.Schema({
   
   status: { 
     type: String, 
-    enum: ['pending_approval', 'approved', 'rejected', 'active'],
+    enum: ['pending_approval', 'approved', 'rejected', 'active', 'deactivated'], // ✅ ADDED 'deactivated'
     default: 'pending_approval' 
   },
 }, { timestamps: true });
 
-// It's good practice to name your model singular
-module.exports = mongoose.model('KYC', kycSchema); // or 'NewConnection'
+module.exports = mongoose.model('KYC', kycSchema);

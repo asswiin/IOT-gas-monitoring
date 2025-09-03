@@ -1,8 +1,10 @@
+
 const express = require("express");
 const router = express.Router();
-const KYC = require("../models/Newconnection"); // Assuming this is your Mongoose model
+const KYC = require("../models/Newconnection");
+const Payment = require("../models/Payment"); // ✅ Import Payment model for cascade deletion
 
-// ✅ NEW: GET all pending approval requests for admin
+// GET all pending approval requests for admin
 router.get("/requests/pending", async (req, res) => {
   try {
     const pendingRequests = await KYC.find({ status: 'pending_approval' });
@@ -13,17 +15,16 @@ router.get("/requests/pending", async (req, res) => {
   }
 });
 
-// ✅ NEW: GET all users/KYC records for admin 'Users' section
-router.get("/", async (req, res) => { // This will now handle requests to /api/newconnection
+// GET all users/KYC records for admin 'Users' section
+router.get("/", async (req, res) => {
   try {
-    const allUsers = await KYC.find({}); // Fetch all KYC records
+    const allUsers = await KYC.find({});
     res.json(allUsers);
   } catch (err) {
     console.error("❌ Error fetching all users:", err);
     res.status(500).json({ message: "Server error while fetching all user data" });
   }
 });
-
 
 // GET existing KYC data by email
 router.get("/:email", async (req, res) => {
@@ -34,11 +35,12 @@ router.get("/:email", async (req, res) => {
     }
     return res.status(404).json({ message: "No KYC data found." });
   } catch (err) {
+    console.error("Server error fetching KYC data:", err);
     res.status(500).json({ message: "Server error while fetching KYC data" });
   }
 });
 
-// POST new KYC form (with improved duplicate check and status)
+// POST new KYC form
 router.post("/", async (req, res) => {
   try {
     const { email, mobileNumber } = req.body;
@@ -46,14 +48,9 @@ router.post("/", async (req, res) => {
     const existingConnection = await KYC.findOne({ $or: [{ email }, { mobileNumber }] });
 
     if (existingConnection) {
-      // If a connection exists, check its status.
-      // If it's already approved, or pending, prevent new creation but allow updates.
-      // For now, if found, tell the user to check their status or update.
       return res.status(409).json({ message: "A connection with this email or mobile number already exists. Please check its status or update your existing application." });
     }
 
-    // If no existing connection, create a new one
-    // ✅ Ensure status is set from req.body (or default to 'pending_approval')
     const newForm = new KYC(req.body);
     await newForm.save();
     res.status(201).json({ message: "KYC Form saved successfully!", kycData: newForm });
@@ -64,6 +61,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT to update KYC status after payment (or admin approval/rejection)
+// ✅ MODIFIED: Handle 'rejected' status the same way 'delete' would for consistency
 router.put("/:email/status", async (req, res) => {
     try {
       const { status } = req.body;
@@ -74,7 +72,9 @@ router.put("/:email/status", async (req, res) => {
         if (!deletedKYC) {
           return res.status(404).json({ message: "KYC record not found for rejection." });
         }
-        return res.json({ message: "KYC request rejected and data removed.", status: 'rejected' });
+        // ✅ Cascade delete associated payments
+        await Payment.deleteMany({ kycId: deletedKYC._id }); 
+        return res.json({ message: "KYC request rejected, user and associated data removed.", status: 'rejected' });
       } else {
         const updatedKYC = await KYC.findOneAndUpdate(
           { email: userEmail },
@@ -97,10 +97,7 @@ router.put("/:email/status", async (req, res) => {
 router.put("/:email", async (req, res) => {
   try {
     const userEmail = req.params.email;
-    // For general application updates, it's reasonable to send it back for review.
-    // However, for an already approved user, this route generally shouldn't be called for minor edits.
-    // The `EditProfile.js` component will now use the new `/profile` route.
-    const updatedData = { ...req.body, status: 'pending_approval' }; // Keep this for application re-submission context
+    const updatedData = { ...req.body, status: 'pending_approval' };
 
     const updatedUser = await KYC.findOneAndUpdate(
       { email: userEmail },
@@ -119,24 +116,20 @@ router.put("/:email", async (req, res) => {
   }
 });
 
-// ✅ NEW ROUTE: For logged-in users to update their profile *without* changing status
+// For logged-in users to update their profile *without* changing status
 router.put("/:email/profile", async (req, res) => {
   try {
     const userEmail = req.params.email;
-    // Destructure req.body to exclude 'status' or only include allowed fields
-    const { status, ...updateFields } = req.body; // Prevent status from being updated through this route
+    const { status, ...updateFields } = req.body;
 
-    // Find the current user to get their existing status
     const existingUser = await KYC.findOne({ email: userEmail });
     if (!existingUser) {
       return res.status(404).json({ message: "User profile not found for update." });
     }
 
-    // Only update allowed fields, and do NOT touch the status field.
-    // You might want to explicitly list fields that can be updated for security.
     const updatedUser = await KYC.findOneAndUpdate(
       { email: userEmail },
-      { $set: updateFields }, // Only set the fields from updateFields
+      { $set: updateFields },
       { new: true, runValidators: true }
     );
 
@@ -148,6 +141,54 @@ router.put("/:email/profile", async (req, res) => {
   } catch (err) {
     console.error("❌ Profile Update Error:", err);
     res.status(500).json({ message: "Error updating profile." });
+  }
+});
+
+// ✅ NEW ROUTE: Deactivate user account (sets status to 'deactivated')
+router.put("/:email/deactivate", async (req, res) => {
+  try {
+    const userEmail = req.params.email;
+    const updatedKYC = await KYC.findOneAndUpdate(
+      { email: userEmail },
+      { $set: { status: 'deactivated' } },
+      { new: true }
+    );
+
+    if (!updatedKYC) {
+      return res.status(404).json({ message: "User not found for deactivation." });
+    }
+    res.json({ message: "Account deactivated successfully!", kycData: updatedKYC });
+  } catch (err) {
+    console.error("❌ Deactivation Error:", err);
+    res.status(500).json({ message: "Error deactivating account." });
+  }
+});
+
+// ✅ NEW ROUTE: Admin-specific DELETE user and their payments
+// This route is distinct from setting status to 'rejected' for pending requests.
+// This is for deleting an *existing* user (approved, active, or deactivated).
+router.delete("/:email", async (req, res) => {
+  try {
+    const userEmail = req.params.email;
+
+    // 1. Find the KYC record to get its _id
+    const userToDelete = await KYC.findOne({ email: userEmail });
+    if (!userToDelete) {
+      return res.status(404).json({ message: "User not found for deletion." });
+    }
+
+    const kycId = userToDelete._id;
+
+    // 2. Delete associated payment records
+    await Payment.deleteMany({ kycId: kycId });
+
+    // 3. Delete the KYC record
+    await KYC.deleteOne({ email: userEmail });
+
+    res.json({ message: "User and all associated data deleted successfully!" });
+  } catch (err) {
+    console.error("❌ Admin Delete User Error:", err);
+    res.status(500).json({ message: "Server error while deleting user and associated data." });
   }
 });
 
