@@ -243,3 +243,116 @@
   box-shadow: 0 8px 20px rgba(0, 123, 255, 0.15);
   /* light blue glow */
 }
+/* Existing styles in userDashboard.css */
+
+.gas-level-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.gas-indicator {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.gas-level-percentage {
+  font-size: 3em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.gas-bar-container {
+  width: 150px; /* Adjust as needed */
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 10px auto;
+  border: 1px solid #ccc;
+}
+
+.gas-bar {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
+}
+
+.gas-level-box .leak-alert {
+  color: #ff0000;
+  font-weight: bold;
+  margin-top: 10px;
+  animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.alert-box.danger {
+    background-color: #ffe0e0; /* Light red */
+    border-left: 5px solid #ff0000; /* Red border */
+}
+
+.alert-box.warning {
+    background-color: #fffacd; /* Lemon Chiffon */
+    border-left: 5px solid #ffcc00; /* Amber border */
+}
+
+.alert-box.success {
+    background-color: #e6ffe6; /* Light green */
+    border-left: 5px solid #00cc00; /* Green border */
+}
+
+
+
+
+
+
+
+
+
+
+/* ... existing styles */
+
+.booking-notification {
+    background-color: #e0f7fa; /* Light blue for booking */
+    border-left: 5px solid #00bcd4;
+}
+
+.booking-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.booking-actions button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.pay-now-btn {
+    background-color: #28a745; /* Green */
+    color: white;
+}
+
+.pay-now-btn:hover {
+    background-color: #218838;
+}
+
+.cancel-booking-btn {
+    background-color: #ffc107; /* Yellow */
+    color: #333;
+}
+
+.cancel-booking-btn:hover {
+    background-color: #e0a800;
+}

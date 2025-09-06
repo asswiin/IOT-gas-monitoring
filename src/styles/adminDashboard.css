@@ -487,6 +487,42 @@
   background-color: #2980b9;
 }
 
+.coming-soon {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+.report-btn,
+.settings-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.report-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.report-btn:hover {
+  background-color: #2980b9;
+}
+
+.settings-btn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.settings-btn:hover {
+  background-color: #27ae60;
+}
+
 @keyframes fadeInScale {
   from {
     opacity: 0;

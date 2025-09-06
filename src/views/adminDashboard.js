@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/adminDashboard.css";
@@ -349,11 +348,19 @@ export default function Dashboard() {
             >
               Payments
             </li>
+           
             <li
               className={activeSection === 'reports' ? 'active' : ''}
               onClick={() => handleSidebarNav('reports')}
             >
               Reports
+            </li>
+            
+             <li
+              className={activeSection === 'feedback' ? 'active' : ''}
+              onClick={() => handleSidebarNav('feedback')}
+            >
+              Feedback
             </li>
             <li
               className={activeSection === 'settings' ? 'active' : ''}
@@ -503,14 +510,50 @@ export default function Dashboard() {
     </>
   )}
 
-          {activeSection === 'payment-detail' && selectedPayment && (
-            <PaymentDetail payment={selectedPayment} onBack={handleBackToPaymentsList} />
+          {activeSection === 'feedback' && (
+            <>
+              <h2 className="section-title">User Feedback</h2>
+              <div className="card-grid">
+                <Card title="Total Feedback">
+                  <p>{loading ? '...' : '0'}</p>
+                </Card>
+                <Card title="New Feedback">
+                  <p>{loading ? '...' : '0'}</p>
+                </Card>
+              </div>
+              <p className="coming-soon">Feedback management features coming soon</p>
+            </>
           )}
 
+          {activeSection === 'reports' && (
+            <>
+              <h2 className="section-title">Reports</h2>
+              <div className="card-grid">
+                <Card title="Monthly Report">
+                  <button className="report-btn">Generate Report</button>
+                </Card>
+                <Card title="User Analytics">
+                  <button className="report-btn">View Analytics</button>
+                </Card>
+              </div>
+              <p className="coming-soon">Advanced reporting features coming soon</p>
+            </>
+          )}
 
-          {activeSection === 'reports' && <h2 className="section-title">Reports (Coming Soon)</h2>}
-          {activeSection === 'settings' && <h2 className="section-title">Settings (Coming Soon)</h2>}
-
+          {activeSection === 'settings' && (
+            <>
+              <h2 className="section-title">System Settings</h2>
+              <div className="card-grid">
+                <Card title="Account Settings">
+                  <button className="settings-btn">Manage Account</button>
+                </Card>
+                <Card title="System Preferences">
+                  <button className="settings-btn">Configure</button>
+                </Card>
+              </div>
+              <p className="coming-soon">Additional settings coming soon</p>
+            </>
+          )}
         </div>
       </main>
 
