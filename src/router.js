@@ -11,7 +11,6 @@ import PaymentPage from './views/Payment';
 import EditProfile from './views/EditProfile';
 import Profile from './views/Profile';
 import ProcessingPage from './views/ProcessingPage';
-import SimulationControl from './views/Simulation'; // Adjusted import to match the component name
 
 function AppRoutes() {
   return (
@@ -28,7 +27,6 @@ function AppRoutes() {
         <Route path="/editprofile" element={<EditProfile />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/processing" element={<ProcessingPage />} />
-        <Route path="/simulation" element={<SimulationControl />} />
       </Route>
     </Routes>
   );
