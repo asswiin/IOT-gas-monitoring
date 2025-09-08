@@ -385,13 +385,17 @@ const UserDashboard = () => {
                <p>Immediate Action: Gas Leak Detected! Please ventilate and contact emergency services.</p>
              </div>
           )}
-          {gasLevel && gasLevel.currentLevel <= AUTO_BOOKING_THRESHOLD && !gasLevel.isLeaking && (
+          {gasLevel && gasLevel.currentLevel <= 20 && !gasLevel.isLeaking && (
             <div className="alert-box warning">
               <i className="warning-icon">⚠️</i>
               <p>Low Gas: Cylinder needs to be replaced soon.</p>
+              <div className="booking-actions">
+                <button onClick={handlePayNow} className="pay-now-btn">Payment</button>
+                <button onClick={handleCancelBooking} className="cancel-booking-btn">Cancel Booking</button>
+              </div>
             </div>
           )}
-          {(!gasLevel || (gasLevel && !gasLevel.isLeaking && gasLevel.currentLevel > AUTO_BOOKING_THRESHOLD)) && (
+          {(!gasLevel || (gasLevel && !gasLevel.isLeaking && gasLevel.currentLevel > 20)) && (
             <div className="alert-box success">
               <i className="success-icon">✅</i>
               <p>All systems nominal. No immediate alerts.</p>

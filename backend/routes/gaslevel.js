@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const GasLevel = require('../models/Gaslevel');
-const KYC = require('../models/Newconnection'); // To potentially initialize GasLevel for new users
+const KYC = require('../models/Newconnection');
+
+const BOOKING_THRESHOLD = 20;
 
 // GET gas level for a specific user by email
 router.get('/:email', async (req, res) => {
@@ -20,12 +22,18 @@ router.get('/:email', async (req, res) => {
           email: userEmail,
           currentLevel: 100,
           isLeaking: false,
+          needsBooking: false
         });
         await newGasLevel.save();
         return res.json(newGasLevel);
       }
       return res.status(404).json({ message: "Gas level data not found for this user, or user not active." });
     }
+
+    // Check if booking is needed
+    gasLevel.needsBooking = gasLevel.currentLevel <= BOOKING_THRESHOLD;
+    await gasLevel.save();
+    
     res.json(gasLevel);
   } catch (err) {
     console.error("Error fetching gas level:", err);
