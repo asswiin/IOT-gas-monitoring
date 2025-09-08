@@ -483,7 +483,7 @@ export default function Dashboard() {
           )}
 
 
-           {activeSection === 'payments' && (
+           {activeSection === 'payments' && !selectedPayment && (
     <>
       <h2 className="section-title">All Payments</h2>
       {loading && <p>Loading payments...</p>}
@@ -508,6 +508,13 @@ export default function Dashboard() {
         </div>
       )}
     </>
+  )}
+
+  {activeSection === 'payment-detail' && selectedPayment && (
+    <PaymentDetail
+      payment={selectedPayment}
+      onBack={handleBackToPaymentsList}
+    />
   )}
 
           {activeSection === 'feedback' && (
