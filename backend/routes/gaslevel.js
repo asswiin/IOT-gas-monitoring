@@ -76,7 +76,7 @@ const BOOKING_THRESHOLD = 20;
 // NEW: Deterministic leak trigger range.
 // A leak will be triggered when the gas level is within this specific range.
 const LEAK_TRIGGER_START_LEVEL = 50; // Leak detection starts when gas level hits 50
-const LEAK_TRIGGER_END_LEVEL = 45;   // Leak detection stops when gas level is below 45
+const LEAK_TRIGGER_END_LEVEL = 48;   // Leak detection stops when gas level is below 45
 
 // Function to check for leaks based on a specific level range
 const checkForLeak = (currentLevel) => {
