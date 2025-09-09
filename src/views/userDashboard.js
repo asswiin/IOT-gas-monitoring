@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/userDashboard.css';
+import { getEndpoint } from '../config';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const UserDashboard = () => {
 
     const fetchGasLevel = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/gaslevel/${userEmail}`);
+        const response = await axios.get(getEndpoint.gasLevel(userEmail));
         const currentGasData = response.data;
         
         // --- MODIFICATION ---

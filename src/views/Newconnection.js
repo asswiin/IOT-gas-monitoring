@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import '../styles/Newconnection.css';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { endpoints, getEndpoint } from '../config';
 
 function KYCForm() {
   const [formData, setFormData] = useState({
@@ -51,7 +52,7 @@ function KYCForm() {
 
 
     if (userEmail) {
-      axios.get(`http://localhost:5000/api/newconnection/${userEmail}`)
+      axios.get(getEndpoint.newConnection(userEmail))
         .then(res => {
           if (res.data) {
             const fetchedData = { ...res.data };
@@ -158,11 +159,11 @@ function KYCForm() {
 
     try {
       if (isExistingUser) {
-        const res = await axios.put(`http://localhost:5000/api/newconnection/${formData.email}`, dataToSend);
+        const res = await axios.put(getEndpoint.newConnection(formData.email), dataToSend);
         setSuccessMessage("Form updated successfully! Your request is awaiting admin approval.");
         localStorage.setItem("kycFormData", JSON.stringify(res.data.kycData));
       } else {
-        const res = await axios.post("http://localhost:5000/api/newconnection", dataToSend);
+        const res = await axios.post(endpoints.newConnection, dataToSend);
         setSuccessMessage("Form submitted successfully! Your request is awaiting admin approval.");
         localStorage.setItem("kycFormData", JSON.stringify(res.data.kycData));
       }

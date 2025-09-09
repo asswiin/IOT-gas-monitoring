@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css';
+import { endpoints, getEndpoint } from '../config';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ function Login() {
 
     try {
       // Step 1: Authenticate the user
-      const response = await axios.post('http://localhost:5000/api/login', {
+      const response = await axios.post(endpoints.login, {
         email,
         password,
       });
@@ -42,7 +43,7 @@ function Login() {
         } else {
           // ✅ For regular users, check their connection status before redirecting
           try {
-            const kycRes = await axios.get(`http://localhost:5000/api/newconnection/${response.data.email}`);
+            const kycRes = await axios.get(getEndpoint.newConnection(response.data.email));
             
             // ✅ Step 3: Redirect based on connection status
             if (kycRes.data && kycRes.data.status === 'active') {

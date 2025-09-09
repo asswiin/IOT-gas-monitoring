@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/Register.css";
+import { endpoints } from '../config';
 
 export default function Registration() {
   const [formData, setFormData] = useState({
@@ -129,10 +130,7 @@ export default function Registration() {
     try {
       const dataToSend = { ...formData, phone: "+91" + formData.phone };
 
-      const res = await axios.post(
-        "http://localhost:5000/api/register",
-        dataToSend
-      );
+      const res = await axios.post(endpoints.register, dataToSend);
 
 
 

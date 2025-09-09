@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/profile.css'; // Make sure you have this CSS file
+import { getEndpoint } from '../config';
 
 const Profile = () => {
   const [profileData, setProfileData] = useState(null);
@@ -19,7 +20,7 @@ const Profile = () => {
     }
 
     // Fetch user profile data
-    axios.get(`http://localhost:5000/api/newconnection/${userEmail}`)
+    axios.get(getEndpoint.newConnection(userEmail))
       .then(res => {
         setProfileData(res.data);
       })
@@ -49,7 +50,7 @@ const Profile = () => {
         setError("User email not found for deactivation.");
         return;
       }
-      await axios.put(`http://localhost:5000/api/newconnection/${profileData.email}/deactivate`);
+      await axios.put(getEndpoint.deactivateConnection(profileData.email));
       localStorage.clear(); // Clear session data
       navigate("/login", { replace: true }); // Redirect to login
     } catch (error) {

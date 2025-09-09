@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../styles/Payment.css";
+import { endpoints, getEndpoint } from '../config';
 
 export default function PaymentPage() {
   const [formData, setFormData] = useState({
@@ -118,11 +119,11 @@ export default function PaymentPage() {
     setShowConfirmationPopup(false); // Close confirmation popup
     
     try {
-      await axios.post("http://localhost:5000/api/payment", formData);
+      await axios.post(endpoints.payment, formData);
       
       const userEmail = localStorage.getItem("userEmail");
       if (userEmail) {
-        await axios.put(`http://localhost:5000/api/newconnection/${userEmail}/status`, { status: 'active' });
+        await axios.put(getEndpoint.updateConnectionStatus(userEmail), { status: 'active' });
       }
 
       setMessage(`✅ Payment successful! Amount Paid: ₹${formData.amountDue}`);
