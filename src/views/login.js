@@ -9,6 +9,12 @@ function Login() {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Clear any stored credentials on component mount
+  React.useEffect(() => {
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userPhone');
+  }, []);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -78,7 +84,7 @@ function Login() {
     >
       <div className="form-box">
         <h2>Login to Your Account</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <div className="form-group">
             <input
               type="email"

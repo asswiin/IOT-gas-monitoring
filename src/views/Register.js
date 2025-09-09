@@ -135,11 +135,6 @@ export default function Registration() {
       );
 
 
-  // ✅ Save email + phone in localStorage
-    localStorage.setItem("userEmail", formData.email);
-    localStorage.setItem("userPhone", formData.phone);
-
-
 
       // ✅ Show success below button
       setSuccessMessage(res.data.message || "Registration successful!");
@@ -164,7 +159,7 @@ export default function Registration() {
       <div className="right-panel">
         <div className="form-box">
           <h2>Create your Account</h2>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} autoComplete="off">
             <div className="input-group">
               <input
                 type="text"

@@ -71,15 +71,13 @@ app.use('/api/register', registerRoute);
 app.use('/api/newconnection', newconnectionRoute);
 app.use('/api/payment', paymentRoute);
 app.use('/api/gaslevel', gasLevelRoute);
-// REMOVED: app.use('/api/simulation', simulationRoutes);
-// REMOVED: const simulationModule = require('../backendsimulation/simulationserver');
 
 
 // Simple health check
 app.get('/', (req, res) => res.send('API running'));
 
 // MongoDB URI from .env
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mydatabase';
+const MONGO_URI = process.env.MONGO_URI;
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI)
