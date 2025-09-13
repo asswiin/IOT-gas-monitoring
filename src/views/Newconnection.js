@@ -39,11 +39,22 @@ function KYCForm() {
   useEffect(() => {
     const userEmail = localStorage.getItem("userEmail");
     let userPhone = localStorage.getItem("userPhone");
+    const kycData = localStorage.getItem("kycFormData");
 
     if (userPhone && userPhone.startsWith("+91")) {
       userPhone = userPhone.substring(3);
     }
-    // Only set initial email/mobile if formData doesn't already have it (e.g., from an existing record)
+
+    if (kycData) {
+      const parsedData = JSON.parse(kycData);
+      if (parsedData.status === 'approved') {
+        // If KYC is approved, redirect to payment page
+        navigate('/payment');
+        return;
+      }
+    }
+
+    // Only set initial email/mobile if formData doesn't already have it
     setFormData(prev => ({
       ...prev,
       email: prev.email || userEmail || "",

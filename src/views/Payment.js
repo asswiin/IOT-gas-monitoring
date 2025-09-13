@@ -35,25 +35,60 @@ export default function PaymentPage() {
   useEffect(() => {
     const savedData = JSON.parse(localStorage.getItem("kycFormData"));
     const today = new Date().toISOString().split("T")[0];
+    const userEmail = localStorage.getItem("userEmail");
 
-    if (savedData) {
-      const fullName = `${savedData.firstName || ''} ${savedData.lastName || ''}`.trim();
-      const fullAddress = [
-        savedData.houseName, savedData.streetName, savedData.city,
-        savedData.district, savedData.state, savedData.pinCode,
-      ].filter(Boolean).join(', ');
+    // If no KYC data is found, fetch it from the server
+    const fetchKYCData = async () => {
+      try {
+        const response = await axios.get(getEndpoint.newConnection(userEmail));
+        const kycData = response.data;
+        
+        if (kycData.status !== 'approved') {
+          // If KYC is not approved, redirect back to new connection page
+          navigate('/newconnection');
+          return;
+        }
 
-      setFormData({
-        kycId: savedData._id,
-        customerName: fullName,
-        email: savedData.email || '',
-        mobileNumber: savedData.mobileNumber || '',
-        address: fullAddress,
-        dateOfPayment: today,
-        amountDue: 900,
-      });
+        // Store the KYC data in localStorage
+        localStorage.setItem("kycFormData", JSON.stringify(kycData));
+        setKYCDataInForm(kycData, today);
+      } catch (err) {
+        console.error("Failed to fetch KYC data:", err);
+        navigate('/newconnection');
+      }
+    };
+
+    if (!savedData && userEmail) {
+      fetchKYCData();
+    } else if (savedData) {
+      setKYCDataInForm(savedData, today);
+    } else {
+      navigate('/newconnection');
     }
-  }, []);
+  }, [navigate]);
+
+  // Helper function to set form data from KYC data
+  const setKYCDataInForm = (kycData, today) => {
+    const fullName = `${kycData.firstName || ''} ${kycData.lastName || ''}`.trim();
+    const fullAddress = [
+      kycData.houseName,
+      kycData.streetName,
+      kycData.city,
+      kycData.district,
+      kycData.state,
+      kycData.pinCode,
+    ].filter(Boolean).join(', ');
+
+    setFormData({
+      kycId: kycData._id,
+      customerName: fullName,
+      email: kycData.email || '',
+      mobileNumber: kycData.mobileNumber || '',
+      address: fullAddress,
+      dateOfPayment: today,
+      amountDue: 900,
+    });
+  };
 
   const handleCardChange = (e) => {
     let { name, value } = e.target;

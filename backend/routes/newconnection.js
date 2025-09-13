@@ -80,13 +80,37 @@ router.put("/:email/status", async (req, res) => {
           { email: userEmail },
           { $set: { status: status } },
           { new: true }
-        );
+        ).select('+_id');  // Explicitly include _id in the response
+        
         if (!updatedKYC) {
           return res.status(404).json({ message: "KYC record not found for update." });
         }
+
+        // If status is approved, send all necessary details for payment
+        if (status === 'approved') {
+          const kycDetails = {
+            _id: updatedKYC._id,
+            firstName: updatedKYC.firstName,
+            lastName: updatedKYC.lastName,
+            email: updatedKYC.email,
+            mobileNumber: updatedKYC.mobileNumber,
+            houseName: updatedKYC.houseName,
+            streetName: updatedKYC.streetName,
+            city: updatedKYC.city,
+            district: updatedKYC.district,
+            state: updatedKYC.state,
+            pinCode: updatedKYC.pinCode,
+            status: updatedKYC.status
+          };
+          return res.json({ 
+            message: "KYC approved. Proceed to payment.", 
+            kycData: kycDetails,
+            requiresPayment: true
+          });
+        }
+        
         res.json({ message: "KYC status updated.", kycData: updatedKYC });
       }
-
     } catch (err) {
       console.error("❌ Status Update/Deletion Error:", err);
       res.status(500).json({ message: "Error updating/deleting KYC status" });
