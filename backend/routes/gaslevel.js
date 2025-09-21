@@ -1,5 +1,4 @@
 
-
 const express = require('express');
 const router = express.Router();
 const GasLevel = require('../models/Gaslevel');
@@ -18,7 +17,7 @@ router.get('/:email', async (req, res) => {
   const userEmail = req.params.email.toLowerCase();
 
   try {
-    const [kycUser, gasLevel] = await Promise.all([
+    const [kycUser, gasLevelDoc] = await Promise.all([ // Renamed gasLevel to gasLevelDoc to avoid confusion
       KYC.findOne({ email: userEmail }),
       GasLevel.findOne({ email: userEmail })
     ]);
@@ -28,7 +27,9 @@ router.get('/:email', async (req, res) => {
       return res.status(404).json({ message: "User profile not found." });
     }
 
-    if (!gasLevel) {
+    let currentGasLevelDoc = gasLevelDoc; // Use a mutable variable
+
+    if (!currentGasLevelDoc) {
       // If the user is active, they need a gas level record. Create one.
       if (kycUser.status === 'active') {
         if (!kycUser._id) {
@@ -40,10 +41,11 @@ router.get('/:email', async (req, res) => {
         const newGasLevel = new GasLevel({
           userId: kycUser._id,
           email: userEmail,
-          currentLevel: 100 // Initialize new connections with full gas
+          currentLevel: 100,
+          hasPaidForRefill: false // New connections don't have paid refills initially
         });
-        await newGasLevel.save();
-        return res.json({ ...newGasLevel.toObject(), status: kycUser.status });
+        currentGasLevelDoc = await newGasLevel.save();
+        return res.json({ ...currentGasLevelDoc.toObject(), status: kycUser.status });
       } else {
         // If user is not active (e.g., pending_approval), it's okay not to have a gas record yet.
         console.warn(`No GasLevel record for non-active user ${userEmail} (status: ${kycUser.status}).`);
@@ -51,26 +53,39 @@ router.get('/:email', async (req, res) => {
       }
     }
 
+    // --- NEW LOGIC FOR REFILL ACTIVATION ---
+    if (currentGasLevelDoc.currentLevel <= 0 && currentGasLevelDoc.hasPaidForRefill) {
+        console.log(`User ${userEmail}: Old cylinder depleted. Activating new cylinder.`);
+        currentGasLevelDoc.currentLevel = 100;
+        currentGasLevelDoc.hasPaidForRefill = false;
+        currentGasLevelDoc.isLeaking = false; // Reset leak status for new cylinder
+        // No need to change kycUser.status here, as it should already be 'active'
+        // or handled by the subsequent status logic.
+    }
+    // --- END NEW LOGIC ---
+
     // Update leak status for the gas level record
-    gasLevel.isLeaking = checkForLeak(gasLevel.currentLevel);
+    currentGasLevelDoc.isLeaking = checkForLeak(currentGasLevelDoc.currentLevel);
 
     // Logic to change KYC status based on gas level
-    if (gasLevel.currentLevel <= BOOKING_THRESHOLD && kycUser.status === 'active' && !gasLevel.isLeaking) {
+    if (currentGasLevelDoc.currentLevel <= BOOKING_THRESHOLD && kycUser.status === 'active' && !currentGasLevelDoc.isLeaking && !currentGasLevelDoc.hasPaidForRefill) {
+      // Auto-book only if no refill is already paid for
       kycUser.status = 'refill_payment_pending'; // Mark for refill payment
       await kycUser.save();
       console.log(`User ${userEmail} status changed to refill_payment_pending.`);
     }
     // If the user's gas level has risen (e.g., after a refill payment on the backend)
     // and their status is still 'booking_pending' or 'refill_payment_pending', revert to 'active'.
-    else if ( (kycUser.status === 'booking_pending' || kycUser.status === 'refill_payment_pending') && gasLevel.currentLevel > BOOKING_THRESHOLD) {
+    // This now only happens if current gas is sufficient AND no refill is pending activation.
+    else if ( (kycUser.status === 'booking_pending' || kycUser.status === 'refill_payment_pending') && currentGasLevelDoc.currentLevel > BOOKING_THRESHOLD && !currentGasLevelDoc.hasPaidForRefill) {
       kycUser.status = 'active';
       await kycUser.save();
       console.log(`User ${userEmail} status automatically reverted to 'active' as gas level is sufficient.`);
     }
 
-    await gasLevel.save(); // Save any changes to gasLevel (like isLeaking)
+    await currentGasLevelDoc.save(); // Save any changes to gasLevelDoc (like currentLevel, isLeaking, hasPaidForRefill)
 
-    res.json({ ...gasLevel.toObject(), status: kycUser.status });
+    res.json({ ...currentGasLevelDoc.toObject(), status: kycUser.status });
 
   } catch (err) {
     console.error(`Error fetching gas level for ${userEmail}:`, err);
@@ -86,8 +101,8 @@ router.put('/:email/refill', async (req, res) => {
         // 1. Update KYC status to 'active'
         const updatedKyc = await KYC.findOneAndUpdate(
             { email: userEmail },
-            { $set: { status: 'active' } },
-            { new: true } // Return the updated document
+            { $set: { status: 'active' } }, // Set status to active immediately as payment is done
+            { new: true }
         );
 
         if (!updatedKyc) {
@@ -95,38 +110,15 @@ router.put('/:email/refill', async (req, res) => {
             return res.status(404).json({ message: "User not found to update status." });
         }
 
-        // 2. Update GasLevel to 100
+        // 2. Instead of setting currentLevel to 100, set hasPaidForRefill to true
         const updatedGasLevel = await GasLevel.findOneAndUpdate(
             { email: userEmail },
-            { $set: { currentLevel: 100, isLeaking: false, lastUpdated: Date.now() } },
-            { new: true } // Return the updated document
+            { $set: { hasPaidForRefill: true, isLeaking: false } }, // Also reset leak status
+            { new: true, upsert: true } // upsert: true creates if not found
         );
 
-        if (!updatedGasLevel) {
-            // If GasLevel document doesn't exist for an active user, create it.
-            // This can happen if a user's KYC was approved but they never had a gas level initialized
-            // (e.g., in a specific edge case or initial data setup).
-            if (updatedKyc._id) {
-                console.log(`No GasLevel found for active user ${userEmail} during refill. Creating a new one.`);
-                const newGasLevel = new GasLevel({
-                    userId: updatedKyc._id,
-                    email: userEmail,
-                    currentLevel: 100
-                });
-                await newGasLevel.save();
-                return res.json({
-                    message: "Gas refilled and status updated successfully! New GasLevel created.",
-                    kycData: updatedKyc,
-                    gasData: newGasLevel
-                });
-            } else {
-                 console.error(`CRITICAL: KYC record for ${userEmail} is missing an _id during refill.`);
-                 return res.status(500).json({ message: "Server error: User data is corrupt during refill." });
-            }
-        }
-
         res.json({
-            message: "Gas refilled and status updated successfully!",
+            message: "Gas refill payment successful! New cylinder will activate when current one is depleted.",
             kycData: updatedKyc,
             gasData: updatedGasLevel
         });
@@ -136,7 +128,5 @@ router.put('/:email/refill', async (req, res) => {
         res.status(500).json({ message: "Server error during gas refill process." });
     }
 });
-
-
 
 module.exports = router;

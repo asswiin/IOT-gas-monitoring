@@ -1,33 +1,48 @@
+
+
+// models/Gaslevel.js
 const mongoose = require('mongoose');
 
 const gasLevelSchema = new mongoose.Schema({
-  userId: { // Link to the KYC/Newconnection record
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'KYC', // Reference to your KYC model
+    ref: 'KYC',
     required: true,
-    unique: true // Each user should have only one active gas level entry
+    unique: true // Each user has one gas level record
   },
-  email: { // For easier lookup
+  email: {
     type: String,
     required: true,
     unique: true,
     lowercase: true,
+    trim: true
   },
-  currentLevel: { // Percentage or unit of gas remaining
+  currentLevel: {
     type: Number,
     required: true,
     min: 0,
     max: 100,
-    default: 100 // Start with a full cylinder
+    default: 100
   },
-  isLeaking: { // Flag for gas leakage
+  isLeaking: {
     type: Boolean,
     default: false
   },
-  lastUpdated: { // Timestamp of the last reading
+  lastUpdated: {
     type: Date,
     default: Date.now
+  },
+  // NEW FIELD: Indicates if a refill has been paid for but not yet applied
+  hasPaidForRefill: {
+    type: Boolean,
+    default: false
   }
+});
+
+// Pre-save hook to update lastUpdated
+gasLevelSchema.pre('save', function(next) {
+  this.lastUpdated = Date.now();
+  next();
 });
 
 module.exports = mongoose.model('GasLevel', gasLevelSchema);

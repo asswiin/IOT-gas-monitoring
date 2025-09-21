@@ -1,20 +1,22 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/userDashboard.css';
+import '../styles/userDashboard.css'; // Make sure your CSS path is correct
 import { getEndpoint } from '../config';
+
+// Define BOOKING_THRESHOLD here as it's used in frontend logic
+const BOOKING_THRESHOLD = 20;
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const [gasLevel, setGasLevel] = useState(null);
+  const [gasLevelData, setGasLevelData] = useState(null); // Renamed to gasLevelData for clarity
   const [loadingGas, setLoadingGas] = useState(true);
   const [errorGas, setErrorGas] = useState(null);
   const userEmail = localStorage.getItem("userEmail");
 
   const triggerLeakAlerts = () => {
-    const audio = new Audio('/alert.mp3');
+    const audio = new Audio('/alert.mp3'); // Ensure this path is correct
     audio.play().catch(e => console.error('Audio play failed:', e));
     if (!("Notification" in window)) {
       alert("⚠️ GAS LEAK DETECTED! Please check your dashboard.");
@@ -23,7 +25,7 @@ const UserDashboard = () => {
     const showNotification = () => {
       new Notification("⚠️ GAS LEAK DETECTED!", {
         body: "Immediate action required! Ventilate the area and contact emergency services.",
-        icon: "/danger-icon.png",
+        icon: "/danger-icon.png", // Ensure this path is correct
         tag: "gas-leak-alert",
       });
     };
@@ -46,9 +48,9 @@ const UserDashboard = () => {
     }
     try {
       const response = await axios.get(getEndpoint.gasLevel(userEmail));
-      const currentData = response.data;
+      const currentData = response.data; // This now includes hasPaidForRefill field
 
-      setGasLevel(prevGasLevel => {
+      setGasLevelData(prevGasLevel => {
         // Trigger alert only if it wasn't leaking before and is leaking now
         if (currentData.isLeaking && (!prevGasLevel || !prevGasLevel.isLeaking)) {
           triggerLeakAlerts();
@@ -61,14 +63,17 @@ const UserDashboard = () => {
       console.error("Failed to fetch gas level:", err);
       if (err.response && err.response.status === 404) {
         setErrorGas("Your user profile was not found. Please log in again.");
+        // Optionally, force logout if profile is missing
+        // localStorage.removeItem("userEmail");
+        // navigate('/login');
       } else {
         setErrorGas("Could not fetch gas level. Is the simulation running?");
       }
-      setGasLevel(null);
+      setGasLevelData(null); // Clear gas data on error
     } finally {
       setLoadingGas(false);
     }
-  }, [userEmail]);
+  }, [userEmail]); // Removed navigate from dependencies, as it's not directly used in the effect's core logic
 
   useEffect(() => {
     fetchGasLevel(); // Initial fetch
@@ -86,12 +91,28 @@ const UserDashboard = () => {
         alert("User email not found. Please log in again.");
         return;
       }
+
       // Fetch the latest KYC data for the user
-      const response = await axios.get(getEndpoint.newConnection(userEmail));
-      const kycData = response.data;
+      const kycResponse = await axios.get(getEndpoint.newConnection(userEmail));
+      const kycData = kycResponse.data;
+
+      // Fetch current gas level data (includes hasPaidForRefill)
+      const gasResponse = await axios.get(getEndpoint.gasLevel(userEmail));
+      const currentGasData = gasResponse.data;
+
+      if (!kycData) {
+          alert("Your user profile data is missing. Please contact support.");
+          return;
+      }
+
+      // If they've already paid for a refill, inform them
+      if (currentGasData && currentGasData.hasPaidForRefill) {
+          alert("You have already paid for a refill. It will be activated once your current cylinder is empty.");
+          return;
+      }
 
       // Ensure the status is appropriate for payment
-      if (!kycData || (kycData.status !== 'booking_pending' && kycData.status !== 'refill_payment_pending')) {
+      if (kycData.status !== 'booking_pending' && kycData.status !== 'refill_payment_pending') {
         alert("Payment is not required at this time or booking is not pending.");
         return;
       }
@@ -113,7 +134,8 @@ const UserDashboard = () => {
       return;
     }
     try {
-      await axios.put(getEndpoint.cancelBooking(userEmail)); // Assuming this endpoint exists and handles status change
+      // You need to implement this backend endpoint to change KYC status
+      await axios.put(getEndpoint.cancelBooking(userEmail));
       alert("Booking cancelled successfully.");
       fetchGasLevel(); // Refresh data to reflect cancellation
     } catch (err) {
@@ -125,7 +147,7 @@ const UserDashboard = () => {
   const getGasLevelColor = (level) => {
     if (level === null || level === undefined) return 'gray';
     if (level > 60) return 'green';
-    if (level > 20) return 'orange';
+    if (level > BOOKING_THRESHOLD) return 'orange'; // Use BOOKING_THRESHOLD for orange
     return 'red';
   };
 
@@ -145,7 +167,7 @@ const UserDashboard = () => {
               onClick={handleProfileClick}
               title="View Profile"
             >
-              <img src="/profileicon.jpg" alt="Profile" />
+              <img src="/profileicon.jpg" alt="Profile" /> {/* Ensure this path is correct */}
             </button>
           </div>
         </div>
@@ -159,27 +181,33 @@ const UserDashboard = () => {
               <p>Loading...</p>
             ) : errorGas ? (
               <p className="error-message">{errorGas}</p>
-            ) : gasLevel ? (
+            ) : gasLevelData ? ( // Use gasLevelData here
               <>
                 <div className="gas-indicator">
                   <span
                     className="gas-level-percentage"
-                    style={{ color: getGasLevelColor(gasLevel.currentLevel) }}
+                    style={{ color: getGasLevelColor(gasLevelData.currentLevel) }}
                   >
-                    {gasLevel.currentLevel.toFixed(2)}%
+                    {gasLevelData.currentLevel.toFixed(2)}%
                   </span>
                   <div className="gas-bar-container">
                     <div
                       className="gas-bar"
                       style={{
-                        width: `${gasLevel.currentLevel}%`,
-                        backgroundColor: getGasLevelColor(gasLevel.currentLevel),
+                        width: `${gasLevelData.currentLevel}%`,
+                        backgroundColor: getGasLevelColor(gasLevelData.currentLevel),
                       }}
                     ></div>
                   </div>
                 </div>
-                {gasLevel.isLeaking && (
+                {gasLevelData.isLeaking && (
                   <p className="leak-alert">⚠️ Gas Leak Detected!</p>
+                )}
+                {/* NEW: Info if refill is paid for but not yet activated */}
+                {gasLevelData.hasPaidForRefill && gasLevelData.currentLevel > 0 && (
+                  <p className="refill-pending-info">
+                    ✅ Refill paid! New cylinder activates when current one is depleted.
+                  </p>
                 )}
               </>
             ) : (
@@ -188,25 +216,25 @@ const UserDashboard = () => {
           </div>
           <div className="stat-box">
             <h3>Estimated Refill Date</h3>
-            <p>Calculated based on usage...</p>
+            <p>Calculated based on usage...</p> {/* You might want to implement this logic */}
           </div>
           <div className="stat-box">
             <h3>Tube Expiry Date</h3>
-            <p>DD/MM/YYYY</p>
+            <p>DD/MM/YYYY</p> {/* You might want to implement this logic */}
           </div>
         </div>
         <div className="alerts-container">
           <h3>Alerts</h3>
-          {gasLevel && gasLevel.isLeaking && (
+          {gasLevelData && gasLevelData.isLeaking && (
             <div className="alert-box danger">
-              <i className="danger-icon">🔥</i>
+              <i className="danger-icon">🔥</i> {/* You need a CSS class for danger-icon or use an actual icon library */}
               <p>Immediate Action: Gas Leak Detected! Ventilate and contact emergency services.</p>
             </div>
           )}
-          {/* MODIFICATION HERE: Check for 'booking_pending' OR 'refill_payment_pending' */}
-          {gasLevel && (gasLevel.status === 'booking_pending' || gasLevel.status === 'refill_payment_pending') && !gasLevel.isLeaking && (
+          {/* MODIFIED: Auto-booking/Pay Now if gas is low AND not already paid for refill */}
+          {gasLevelData && (gasLevelData.status === 'booking_pending' || gasLevelData.status === 'refill_payment_pending') && !gasLevelData.isLeaking && !gasLevelData.hasPaidForRefill && (
             <div className="alert-box info">
-              <i className="info-icon">ℹ️</i>
+              <i className="info-icon">ℹ️</i> {/* You need a CSS class for info-icon */}
               <p>Your gas level is low. A new cylinder has been automatically booked for you.</p>
               <div className="booking-actions">
                 <button onClick={handlePayNow} className="pay-now-btn">Pay Now</button>
@@ -214,21 +242,37 @@ const UserDashboard = () => {
               </div>
             </div>
           )}
-          {gasLevel && gasLevel.currentLevel <= 20 && gasLevel.status === 'active' && !gasLevel.isLeaking && (
+          {/* NEW: Alert if refill paid, waiting for current cylinder to deplete */}
+          {gasLevelData && (gasLevelData.status === 'booking_pending' || gasLevelData.status === 'refill_payment_pending') && !gasLevelData.isLeaking && gasLevelData.hasPaidForRefill && (
+            <div className="alert-box success"> {/* Using success class as it's a positive state */}
+              <i className="info-icon">ℹ️</i>
+              <p>Payment for new cylinder received! It will be installed once your current cylinder is fully depleted.</p>
+            </div>
+          )}
+          {/* MODIFIED: Low gas warning if active, below threshold, not leaking, AND no refill paid for */}
+          {gasLevelData && gasLevelData.currentLevel <= BOOKING_THRESHOLD && gasLevelData.status === 'active' && !gasLevelData.isLeaking && !gasLevelData.hasPaidForRefill && (
             <div className="alert-box warning">
-              <i className="warning-icon">⚠️</i>
+              <i className="warning-icon">⚠️</i> {/* You need a CSS class for warning-icon */}
               <p>Low Gas: Cylinder needs to be replaced soon. Auto-booking in progress...</p>
             </div>
           )}
-          {(!gasLevel || (gasLevel && !gasLevel.isLeaking && gasLevel.status !== 'booking_pending' && gasLevel.status !== 'refill_payment_pending' && gasLevel.currentLevel > 20)) && (
+          {/* Default 'All nominal' message if no other alerts */}
+          {(!gasLevelData || (gasLevelData && !gasLevelData.isLeaking && gasLevelData.status === 'active' && gasLevelData.currentLevel > BOOKING_THRESHOLD && !gasLevelData.hasPaidForRefill)) && (
             <div className="alert-box success">
-              <i className="success-icon">✅</i>
+              <i className="success-icon">✅</i> {/* You need a CSS class for success-icon */}
               <p>All systems nominal. No immediate alerts.</p>
             </div>
           )}
         </div>
         <div className="notifications-container">
           <h3>Notifications</h3>
+          {/* NEW: Notification for paid refill */}
+          {gasLevelData && gasLevelData.hasPaidForRefill && (
+            <div className="notification-box info">
+              <i className="info-icon">ℹ️</i>
+              <p>Refill payment confirmed. A new cylinder is ready for activation.</p>
+            </div>
+          )}
           <div className="notification-box success">
             <i className="success-icon">✅</i>
             <p>Your connection is active and running smoothly.</p>
