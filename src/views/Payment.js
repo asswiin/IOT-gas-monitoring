@@ -1,8 +1,8 @@
 
 // src/views/PaymentPage.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/Payment.css";
 import { endpoints, getEndpoint } from '../config';
 
@@ -17,58 +17,26 @@ export default function PaymentPage() {
     amountDue: 900,
   });
 
-  const [paymentMethod, setPaymentMethod] = useState(''); // 'credit' or 'debit'
+  const [paymentMethod, setPaymentMethod] = useState('');
   const [cardDetails, setCardDetails] = useState({
     cardNumber: '',
     expiryMonth: '',
     expiryYear: '',
     cvv: ''
   });
+  const [userEmail, setUserEmail] = useState(null);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // --- ✅ NEW STATE FOR POP-UP VISIBILITY ---
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
-  useEffect(() => {
-    const savedData = JSON.parse(localStorage.getItem("kycFormData"));
-    const today = new Date().toISOString().split("T")[0];
-    const userEmail = localStorage.getItem("userEmail");
-
-    // If no KYC data is found, fetch it from the server
-    const fetchKYCData = async () => {
-      try {
-        const response = await axios.get(getEndpoint.newConnection(userEmail));
-        const kycData = response.data;
-        
-        if (kycData.status !== 'approved') {
-          // If KYC is not approved, redirect back to new connection page
-          navigate('/newconnection');
-          return;
-        }
-
-        // Store the KYC data in localStorage
-        localStorage.setItem("kycFormData", JSON.stringify(kycData));
-        setKYCDataInForm(kycData, today);
-      } catch (err) {
-        console.error("Failed to fetch KYC data:", err);
-        navigate('/newconnection');
-      }
-    };
-
-    if (!savedData && userEmail) {
-      fetchKYCData();
-    } else if (savedData) {
-      setKYCDataInForm(savedData, today);
-    } else {
-      navigate('/newconnection');
-    }
-  }, [navigate]);
+  const isRefillPayment = location.state?.isRefill || false;
 
   // Helper function to set form data from KYC data
-  const setKYCDataInForm = (kycData, today) => {
+  const setKYCDataInForm = useCallback((kycData, today) => {
     const fullName = `${kycData.firstName || ''} ${kycData.lastName || ''}`.trim();
     const fullAddress = [
       kycData.houseName,
@@ -86,15 +54,92 @@ export default function PaymentPage() {
       mobileNumber: kycData.mobileNumber || '',
       address: fullAddress,
       dateOfPayment: today,
-      amountDue: 900,
+      amountDue: 900, // Assuming a fixed amount for simplicity
     });
-  };
+  }, []);
+
+  useEffect(() => {
+    const savedData = JSON.parse(localStorage.getItem("kycFormData"));
+    const today = new Date().toISOString().split("T")[0];
+    const storedUserEmail = localStorage.getItem("userEmail");
+
+    if (!storedUserEmail) {
+      navigate('/login');
+      return;
+    }
+    setUserEmail(storedUserEmail);
+
+    const fetchKYCData = async (emailToFetch) => {
+      try {
+        const response = await axios.get(getEndpoint.newConnection(emailToFetch));
+        const kycData = response.data;
+
+        if (!kycData) {
+            alert("Your user profile data is missing. Please contact support.");
+            navigate('/userdashboard');
+            return;
+        }
+
+        if (isRefillPayment) {
+          if (kycData.status !== 'booking_pending' && kycData.status !== 'refill_payment_pending') { // Check for both
+            alert("Your gas booking is not pending payment.");
+            navigate('/userdashboard');
+            return;
+          }
+          setFormData(prev => ({ ...prev, amountDue: 900, paymentType: 'gas_refill' }));
+        } else { // Initial connection payment
+           if (kycData.status !== 'approved') {
+            if (kycData.status === 'active') {
+                alert("Your connection is already active. You do not need to make an initial payment.");
+                navigate('/userdashboard');
+                return;
+            }
+            alert("Your KYC is not approved for initial payment.");
+            navigate('/userdashboard');
+            return;
+          }
+          setFormData(prev => ({ ...prev, amountDue: 900, paymentType: 'initial_connection' }));
+        }
+
+        localStorage.setItem("kycFormData", JSON.stringify(kycData));
+        setKYCDataInForm(kycData, today);
+      } catch (err) {
+        console.error("Failed to fetch KYC data:", err);
+        alert("Failed to load your profile data. Please try again later.");
+        navigate('/userdashboard');
+      }
+    };
+
+    if (savedData && savedData.email === storedUserEmail) {
+      let shouldProceed = false;
+      const isSavedDataSuitableForRefill = isRefillPayment && (savedData.status === 'booking_pending' || savedData.status === 'refill_payment_pending');
+      const isSavedDataSuitableForInitial = !isRefillPayment && savedData.status === 'approved';
+
+      if (isSavedDataSuitableForRefill || isSavedDataSuitableForInitial) {
+          shouldProceed = true;
+      }
+
+      if (shouldProceed) {
+          setKYCDataInForm(savedData, today);
+          setFormData(prev => ({
+              ...prev,
+              amountDue: 900,
+              paymentType: isRefillPayment ? 'gas_refill' : 'initial_connection'
+          }));
+      } else {
+          localStorage.removeItem("kycFormData");
+          fetchKYCData(storedUserEmail);
+      }
+    } else {
+        fetchKYCData(storedUserEmail);
+    }
+
+  }, [navigate, isRefillPayment, location.state, setKYCDataInForm, userEmail]);
 
   const handleCardChange = (e) => {
     let { name, value } = e.target;
-
     if (name === 'cardNumber' || name === 'cvv' || name === 'expiryMonth' || name === 'expiryYear') {
-      value = value.replace(/\D/g, '');
+      value = value.replace(/\D/g, ''); // Only allow digits
     }
 
     if (name === 'cardNumber' && value.length > 16) value = value.slice(0, 16);
@@ -117,22 +162,21 @@ export default function PaymentPage() {
     }
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1; // Month is 0-indexed
-    
+
     if (!/^\d{4}$/.test(expiryYear) || parseInt(expiryYear) < currentYear) {
-      newErrors.expiryYear = "Invalid year (YYYY).";
+      newErrors.expiryYear = "Invalid year (YYYY) or year in past.";
     } else if (parseInt(expiryYear) === currentYear && parseInt(expiryMonth) < currentMonth) {
-        newErrors.expiryMonth = "Card has expired.";
+      newErrors.expiryMonth = "Card has expired.";
     }
 
     if (!/^\d{3}$/.test(cvv)) {
       newErrors.cvv = "CVV must be 3 digits.";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // --- ✅ MODIFIED SUBMIT HANDLER TO SHOW CONFIRMATION POPUP ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -140,56 +184,67 @@ export default function PaymentPage() {
       setErrors({ form: "Please select a payment method." });
       return;
     }
-    
+
     if (!validateCardDetails()) {
       return;
     }
-    
-    setErrors({}); // Clear errors if validation passes
-    setShowConfirmationPopup(true); // Show confirmation popup
+
+    setErrors({});
+    setShowConfirmationPopup(true);
   };
 
-  // --- ✅ NEW FUNCTION TO HANDLE CONFIRMATION YES ---
   const handleConfirmPayment = async () => {
-    setShowConfirmationPopup(false); // Close confirmation popup
-    
+    setShowConfirmationPopup(false);
+
     try {
-      await axios.post(endpoints.payment, formData);
-      
-      const userEmail = localStorage.getItem("userEmail");
-      if (userEmail) {
-        await axios.put(getEndpoint.updateConnectionStatus(userEmail), { status: 'active' });
+      if (!userEmail) {
+        throw new Error("User email not found in state.");
       }
 
-      setMessage(`✅ Payment successful! Amount Paid: ₹${formData.amountDue}`);
-      localStorage.removeItem("kycFormData");
-      setShowSuccessPopup(true); // Show success popup
+      const paymentDataToSubmit = {
+        ...formData,
+        paymentType: isRefillPayment ? 'gas_refill' : 'initial_connection'
+      };
+
+      await axios.post(endpoints.payment, paymentDataToSubmit);
+
+      if (isRefillPayment) {
+        // This endpoint should set KYC status to 'active' and gas level to 100
+        await axios.put(getEndpoint.refillGas(userEmail));
+        setMessage(`✅ Refill payment successful! Amount Paid: ₹${formData.amountDue}. Gas cylinder is now full.`);
+      } else {
+        // This endpoint should set KYC status to 'active'
+        await axios.put(getEndpoint.updateConnectionStatus(userEmail), { status: 'active' });
+        setMessage(`✅ Initial payment successful! Amount Paid: ₹${formData.amountDue}. Your connection is now active.`);
+        localStorage.removeItem("kycFormData"); // Clear temporary data after initial connection
+      }
+
+      setShowSuccessPopup(true);
 
     } catch (error) {
-      console.error(error);
-      setMessage("❌ Payment failed. Please try again.");
+      console.error("Payment or status update failed:", error);
+      setMessage("❌ Payment failed. Please try again. Details: " + (error.response ? error.response.data.message : error.message));
     }
   };
 
-  // --- ✅ NEW FUNCTION TO HANDLE SUCCESS OK ---
   const handleSuccessOk = () => {
-    setShowSuccessPopup(false); // Close success popup
-    navigate("/userdashboard"); // Navigate to dashboard
+    setShowSuccessPopup(false);
+    navigate("/userdashboard");
   };
 
   return (
     <div className="payment-container">
       <div className="payment-card">
-        <h2 className="payment-title">Payment</h2>
+        <h2 className="payment-title">{isRefillPayment ? "Gas Refill Payment" : "Initial Connection Payment"}</h2>
         <form onSubmit={handleSubmit} className="payment-form">
           <div className="form-group"><label>Customer Name</label><input type="text" value={formData.customerName} readOnly /></div>
           <div className="form-group"><label>Email</label><input type="email" value={formData.email} readOnly /></div>
           <div className="form-group"><label>Mobile Number</label><input type="text" value={formData.mobileNumber} readOnly /></div>
           <div className="form-group"><label>Address</label><textarea value={formData.address} readOnly /></div>
           <div className="form-group"><label>Date of Payment</label><input type="date" value={formData.dateOfPayment} readOnly /></div>
-          
+
           <div className="amount-due"><h3>Amount Due: ₹{formData.amountDue}</h3></div>
-          
+
           <div className="payment-method">
             <h3>Select Payment Method</h3>
             <div className="method-buttons">
@@ -242,11 +297,10 @@ export default function PaymentPage() {
         </form>
       </div>
 
-      {/* --- ✅ CONFIRMATION POPUP --- */}
       {showConfirmationPopup && (
         <div className="popup-overlay">
           <div className="popup-content">
-            <h3>Proceed to Payment?</h3>
+            <h3>Confirm {isRefillPayment ? "Refill" : "Initial"} Payment?</h3>
             <div className="popup-buttons">
               <button onClick={handleConfirmPayment} className="popup-yes">Yes</button>
               <button onClick={() => setShowConfirmationPopup(false)} className="popup-no">No</button>
@@ -255,7 +309,6 @@ export default function PaymentPage() {
         </div>
       )}
 
-      {/* --- ✅ SUCCESS POPUP --- */}
       {showSuccessPopup && (
         <div className="popup-overlay">
           <div className="popup-content">
@@ -269,16 +322,3 @@ export default function PaymentPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

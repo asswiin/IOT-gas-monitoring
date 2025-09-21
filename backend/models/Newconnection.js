@@ -32,7 +32,7 @@ const kycSchema = new mongoose.Schema({
   
   status: { 
     type: String, 
-    enum: ['pending_approval', 'approved', 'rejected', 'active', 'deactivated'], // ✅ ADDED 'deactivated'
+    enum: ['pending_approval', 'approved', 'rejected', 'active', 'deactivated', 'booking_pending','refill_payment_pending'],
     default: 'pending_approval' 
   },
 }, { timestamps: true });

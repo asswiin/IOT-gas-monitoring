@@ -106,7 +106,7 @@ function RequestDetail({ request, onApprove, onReject, onBack }) {
   );
 }
 
-// PaymentDetail component (no change for this request)
+// PaymentDetail component (MODIFIED to show paymentType)
 function PaymentDetail({ payment, onBack }) {
   if (!payment) return null;
 
@@ -120,6 +120,7 @@ function PaymentDetail({ payment, onBack }) {
         <p><strong>Mobile Number:</strong> {payment.mobileNumber}</p>
         <p><strong>Amount Paid:</strong> ₹{payment.amountDue}</p>
         <p><strong>Payment Date:</strong> {new Date(payment.dateOfPayment || payment.createdAt).toLocaleDateString()}</p>
+        <p><strong>Payment Type:</strong> {payment.paymentType ? payment.paymentType.replace(/_/g, ' ') : 'N/A'}</p> {/* MODIFIED */}
         <p><strong>Payment ID:</strong> {payment._id}</p>
       </div>
       {(payment.createdAt && (!payment.dateOfPayment || new Date(payment.createdAt).toDateString() !== new Date(payment.dateOfPayment).toDateString())) && (
@@ -142,9 +143,6 @@ export default function Dashboard() {
   const [selectedPayment, setSelectedPayment] = useState(null);
 
   const [activeSection, setActiveSection] = useState('dashboard-summary');
-  // Removed unused state variables:
-  // const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  // const [userToDelete, setUserToDelete] = useState(null);
 
   // Add new state for notification popup
   const [notification, setNotification] = useState({
@@ -164,7 +162,7 @@ export default function Dashboard() {
         }
         // Always fetch all users to get updated counts for dashboard summary
         await fetchAllUsers();
-        if (activeSection === 'payments') {
+        if (activeSection === 'payments' || activeSection === 'dashboard-summary') { // Fetch payments for summary too
           await fetchAllPayments();
         }
       } catch (err) {
@@ -214,7 +212,7 @@ export default function Dashboard() {
       await axios.put(`http://localhost:5000/api/newconnection/${userEmail}/status`, { status: 'approved' });
       setNotification({
         show: true,
-        message: "Request approved successfully!",
+        message: "Request approved successfully! User can now proceed to initial payment.",
         type: 'success'
       });
       fetchPendingRequests();
@@ -236,9 +234,7 @@ export default function Dashboard() {
       const response = await axios.put(`http://localhost:5000/api/newconnection/${userEmail}/status`, { status: 'rejected' });
       setNotification({
         show: true,
-        message: response.data.status === 'rejected' 
-          ? "Request rejected and data removed successfully!"
-          : "Request rejected (but data not explicitly removed from database).",
+        message: response.data.message, // Use the message from the backend response
         type: 'success'
       });
       fetchPendingRequests();
@@ -348,14 +344,14 @@ export default function Dashboard() {
             >
               Payments
             </li>
-           
+
             <li
               className={activeSection === 'reports' ? 'active' : ''}
               onClick={() => handleSidebarNav('reports')}
             >
               Reports
             </li>
-            
+
              <li
               className={activeSection === 'feedback' ? 'active' : ''}
               onClick={() => handleSidebarNav('feedback')}
@@ -498,7 +494,7 @@ export default function Dashboard() {
               className="payment-item card clickable"
               onClick={() => handleViewPaymentDetails(payment)}
             >
-              <h4>{payment.customerName}</h4>
+<h4>{payment.customerName}</h4>
               <p><strong>Email:</strong> {payment.email}</p>
               <p><strong>Amount:</strong> ₹{payment.amountDue}</p>
               <p><strong>Date:</strong> {new Date(payment.dateOfPayment || payment.createdAt).toLocaleDateString()}</p>

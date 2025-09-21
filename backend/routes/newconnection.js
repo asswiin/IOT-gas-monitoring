@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const KYC = require("../models/Newconnection");
 const Payment = require("../models/Payment"); // ✅ Import Payment model for cascade deletion
+const GasLevel = require("../models/Gaslevel");
 
 // GET all pending approval requests for admin
 router.get("/requests/pending", async (req, res) => {
@@ -209,6 +210,10 @@ router.delete("/:email", async (req, res) => {
     // 3. Delete the KYC record
     await KYC.deleteOne({ email: userEmail });
 
+      // Since email is unique in GasLevel, we can safely delete by email.
+    await GasLevel.deleteOne({ email: userEmail });
+     await KYC.deleteOne({ email: userEmail })
+
     res.json({ message: "User and all associated data deleted successfully!" });
   } catch (err) {
     console.error("❌ Admin Delete User Error:", err);
@@ -216,5 +221,79 @@ router.delete("/:email", async (req, res) => {
   }
 });
 
+// PUT to cancel a pending gas booking
+router.put("/:email/cancel-booking", async (req, res) => {
+  try {
+    const userEmail = req.params.email;
+    const updatedKYC = await KYC.findOneAndUpdate(
+      { email: userEmail, status: 'booking_pending' }, // Only update if booking is pending
+      { $set: { status: 'active' } },
+      { new: true }
+    );
+
+    if (!updatedKYC) {
+      return res.status(404).json({ message: "User with a pending booking not found." });
+    }
+    res.json({ message: "Booking cancelled successfully! Status reset to active.", kycData: updatedKYC });
+  } catch (err) {
+    console.error("❌ Booking Cancellation Error:", err);
+    res.status(500).json({ message: "Error cancelling booking." });
+  }
+});
+
+
+
+
+
 
 module.exports = router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

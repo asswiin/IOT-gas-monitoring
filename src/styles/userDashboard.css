@@ -356,3 +356,21 @@
 .cancel-booking-btn:hover {
     background-color: #e0a800;
 }
+
+/* ... (existing styles in adminDashboard.css) ... */
+
+.status.active {
+  background-color: #28a745; /* green */
+}
+
+/* ✅ NEW STYLE for booking_pending */
+.status.booking_pending {
+  background-color: #007bff; /* blue */
+  color: white;
+}
+
+.status.deactivated {
+  background-color: #6c757d; /* gray */
+}
+
+/* ... (rest of the styles) ... */

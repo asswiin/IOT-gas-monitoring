@@ -7,27 +7,27 @@ const Payment = require("../models/Payment");
 // POST new Payment
 router.post("/", async (req, res) => {
   try {
-    const newForm = new Payment({ ...req.body, status: 'completed' }); 
+    const newForm = new Payment({ ...req.body, status: 'completed' });
     await newForm.save();
     res.status(200).json({ message: "✅ Payment saved successfully!" });
   } catch (err) {
     console.error("❌ Save Error:", err);
-    res.status(500).json({ message: "Error saving form" });
+    res.status(500).json({ message: "Error saving payment data." });
   }
 });
 
 // GET all Payments
 router.get("/", async (req, res) => {
   try {
-    const allPayments = await Payment.find({}); 
+    const allPayments = await Payment.find({});
     res.json(allPayments);
   } catch (err) {
     console.error("❌ Error fetching all payments:", err);
-    res.status(500).json({ message: "Server error while fetching all payment data" });
+    res.status(500).json({ message: "Server error while fetching all payment data." });
   }
 });
 
-// ✅ NEW: DELETE Payment records by KYC ID
+// DELETE Payment records by KYC ID
 router.delete("/kyc/:kycId", async (req, res) => {
   try {
     const kycId = req.params.kycId;
@@ -39,7 +39,7 @@ router.delete("/kyc/:kycId", async (req, res) => {
     res.json({ message: `Successfully deleted ${result.deletedCount} payment records for KYC ID: ${kycId}` });
   } catch (err) {
     console.error("❌ Error deleting payment records:", err);
-    res.status(500).json({ message: "Server error while deleting payment records" });
+    res.status(500).json({ message: "Server error while deleting payment records." });
   }
 });
 
