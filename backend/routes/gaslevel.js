@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const GasLevel = require('../models/Gaslevel');
 const KYC = require('../models/Newconnection');
+const AutoBooking = require('../models/AutoBooking'); // Import the new model
 
 const BOOKING_THRESHOLD = 20; // Gas level percentage at which auto-booking triggers
 const LEAK_TRIGGER_START_LEVEL = 50; // Example: Leak starts detecting below 50%
@@ -59,8 +60,11 @@ router.get('/:email', async (req, res) => {
         currentGasLevelDoc.currentLevel = 100;
         currentGasLevelDoc.hasPaidForRefill = false;
         currentGasLevelDoc.isLeaking = false; // Reset leak status for new cylinder
-        // No need to change kycUser.status here, as it should already be 'active'
-        // or handled by the subsequent status logic.
+        // Also update the auto-booking status if it exists
+        await AutoBooking.findOneAndUpdate(
+          { email: userEmail, status: 'paid' },
+          { $set: { status: 'fulfilled' } }
+        );
     }
     // --- END NEW LOGIC ---
 
@@ -73,6 +77,20 @@ router.get('/:email', async (req, res) => {
       kycUser.status = 'refill_payment_pending'; // Mark for refill payment
       await kycUser.save();
       console.log(`User ${userEmail} status changed to refill_payment_pending.`);
+
+      // --- NEW: Create an AutoBooking record ---
+      const existingAutoBooking = await AutoBooking.findOne({ email: userEmail, status: 'booked' });
+      if (!existingAutoBooking) { // Only create if one doesn't already exist
+        const newAutoBooking = new AutoBooking({
+          userId: kycUser._id,
+          email: userEmail,
+          status: 'booked',
+        });
+        await newAutoBooking.save();
+        console.log(`Auto-booking created for ${userEmail}.`);
+      }
+      // --- END NEW ---
+
     }
     // If the user's gas level has risen (e.g., after a refill payment on the backend)
     // and their status is still 'booking_pending' or 'refill_payment_pending', revert to 'active'.
@@ -81,6 +99,11 @@ router.get('/:email', async (req, res) => {
       kycUser.status = 'active';
       await kycUser.save();
       console.log(`User ${userEmail} status automatically reverted to 'active' as gas level is sufficient.`);
+      // If status reverted, also mark any pending auto-booking as cancelled or remove it if desired
+      await AutoBooking.findOneAndUpdate(
+        { email: userEmail, status: 'booked' },
+        { $set: { status: 'cancelled' } }
+      );
     }
 
     await currentGasLevelDoc.save(); // Save any changes to gasLevelDoc (like currentLevel, isLeaking, hasPaidForRefill)
@@ -116,6 +139,13 @@ router.put('/:email/refill', async (req, res) => {
             { $set: { hasPaidForRefill: true, isLeaking: false } }, // Also reset leak status
             { new: true, upsert: true } // upsert: true creates if not found
         );
+
+        // --- NEW: Update the AutoBooking status to 'paid' ---
+        await AutoBooking.findOneAndUpdate(
+          { email: userEmail, status: 'booked' }, // Find an existing 'booked' status
+          { $set: { status: 'paid' } }
+        );
+        // --- END NEW ---
 
         res.json({
             message: "Gas refill payment successful! New cylinder will activate when current one is depleted.",
