@@ -35,13 +35,14 @@ export default function PaymentPage() {
 
   const isRefillPayment = location.state?.isRefill || false;
 
-  // Helper function to set form data from KYC data
   const setKYCDataInForm = useCallback((kycData, today) => {
     const fullName = `${kycData.firstName || ''} ${kycData.lastName || ''}`.trim();
+    
+    // MODIFIED: Correctly build the address string with town
     const fullAddress = [
       kycData.houseName,
       kycData.streetName,
-      kycData.city,
+      kycData.town,
       kycData.district,
       kycData.state,
       kycData.pinCode,
@@ -54,7 +55,7 @@ export default function PaymentPage() {
       mobileNumber: kycData.mobileNumber || '',
       address: fullAddress,
       dateOfPayment: today,
-      amountDue: 900, // Assuming a fixed amount for simplicity
+      amountDue: 900,
     });
   }, []);
 
@@ -81,13 +82,13 @@ export default function PaymentPage() {
         }
 
         if (isRefillPayment) {
-          if (kycData.status !== 'booking_pending' && kycData.status !== 'refill_payment_pending') { // Check for both
+          if (kycData.status !== 'booking_pending' && kycData.status !== 'refill_payment_pending') {
             alert("Your gas booking is not pending payment.");
             navigate('/userdashboard');
             return;
           }
           setFormData(prev => ({ ...prev, amountDue: 900, paymentType: 'gas_refill' }));
-        } else { // Initial connection payment
+        } else {
            if (kycData.status !== 'approved') {
             if (kycData.status === 'active') {
                 alert("Your connection is already active. You do not need to make an initial payment.");
@@ -139,7 +140,7 @@ export default function PaymentPage() {
   const handleCardChange = (e) => {
     let { name, value } = e.target;
     if (name === 'cardNumber' || name === 'cvv' || name === 'expiryMonth' || name === 'expiryYear') {
-      value = value.replace(/\D/g, ''); // Only allow digits
+      value = value.replace(/\D/g, '');
     }
 
     if (name === 'cardNumber' && value.length > 16) value = value.slice(0, 16);
@@ -161,7 +162,7 @@ export default function PaymentPage() {
       newErrors.expiryMonth = "Invalid month (MM).";
     }
     const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth() + 1; // Month is 0-indexed
+    const currentMonth = new Date().getMonth() + 1;
 
     if (!/^\d{4}$/.test(expiryYear) || parseInt(expiryYear) < currentYear) {
       newErrors.expiryYear = "Invalid year (YYYY) or year in past.";
@@ -193,46 +194,6 @@ export default function PaymentPage() {
     setShowConfirmationPopup(true);
   };
 
-
-  // const handleConfirmPayment = async () => {
-  //   setShowConfirmationPopup(false);
-
-  //   try {
-  //     if (!userEmail) {
-  //       throw new Error("User email not found in state.");
-  //     }
-
-  //     const paymentDataToSubmit = {
-  //       ...formData,
-  //       paymentType: isRefillPayment ? 'gas_refill' : 'initial_connection'
-  //     };
-
-  //     await axios.post(endpoints.payment, paymentDataToSubmit);
-
-  //     if (isRefillPayment) {
-  //       // This endpoint should set KYC status to 'active' and gas level to 100
-  //       await axios.put(getEndpoint.refillGas(userEmail));
-  //       setMessage(`✅ Refill payment successful! Amount Paid: ₹${formData.amountDue}. Gas cylinder is now full.`);
-  //     } else {
-  //       // This endpoint should set KYC status to 'active'
-  //       await axios.put(getEndpoint.updateConnectionStatus(userEmail), { status: 'active' });
-  //       setMessage(`✅ Initial payment successful! Amount Paid: ₹${formData.amountDue}. Your connection is now active.`);
-  //       localStorage.removeItem("kycFormData"); // Clear temporary data after initial connection
-  //     }
-
-  //     setShowSuccessPopup(true);
-
-  //   } catch (error) {
-  //     console.error("Payment or status update failed:", error);
-  //     setMessage("❌ Payment failed. Please try again. Details: " + (error.response ? error.response.data.message : error.message));
-  //   }
-  // };
-
-
-
-// src/views/PaymentPage.js
-// ... (previous imports and state) ...
-
   const handleConfirmPayment = async () => {
     setShowConfirmationPopup(false);
 
@@ -249,11 +210,9 @@ export default function PaymentPage() {
       await axios.post(endpoints.payment, paymentDataToSubmit);
 
       if (isRefillPayment) {
-        // This endpoint will now set hasPaidForRefill to true
         await axios.put(getEndpoint.refillGas(userEmail));
         setMessage(`✅ Refill payment successful! Amount Paid: ₹${formData.amountDue}. Your new gas cylinder will be activated once the current one is fully depleted.`);
       } else {
-        // ... (initial connection logic remains the same) ...
         await axios.put(getEndpoint.updateConnectionStatus(userEmail), { status: 'active' });
         setMessage(`✅ Initial payment successful! Amount Paid: ₹${formData.amountDue}. Your connection is now active.`);
         localStorage.removeItem("kycFormData");
@@ -266,10 +225,6 @@ export default function PaymentPage() {
       setMessage("❌ Payment failed. Please try again. Details: " + (error.response ? error.response.data.message : error.message));
     }
   };
-
-  // ... (rest of the component) ...
-
-
 
   const handleSuccessOk = () => {
     setShowSuccessPopup(false);

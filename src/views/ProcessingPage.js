@@ -26,7 +26,7 @@ function ProcessingPage() {
           if (kycData.status === 'approved') {
             setStatusMessage("Your request has been APPROVED! Redirecting to payment...");
             localStorage.setItem("kycFormData", JSON.stringify(kycData)); // Store for payment page if needed
-            setTimeout(() => navigate('/payment'), 2000); // ✅ THIS IS THE CORRECT REDIRECTION FOR THE USER
+            setTimeout(() => navigate('/payment', { state: { isRefill: false } }), 2000); // Navigate for initial payment
             return;
           } else if (kycData.status === 'rejected') {
             setStatusMessage("Your request has been REJECTED. Please check your details and re-apply.");

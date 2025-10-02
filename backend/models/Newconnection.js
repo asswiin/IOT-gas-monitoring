@@ -16,9 +16,9 @@ const kycSchema = new mongoose.Schema({
   housingComplex: String,
   streetName: { type: String, required: true },
   landmark: { type: String, required: true },
-  city: { type: String, required: true },
-  state: { type: String, required: true },
+  state: { type: String, required: true, default: 'Kerala'},
   district: { type: String, required: true },
+  town: { type: String, required: true },
   pinCode: { type: String, required: true, match: /^\d{6}$/ },
   mobileNumber: { 
     type: String, 
@@ -27,7 +27,6 @@ const kycSchema = new mongoose.Schema({
     match: /^\+91[6-9]\d{9}$/,
     message: "Invalid Indian mobile number format (must be +91 followed by 10 digits starting with 6-9)."
   },
-  telephoneNumber: String,
   email: { type: String, required: true, unique: true, lowercase: true, match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
   
   status: { 

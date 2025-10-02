@@ -159,4 +159,54 @@ router.put('/:email/refill', async (req, res) => {
     }
 });
 
+
+
+
+
+
+// POST /api/gaslevel/update
+router.post('/update', async (req, res) => {
+  const { email, currentLevel, isLeaking } = req.body;
+
+  if (!email || currentLevel === undefined || isLeaking === undefined) {
+    return res.status(400).json({ message: "Missing required fields: email, currentLevel, isLeaking" });
+  }
+
+  try {
+    // Find the user's gas level document and update it
+    const updatedGasLevel = await GasLevel.findOneAndUpdate(
+      { email: email },
+      {
+        $set: {
+          currentLevel: currentLevel,
+          isLeaking: isLeaking,
+          lastUpdated: new Date()
+        }
+      },
+      { 
+        new: true, // Return the updated document
+        upsert: true // Create the document if it doesn't exist
+      }
+    );
+    
+    // --- Auto-Booking Logic ---
+    // This logic should be here on the server, not on the ESP32
+    if (currentLevel <= 20 && !isLeaking) { // Let's use 20% as the threshold
+        const kycUser = await KYC.findOne({ email: email });
+        if (kycUser && kycUser.status === 'active') {
+            kycUser.status = 'booking_pending';
+            await kycUser.save();
+            console.log(`Auto-booking triggered for ${email}. Status changed to booking_pending.`);
+        }
+    }
+
+    res.status(200).json({ message: "Gas level updated successfully", data: updatedGasLevel });
+
+  } catch (error) {
+    console.error("Error updating gas level:", error);
+    res.status(500).json({ message: "Server error while updating gas level." });
+  }
+});
+
+
 module.exports = router;

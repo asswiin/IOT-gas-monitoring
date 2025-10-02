@@ -1,0 +1,45 @@
+.simulation-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f2f5;
+}
+
+.simulation-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 400px;
+}
+
+.simulation-card h2 {
+    margin-bottom: 1.5rem;
+}
+
+.button-group {
+    margin: 1rem 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+.simulation-card button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.start-btn { background-color: #28a745; }
+.stop-btn { background-color: #dc3545; }
+.leak-on-btn { background-color: #ffc107; color: black; }
+.leak-off-btn { background-color: #17a2b8; }
+
+.message {
+    margin-top: 1.5rem;
+    font-weight: bold;
+}

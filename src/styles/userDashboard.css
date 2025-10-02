@@ -3,14 +3,14 @@
 .dashboard-container {
   min-height: 100vh;
   padding: 2rem;
-  background: linear-gradient(135deg, #f9f9f9, #e9ecef);
-  /* light gradient */
+  background: linear-gradient(135deg, #e3f2fd, #fce4ec);
+  /* Updated gradient with soft blue and pink tones */
   color: #212529;
   font-family: 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
-  border-radius: 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 25px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
 /* ---------------- HEADER ---------------- */
@@ -19,10 +19,10 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #ffffff, #f1f3f5);
-  border: 1px solid #ced4da;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #ffffff, #f3f4f7);
+  border: 1px solid #d1d5db;
+  border-radius: 25px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
   transition: transform 0.3s ease;
 }
@@ -39,7 +39,7 @@
 
 /* ---------------- NAV BUTTONS ---------------- */
 .nav-btn {
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(135deg, #6a5acd, #483d8b);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -51,7 +51,7 @@
 }
 
 .nav-btn:hover {
-  background: linear-gradient(135deg, #0056b3, #003f7f);
+  background: linear-gradient(135deg, #483d8b, #322a5a);
 }
 
 /* ---------------- PROFILE SECTION ---------------- */
@@ -60,27 +60,12 @@
   height: 45px;
   border-radius: 50%;
   border: 2px solid #dee2e6;
-  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
 }
 
 .profile-button:hover img {
-  border-color: #133aff;
-  /* pastel lavender */
-  transform: scale(1.08);
-  box-shadow: 0 0 12px rgba(165, 180, 252, 0.6);
-  /* soft glow */
-}
-
-.profile-dropdown {
-  position: absolute;
-  top: 60px;
-  right: 0;
-  background: #ffffff;
-  border-radius: 10px;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  width: 180px;
-  overflow: hidden;
+  transform: scale(1.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
 }
 
 /* ---------------- DASHBOARD CONTENT ---------------- */
@@ -104,23 +89,24 @@
 }
 
 .stat-box {
-  background: linear-gradient(135deg, #ffffff, #f8f9fa);
+  background: linear-gradient(135deg, #ffffff, #f3f4f7); /* Light gradient */
   padding: 1.8rem;
-  border: 1px solid #dee2e6;
-  border-radius: 15px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  border: 1px solid #d1d5db;
+  border-radius: 25px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
 
 .stat-box:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #e3e6ea, #d1d5db); /* Slightly darker on hover */
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
 }
 
 .stat-box h3 {
   margin-top: 0;
-  font-size: 1.15rem;
-  color: #6c757d;
+  font-size: 1.2rem;
+  color: #2c3e50; /* Darker text for contrast */
   font-weight: 600;
 }
 
@@ -170,31 +156,38 @@
   margin-bottom: 1rem;
   font-size: 1rem;
   font-weight: 500;
+  border-left: 10px solid #6a5acd;
+  background: linear-gradient(135deg, #f9f9ff, #eef1ff); /* Light gradient */
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
 }
 
 .alert-box:hover,
 .notification-box:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #e8eaf6, #dfe3ee); /* Darker hover effect */
+  transform: translateY(-6px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
 /* Variants */
 .alert-box.warning {
-  background: linear-gradient(135deg, #fff8e6, #ffeeba);
+  border-left-color: #ffc107;
+  background: linear-gradient(135deg, #fff9e6, #fff4cc);
 }
 
 .alert-box.danger {
-  background: linear-gradient(135deg, #ffeaea, #f5c6cb);
+  border-left-color: #e63946;
+  background: linear-gradient(135deg, #fce4e4, #f8d7da);
 }
 
 .notification-box.success {
-  background: linear-gradient(135deg, #e6ffee, #c3e6cb);
+  border-left-color: #28a745;
+  background: linear-gradient(135deg, #e8f8e9, #d4edda);
 }
 
 .notification-box.info {
-  background: linear-gradient(135deg, #e6f7ff, #bee5eb);
+  border-left-color: #3498db;
+  background: linear-gradient(135deg, #eaf6ff, #d6eaff);
 }
 
 /* Icons */
@@ -234,6 +227,7 @@
   box-shadow: 0 8px 20px rgba(0, 123, 255, 0.15);
   /* light blue glow */
 }
+
 /* Existing styles in userDashboard.css */
 
 .gas-level-box {
@@ -249,8 +243,9 @@
 }
 
 .gas-level-percentage {
-  font-size: 3em;
+  font-size: 3rem;
   font-weight: bold;
+  color: #2c3e50; /* Dark text for contrast */
   margin-bottom: 10px;
   display: block;
 }
@@ -258,7 +253,7 @@
 .gas-bar-container {
   width: 150px; /* Adjust as needed */
   height: 20px;
-  background-color: #e0e0e0;
+  background: #e0e0e0; /* Light gray */
   border-radius: 10px;
   overflow: hidden;
   margin: 10px auto;
@@ -266,6 +261,7 @@
 }
 
 .gas-bar {
+  background: linear-gradient(135deg, #6a5acd, #483d8b); /* Gradient for the bar */
   height: 100%;
   border-radius: 10px;
   transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
@@ -299,15 +295,6 @@
     border-left: 5px solid #00cc00; /* Green border */
 }
 
-
-
-
-
-
-
-
-
-
 /* ... existing styles */
 
 .booking-notification {
@@ -316,120 +303,5 @@
 }
 
 .booking-actions {
-    margin-top: 10px;
-    display: flex;
-    gap: 10px;
-}
-
-.booking-actions button {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.3s ease;
-}
-
-.pay-now-btn {
-    background-color: #28a745; /* Green */
-    color: white;
-}
-
-.pay-now-btn:hover {
-    background-color: #218838;
-}
-
-.cancel-booking-btn {
-    background-color: #ffc107; /* Yellow */
-    color: #333;
-}
-
-.cancel-booking-btn:hover {
-    background-color: #e0a800;
-}
-
-/* ... (existing styles in adminDashboard.css) ... */
-
-.status.active {
-  background-color: #28a745; /* green */
-}
-
-/* ✅ NEW STYLE for booking_pending */
-.status.booking_pending {
-  background-color: #007bff; /* blue */
-  color: white;
-}
-
-.status.deactivated {
-  background-color: #6c757d; /* gray */
-}
-
-/* ... (rest of the styles) ... */
-
-
-/* src/styles/userDashboard.css or a shared popup.css */
-
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.popup-content {
-  background: linear-gradient(135deg, #ffffff, #f8f9fa);
-  border: 1px solid #dee2e6;
-  border-radius: 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  text-align: center;
-  max-width: 400px;
-  width: 90%;
-}
-
-.popup-content h3 {
-  margin-top: 0;
-  color: #333;
-  font-size: 1.5em;
-}
-
-.popup-content p {
-  color: #555;
-  margin-bottom: 20px;
-}
-
-.popup-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-}
-
-.popup-buttons button {
-  padding: 10px 25px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-  transition: background-color 0.3s ease;
-}
-
-.popup-yes {
-  background: linear-gradient(135deg, #28a745, #218838);
-}
-
-.popup-yes:hover {
-  background-color: #218838;
-}
-
-.popup-no {
-  background: linear-gradient(135deg, #dc3545, #c82333);
-}
-
-.popup-no:hover {
-  background-color: #c82333;
+  display: none; /* Hide booking actions as refill payments are removed */
 }

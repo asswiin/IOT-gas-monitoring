@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -158,9 +157,7 @@ const UserDashboard = () => {
         <div className="nav-actions">
           <button className="nav-btn" onClick={() => navigate("/userdashboard")}>Dashboard</button>
           <button className="nav-btn" onClick={() => navigate("/history")}>History</button>
-          <button className="nav-btn" onClick={() => navigate("/payment-history")}>Payment</button>
           <button className="nav-btn" onClick={() => navigate("/feedback")}>Feedback</button>
-          <button className="nav-btn" onClick={() => navigate("/simulation-control")}>Simulation Control</button>
           <div className="profile-section">
             <button
               className="profile-button"

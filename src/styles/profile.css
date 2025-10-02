@@ -17,25 +17,25 @@
 }
 
 .back-to-dashboard-btn {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 8px 16px;
-  border-radius: 20px;
-  cursor: pointer;
+  position: fixed; /* Keep the button fixed on the left */
+  left: 10px; /* Adjusted to align closer to the left edge */
+  top: 20px;
+  background: linear-gradient(135deg, #ffefd5, #b7ac8d); /* Light pastel yellow gradient */
+  color: #333; /* Dark text for contrast */
+  border: 1px solid #c6b88d; /* Border matching the gradient */
+  padding: 10px 15px;
+  border-radius: 10px; /* Rounded corners for the box */
   font-size: 0.9rem;
-  font-weight: 500;
-  color: #333;
-  transition: all 0.2s ease-in-out;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  z-index: 1000; /* Ensure it stays above other elements */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow for the box */
 }
 
 .back-to-dashboard-btn:hover {
-  background-color: #f0f0f0;
-  border-color: #ccc;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #ffc107, #897947); /* Slightly darker gradient on hover */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
 }
 
 .profile-container h2 {
