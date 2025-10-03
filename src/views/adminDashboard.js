@@ -1,9 +1,11 @@
-
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../styles/adminDashboard.css"; // Ensure this path is correct for your project
+import { useNavigate } from "react-router-dom";
+import "../styles/adminDashboard.css"; // Ensure this path is correct
 
+// ===================================================================================
+//  1. SUB-COMPONENTS (These are unchanged)
+// ===================================================================================
 
 function Card({ title, children }) {
   return (
@@ -32,7 +34,6 @@ function UserDetail({ user, onBack, onDeleteUser }) {
       </div>
       <div className="detail-section">
         <h4>Address</h4>
-        {/* MODIFIED: Correctly display town and district */}
         <p><strong>Address:</strong> {`${user.houseName}, ${user.streetName}, ${user.town}, ${user.district}, ${user.state} - ${user.pinCode}`}</p>
       </div>
       <p><strong>Joined On:</strong> {new Date(user.createdAt).toLocaleString()}</p>
@@ -66,7 +67,6 @@ function RequestDetail({ request, onApprove, onReject, onBack }) {
         <p><strong>Full Name:</strong> {request.firstName} {request.lastName}</p>
         <p><strong>Email:</strong> {request.email}</p>
         <p><strong>Mobile:</strong> {request.mobileNumber}</p>
-        {/* MODIFIED: Correctly display town and district */}
         <p><strong>Address:</strong> {`${request.houseName}, ${request.streetName}, ${request.town}, ${request.district}`}</p>
         <p><strong>Requested On:</strong> {new Date(request.createdAt).toLocaleString()}</p>
       </div>
@@ -112,7 +112,9 @@ function AutoBookingDetail({ booking, onBack }) {
   );
 }
 
-
+// ===================================================================================
+//  2. MAIN DASHBOARD COMPONENT
+// ===================================================================================
 
 export default function Dashboard() {
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -120,26 +122,42 @@ export default function Dashboard() {
   const [allPayments, setAllPayments] = useState([]);
   const [pendingAutoBookings, setPendingAutoBookings] = useState([]);
   const [cancelledBookings, setCancelledBookings] = useState([]);
+  // const [allFeedback, setAllFeedback] = useState([]); // <-- REMOVED Friend's feedback state
+  const [myFeedback, setMyFeedback] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('dashboard-summary');
   const [selectedItem, setSelectedItem] = useState(null);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [showSignOutPopup, setShowSignOutPopup] = useState(false);
+
+  const navigate = useNavigate();
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const [requestsRes, usersRes, paymentsRes, pendingBookingsRes, cancelledBookingsRes] = await Promise.all([
+      const [
+        requestsRes, usersRes, paymentsRes, 
+        pendingBookingsRes, cancelledBookingsRes, 
+        myFeedbackRes
+      ] = await Promise.all([
         axios.get("http://localhost:5000/api/newconnection/requests/pending"),
         axios.get("http://localhost:5000/api/newconnection"),
         axios.get("http://localhost:5000/api/payment"),
         axios.get("http://localhost:5000/api/autobooking"),
-        axios.get("http://localhost:5000/api/autobooking/cancelled")
+        axios.get("http://localhost:5000/api/autobooking/cancelled"),
+        axios.get("http://localhost:5000/api/myfeedback")
       ]);
+      
       setPendingRequests(requestsRes.data);
       setAllUsers(usersRes.data);
       setAllPayments(paymentsRes.data);
       setPendingAutoBookings(pendingBookingsRes.data);
       setCancelledBookings(cancelledBookingsRes.data);
+      // setAllFeedback(feedbackRes.data); // <-- REMOVED setting friend's feedback
+      setMyFeedback(myFeedbackRes.data);
+
     } catch (err) {
       setError("Failed to load dashboard data. Please check the server connection and refresh.");
       console.error("Dashboard fetch error:", err);
@@ -151,7 +169,8 @@ export default function Dashboard() {
   useEffect(() => {
     fetchData();
   }, []);
-
+  
+  // Handler functions remain unchanged
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
   };
@@ -189,6 +208,20 @@ export default function Dashboard() {
     }
   };
 
+  const handleSignOutClick = () => {
+    setShowSignOutPopup(true);
+  };
+
+  const handleSignOutConfirm = () => {
+    setShowSignOutPopup(false);
+    localStorage.clear();
+    navigate('/login', { replace: true });
+  };
+
+  const handleSignOutCancel = () => {
+    setShowSignOutPopup(false);
+  };
+
   const handleSidebarNav = (section) => {
     setSelectedItem(null);
     setActiveSection(section);
@@ -207,6 +240,14 @@ export default function Dashboard() {
         default: setSelectedItem(null); return null;
       }
     }
+    
+    const getFeedbackCardClass = (type) => {
+      switch (type) {
+        case 'Urgent': return 'urgent';
+        case 'Complaint': return 'complaint';
+        default: return '';
+      }
+    };
 
     switch (activeSection) {
       case 'dashboard-summary':
@@ -224,7 +265,7 @@ export default function Dashboard() {
       case 'users':
         return (
           <div className="list-container">
-            {allUsers.length === 0 ? <p>No users found.</p> : allUsers.map(user => (
+            {allUsers.map(user => (
               <div key={user._id} className="list-item card clickable" onClick={() => setSelectedItem(user)}>
                 <h4>{user.firstName} {user.lastName} ({user.email})</h4>
                 <p><strong>Status:</strong> <span className={`status ${user.status}`}>{user.status.replace(/_/g, ' ')}</span></p>
@@ -236,7 +277,7 @@ export default function Dashboard() {
       case 'requests-list':
         return (
           <div className="list-container">
-            {pendingRequests.length === 0 ? <p>No pending requests.</p> : pendingRequests.map(req => (
+            {pendingRequests.map(req => (
               <div key={req._id} className="list-item card clickable" onClick={() => setSelectedItem(req)}>
                 <h4>{req.firstName} {req.lastName} ({req.email})</h4>
                 <p><strong>Requested On:</strong> {new Date(req.createdAt).toLocaleDateString()}</p>
@@ -248,7 +289,7 @@ export default function Dashboard() {
       case 'payments':
         return (
           <div className="list-container">
-            {allPayments.length === 0 ? <p>No payments found.</p> : allPayments.map(p => (
+            {allPayments.map(p => (
               <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
                 <h4>{p.customerName} (₹{p.amountDue})</h4>
                 <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
@@ -260,7 +301,7 @@ export default function Dashboard() {
       case 'auto-bookings':
         return (
           <div className="list-container">
-            {pendingAutoBookings.length === 0 ? <p>No pending auto-bookings.</p> : pendingAutoBookings.map(b => (
+            {pendingAutoBookings.map(b => (
               <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
                 <h4>{b.email}</h4>
                 <p><strong>Booked On:</strong> {new Date(b.bookingDate).toLocaleDateString()}</p>
@@ -273,11 +314,29 @@ export default function Dashboard() {
       case 'cancelled-bookings':
         return (
           <div className="list-container">
-            {cancelledBookings.length === 0 ? <p>No cancelled bookings.</p> : cancelledBookings.map(b => (
+            {cancelledBookings.map(b => (
               <div key={b._id} className="list-item card">
                 <h4>{b.email}</h4>
                 <p><strong>Cancelled On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
                 <p><strong>Status:</strong> <span className="status cancelled">{b.status}</span></p>
+              </div>
+            ))}
+          </div>
+        );
+        
+      // case 'feedback': // <-- REMOVED case for friend's feedback
+
+      case 'my-feedback':
+        return (
+          <div className="list-container">
+            {myFeedback.length === 0 ? <p>You have no personal feedback messages yet.</p> : myFeedback.map(fb => (
+              <div key={fb._id} className={`list-item card feedback-card ${getFeedbackCardClass(fb.type)}`}>
+                <div className="feedback-header">
+                  <h4>{fb.email}</h4>
+                  <span className="feedback-type">{fb.type}</span>
+                </div>
+                <p className="feedback-message">{fb.message}</p>
+                <p className="feedback-date"><strong>Received On:</strong> {new Date(fb.createdAt).toLocaleString()}</p>
               </div>
             ))}
           </div>
@@ -297,9 +356,12 @@ export default function Dashboard() {
       'payments': 'All Payments',
       'auto-bookings': 'Pending Auto-Bookings',
       'cancelled-bookings': 'Cancelled Bookings',
+      'my-feedback': "Feedback"
     };
     return titles[activeSection] || 'Admin Panel';
   };
+  
+  const myUrgentFeedbackCount = myFeedback.filter(fb => fb.type === 'Urgent').length;
 
   return (
     <div className="dashboard">
@@ -313,13 +375,20 @@ export default function Dashboard() {
             <li className={activeSection === 'payments' ? 'active' : ''} onClick={() => handleSidebarNav('payments')}>Payments</li>
             <li className={activeSection === 'auto-bookings' ? 'active' : ''} onClick={() => handleSidebarNav('auto-bookings')}>Pending Bookings {pendingAutoBookings.length > 0 && <span className="pending-count">({pendingAutoBookings.length})</span>}</li>
             <li className={activeSection === 'cancelled-bookings' ? 'active' : ''} onClick={() => handleSidebarNav('cancelled-bookings')}>Cancelled Bookings</li>
+            {/* <li className... > Friend's Feedback </li> */} {/* <-- REMOVED sidebar link */}
+            <li className={activeSection === 'my-feedback' ? 'active' : ''} onClick={() => handleSidebarNav('my-feedback')}>
+              Feedback 
+              {myUrgentFeedbackCount > 0 && 
+                <span className="pending-count urgent-count">({myUrgentFeedbackCount})</span>
+              }
+            </li>
           </ul>
         </nav>
         <div className="user-info">
           <div className="avatar"></div>
           <div>
             <p className="username">Admin User</p>
-            <p className="signout">Sign Out</p>
+            <p className="signout" onClick={handleSignOutClick}>Sign Out</p>
           </div>
         </div>
       </aside>
@@ -331,12 +400,26 @@ export default function Dashboard() {
         </div>
       </main>
 
+      {/* Popups remain unchanged */}
       {notification.show && (
         <div className="popup-overlay">
           <div className={`popup-content notification ${notification.type}`}>
             <h3>{notification.type === 'success' ? '✅ Success' : '❌ Error'}</h3>
             <p>{notification.message}</p>
             <button onClick={() => setNotification({ ...notification, show: false })} className="popup-ok">OK</button>
+          </div>
+        </div>
+      )}
+
+      {showSignOutPopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h3>Confirm Sign Out</h3>
+            <p>Are you sure you want to sign out?</p>
+            <div className="popup-buttons">
+              <button onClick={handleSignOutConfirm} className="confirm-yes">Yes, Sign Out</button>
+              <button onClick={handleSignOutCancel} className="confirm-no">Cancel</button>
+            </div>
           </div>
         </div>
       )}

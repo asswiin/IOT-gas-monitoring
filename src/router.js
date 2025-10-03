@@ -13,6 +13,7 @@ import Profile from './views/Profile';
 import ProcessingPage from './views/ProcessingPage';
 import SimulationControl from './views/SimulationControl';
 import History from './views/History';
+import Feedback from './views/Feedback';
 
 function AppRoutes() {
   return (
@@ -31,6 +32,7 @@ function AppRoutes() {
         <Route path="/processing" element={<ProcessingPage />} />
         <Route path="/simulation" element={<SimulationControl />} />
          <Route path="/history" element={<History />} />
+         <Route path="/feedback" element={<Feedback />} />  
       </Route>
     </Routes>
   );

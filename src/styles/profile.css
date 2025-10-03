@@ -10,38 +10,40 @@
 .profile-header {
   width: 100%;
   max-width: 600px;
-  position: relative; /* Needed for absolute positioning of the back button */
+  position: relative;
   display: flex;
-  justify-content: center; /* Center the title */
+  flex-direction: column;
+  align-items: center;
   margin-bottom: 20px;
 }
 
+/* --- MODIFIED STYLES FOR THE BACK BUTTON --- */
 .back-to-dashboard-btn {
-  position: fixed; /* Keep the button fixed on the left */
-  left: 10px; /* Adjusted to align closer to the left edge */
-  top: 20px;
-  background: linear-gradient(135deg, #ffefd5, #b7ac8d); /* Light pastel yellow gradient */
-  color: #333; /* Dark text for contrast */
-  border: 1px solid #c6b88d; /* Border matching the gradient */
-  padding: 10px 15px;
-  border-radius: 10px; /* Rounded corners for the box */
-  font-size: 0.9rem;
-  font-weight: bold;
+  position: static;
+  align-self: flex-start;
+  background: linear-gradient(135deg, #ffefd5, #b7ac8d);
+  color: #333;
+  border: 1px solid #c6b88d;
+  padding: 6px 12px; /* Adjusted padding for a clean rectangle shape */
+  border-radius: 4px;
+  font-size: 0.8rem; /* Adjusted font size */
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
-  z-index: 1000; /* Ensure it stays above other elements */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow for the box */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  margin-bottom: 15px;
 }
 
 .back-to-dashboard-btn:hover {
-  background: linear-gradient(135deg, #ffc107, #897947); /* Slightly darker gradient on hover */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+  background: linear-gradient(135deg, #ffc107, #897947);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
+/* --- END OF MODIFICATIONS --- */
 
 .profile-container h2 {
   font-size: 2.2rem;
   color: #333;
-  margin: 0; /* Remove default margin */
+  margin: 0;
 }
 
 .profile-card {
@@ -99,8 +101,8 @@
 }
 
 .details-section h4 {
-    font-size: 1.2rem;
-    color: #555;
+  font-size: 1.2rem;
+  color: #555;
 }
 
 .profile-actions {
@@ -131,23 +133,14 @@
   background-color: #0056b3;
 }
 
-.signout-btn {
+.signout-btn, .deactivate-btn {
   background-color: #dc3545;
   color: white;
   border: 1px solid #dc3545;
 }
 
-.signout-btn:hover {
+.signout-btn:hover, .deactivate-btn:hover {
   background-color: #c82333;
-}
-
-.deactivate-btn {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
 .popup-overlay {

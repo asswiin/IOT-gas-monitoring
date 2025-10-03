@@ -396,7 +396,16 @@ function EditProfile() {
 
   return (
     <form onSubmit={handleSubmit} className="kyc-form">
-      <h2>Edit Your Profile</h2>
+      <div className="edit-profile-header">
+        <button 
+          type="button" 
+          onClick={() => navigate('/profile')} 
+          className="back-to-profile-btn"
+        >
+          &larr; Back to Profile
+        </button>
+        <h2>Edit Your Profile</h2>
+      </div>
       <p className="subtitle">*Mandatory Fields</p>
 
       {/* Personal Details */}

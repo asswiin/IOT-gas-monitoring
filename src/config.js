@@ -23,5 +23,6 @@ export const getEndpoint = {
   updateConnectionStatus: (email) => `${endpoints.newConnection}/${email}/status`,
   deactivateConnection: (email) => `${endpoints.newConnection}/${email}/deactivate`,
   refillGas: (email) => `${endpoints.gasLevel}/${email}/refill`,
-   cancelBooking: (email) => `${endpoints.newConnection}/${email}/cancel-booking`
+   cancelBooking: (email) => `${endpoints.newConnection}/${email}/cancel-booking`,
+   myFeedback: (email) => `${API_BASE_URL}/myfeedback/${email}` 
 };

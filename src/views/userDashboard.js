@@ -144,36 +144,42 @@ const UserDashboard = () => {
   }, [userEmail, fetchGasLevel]);
 
   const getGasLevelColor = (level) => {
-    if (level === null || level === undefined) return 'gray';
-    if (level > 60) return 'green';
-    if (level > BOOKING_THRESHOLD) return 'orange'; // Use BOOKING_THRESHOLD for orange
-    return 'red';
+    if (level === null || level === undefined) return '#6c757d';
+    if (level > 60) return '#28a745'; // Green for high levels
+    if (level > BOOKING_THRESHOLD) return '#ffc107'; // Yellow for medium levels
+    return '#dc3545'; // Red for low levels
   };
 
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <h1>Gas Monitor</h1>
+        <h1>⛽ Gas Monitor</h1>
         <div className="nav-actions">
-          <button className="nav-btn" onClick={() => navigate("/userdashboard")}>Dashboard</button>
-          <button className="nav-btn" onClick={() => navigate("/history")}>History</button>
-          <button className="nav-btn" onClick={() => navigate("/feedback")}>Feedback</button>
+          <button className="nav-btn" onClick={() => navigate("/userdashboard")}>
+            Dashboard
+          </button>
+          <button className="nav-btn" onClick={() => navigate("/history")}>
+            History
+          </button>
+          <button className="nav-btn" onClick={() => navigate("/feedback")}>
+            Feedback
+          </button>
           <div className="profile-section">
             <button
               className="profile-button"
               onClick={handleProfileClick}
               title="View Profile"
             >
-              <img src="/profileicon.jpg" alt="Profile" /> {/* Ensure this path is correct */}
+              <img src="/profileicon.jpg" alt="Profile" />
             </button>
           </div>
         </div>
       </header>
       <main className="dashboard-main">
-        <h2>Dashboard</h2>
+        <h2>🎛️ Control Center</h2>
         <div className="stats-container">
           <div className="stat-box gas-level-box">
-            <h3>Current Gas Level</h3>
+            <h3>⛽ Current Gas Level</h3>
             {loadingGas ? (
               <p>Loading...</p>
             ) : errorGas ? (
@@ -212,12 +218,12 @@ const UserDashboard = () => {
             )}
           </div>
           <div className="stat-box">
-            <h3>Estimated Refill Date</h3>
-            <p>Calculated based on usage...</p> {/* You might want to implement this logic */}
+            <h3>📅 Estimated Refill Date</h3>
+            <p>📈 Calculated based on usage...</p> {/* You might want to implement this logic */}
           </div>
           <div className="stat-box">
-            <h3>Tube Expiry Date</h3>
-            <p>DD/MM/YYYY</p> {/* You might want to implement this logic */}
+            <h3>⏰ Tube Expiry Date</h3>
+            <p>📋 DD/MM/YYYY</p> {/* You might want to implement this logic */}
           </div>
         </div>
         <div className="alerts-container">
