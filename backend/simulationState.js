@@ -1,4 +1,4 @@
 
-const simulationStates = {};
+    const simulationStates = {};
 
-module.exports = simulationStates;
+    module.exports = simulationStates;
