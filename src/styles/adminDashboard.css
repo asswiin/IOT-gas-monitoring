@@ -712,7 +712,52 @@
 }
 
 
+/* ... add this to your existing adminDashboard.css file ... */
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap; /* Allows search bar to wrap on smaller screens */
+  gap: 1rem;
+}
+
+.page-title {
+  margin: 0; /* Remove default margin */
+}
+
+.search-bar-container {
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 300px; /* Adjust width as needed */
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* Responsive adjustments for the search bar */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+}
 
 
 

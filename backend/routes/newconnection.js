@@ -225,60 +225,7 @@ router.delete("/:email", async (req, res) => {
   }
 });
 
-// PUT to cancel a pending gas booking
-// router.put("/:email/cancel-booking", async (req, res) => {
-//   try { 
-//     const userEmail = req.params.email;
-    
-//     // First, find the user to get their _id
-//     const user = await KYC.findOne({ email: userEmail });
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found." });
-//     }
-
-//     // Update KYC status from booking_pending to active
-//     const updatedKYC = await KYC.findOneAndUpdate(
-//       { email: userEmail, status: { $in: ['booking_pending', 'refill_payment_pending'] } },
-//       { $set: { status: 'active' } },
-//       { new: true }
-//     );
-
-//     if (!updatedKYC) {
-//       return res.status(404).json({ message: "User with a pending booking not found." });
-//     }
-
-//     // Update the AutoBooking status to 'cancelled' using both email and userId
-//     const cancelledBooking = await AutoBooking.findOneAndUpdate(
-//       { 
-//         $or: [
-//           { email: userEmail, status: 'booked' },
-//           { userId: user._id, status: 'booked' }
-//         ]
-//       },
-//       { $set: { status: 'cancelled' } },
-//       { new: true }
-//     );
-
-//     if (!cancelledBooking) {
-//       console.log(`No active booking found for user ${userEmail} to cancel`);
-//     }
-
-//     res.json({ 
-//       message: "Booking cancelled successfully! Status reset to active.", 
-//       kycData: updatedKYC,
-//       cancelledBooking: cancelledBooking 
-//     });
-//   } catch (err) {
-//     console.error("❌ Booking Cancellation Error:", err);
-//     res.status(500).json({ message: "Error cancelling booking." });
-//   }
-// });
-
-
-
-
-
-
+// Cancel a pending booking (user-initiated, keeps KYC active)
 router.put("/:email/cancel-booking", async (req, res) => {
   try { 
     const userEmail = req.params.email;
