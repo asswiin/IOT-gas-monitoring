@@ -39,15 +39,17 @@ app.use('/api/myfeedback', myFeedbackRoutes);
 // --- Simple Health Check Route ---
 app.get('/', (req, res) => res.send('API is running successfully!'));
 
-// --- MongoDB Connection ---
-const MONGO_URI = process.env.MONGO_URI;
+// --- Start HTTP server immediately (so clients can connect even if DB is down) ---
+app.listen(PORT, () => console.log(`🚀 🚀 🚀  Server is running on port ${PORT}`));
+
+// --- MongoDB Connection (non-fatal) ---
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/miniproject';
 
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('✅ ✅ ✅  Backend connected to MongoDB successfully!');
-    app.listen(PORT, () => console.log(`🚀 🚀 🚀  Server is running on port ${PORT}`));
   })
   .catch(err => {
     console.error('❌ ❌ ❌  MongoDB connection error:', err.message);
-    process.exit(1);
+    console.error('⚠️  Continuing to serve HTTP endpoints; DB-dependent routes may fail until MongoDB is available.');
   });

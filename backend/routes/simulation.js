@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const GasLevel = require('../models/Gaslevel');
 const GasDataHistory = require('../models/GasDataHistory');
-const simulationStates = require('../simulationState'); // <-- Import our state holder
+const simulationStates = {}; 
 
 // POST /api/simulation/start
 // The WEB APP calls this to command the simulation to start.

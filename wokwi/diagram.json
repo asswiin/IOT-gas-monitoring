@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "author": "Mohammedjaseem Jaseem",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 72.04, "attrs": {} },
+    { "type": "wokwi-gas-sensor", "id": "gas1", "top": -64.5, "left": -79.4, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 44.4, "left": -15.4, "attrs": { "color": "red" } },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": 79.2,
+      "left": -55.8,
+      "attrs": { "volume": "0.1" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "gas1:VCC", "esp:3V3", "red", [ "h19.2", "v47.1", "h-19.2" ] ],
+    [ "gas1:GND", "esp:GND.1", "black", [ "h0", "v143.2", "h-9.6" ] ],
+    [ "gas1:AOUT", "esp:32", "blue", [ "h19.2", "v124.5" ] ],
+    [ "gas1:DOUT", "esp:33", "green", [ "h28.8", "v115.2" ] ],
+    [ "led1:A", "esp:21", "green", [ "v-76.8", "h163.2", "v9.6" ] ],
+    [ "led1:C", "esp:GND.1", "green", [ "v67.2", "h77.2" ] ],
+    [ "bz1:1", "esp:GND.1", "green", [ "v-9.6", "h105.6" ] ],
+    [ "bz1:2", "esp:22", "green", [ "v-105.6", "h66.8" ] ]
+  ],
+  "dependencies": {}
+}

@@ -120,9 +120,9 @@ export default function Dashboard() {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
-  const [pendingAutoBookings, setPendingAutoBookings] = useState([]);
-  const [cancelledBookings, setCancelledBookings] = useState([]);
-  // const [allFeedback, setAllFeedback] = useState([]); // <-- REMOVED Friend's feedback state
+  const [initialPayments, setInitialPayments] = useState([]);
+  const [refillPayments, setRefillPayments] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
   const [myFeedback, setMyFeedback] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -139,23 +139,32 @@ export default function Dashboard() {
     try {
       const [
         requestsRes, usersRes, paymentsRes, 
-        pendingBookingsRes, cancelledBookingsRes, 
+        allBookingsRes,
         myFeedbackRes
       ] = await Promise.all([
         axios.get("http://localhost:5000/api/newconnection/requests/pending"),
         axios.get("http://localhost:5000/api/newconnection"),
         axios.get("http://localhost:5000/api/payment"),
-        axios.get("http://localhost:5000/api/autobooking"),
-        axios.get("http://localhost:5000/api/autobooking/cancelled"),
+        axios.get("http://localhost:5000/api/autobooking/all"),
         axios.get("http://localhost:5000/api/myfeedback")
       ]);
       
       setPendingRequests(requestsRes.data);
       setAllUsers(usersRes.data);
       setAllPayments(paymentsRes.data);
-      setPendingAutoBookings(pendingBookingsRes.data);
-      setCancelledBookings(cancelledBookingsRes.data);
-      // setAllFeedback(feedbackRes.data); // <-- REMOVED setting friend's feedback
+      
+      // Separate payments by type
+      const initial = paymentsRes.data.filter(payment => 
+        payment.paymentType === 'initial_connection' || !payment.paymentType
+      );
+      const refill = paymentsRes.data.filter(payment => 
+        payment.paymentType === 'gas_refill'
+      );
+      
+      setInitialPayments(initial);
+      setRefillPayments(refill);
+      
+      setAllBookings(allBookingsRes.data);
       setMyFeedback(myFeedbackRes.data);
 
     } catch (err) {
@@ -168,6 +177,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData();
+    
+    // Add auto-refresh every 10 seconds to catch real-time updates
+    const interval = setInterval(fetchData, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
   
   // Handler functions remain unchanged
@@ -235,7 +249,9 @@ export default function Dashboard() {
       switch (activeSection) {
         case 'users': return <UserDetail user={selectedItem} onBack={() => setSelectedItem(null)} onDeleteUser={handleDeleteUser} />;
         case 'requests-list': return <RequestDetail request={selectedItem} onBack={() => setSelectedItem(null)} onApprove={handleApprove} onReject={handleReject} />;
-        case 'payments': return <PaymentDetail payment={selectedItem} onBack={() => setSelectedItem(null)} />;
+        case 'initial-payments':
+        case 'refill-payments': 
+          return <PaymentDetail payment={selectedItem} onBack={() => setSelectedItem(null)} />;
         case 'auto-bookings': return <AutoBookingDetail booking={selectedItem} onBack={() => setSelectedItem(null)} />;
         default: setSelectedItem(null); return null;
       }
@@ -256,8 +272,9 @@ export default function Dashboard() {
             <Card title="Total Users"><p>{allUsers.length}</p></Card>
             <Card title="Active Connections"><p>{allUsers.filter(u => u.status === 'active').length}</p></Card>
             <Card title="Pending Requests"><p>{pendingRequests.length}</p></Card>
-            <Card title="Pending Bookings"><p>{pendingAutoBookings.length}</p></Card>
-            <Card title="Cancelled Bookings"><p>{cancelledBookings.length}</p></Card>
+            <Card title="Initial Payments"><p>{initialPayments.length}</p></Card>
+            <Card title="Refill Payments"><p>{refillPayments.length}</p></Card>
+            <Card title="Total Bookings"><p>{allBookings.length}</p></Card>
             <Card title="Total Payments"><p>{allPayments.length}</p></Card>
           </div>
         );
@@ -286,13 +303,27 @@ export default function Dashboard() {
           </div>
         );
 
-      case 'payments':
+      case 'initial-payments':
         return (
           <div className="list-container">
-            {allPayments.map(p => (
+            {initialPayments.length === 0 ? <p>No initial connection payments found.</p> : initialPayments.map(p => (
               <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
                 <h4>{p.customerName} (₹{p.amountDue})</h4>
                 <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
+                <p><strong>Type:</strong> <span className="payment-type initial">Initial Connection</span></p>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'refill-payments':
+        return (
+          <div className="list-container">
+            {refillPayments.length === 0 ? <p>No refill payments found.</p> : refillPayments.map(p => (
+              <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
+                <h4>{p.customerName} (₹{p.amountDue})</h4>
+                <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
+                <p><strong>Type:</strong> <span className="payment-type refill">Gas Refill</span></p>
               </div>
             ))}
           </div>
@@ -301,30 +332,18 @@ export default function Dashboard() {
       case 'auto-bookings':
         return (
           <div className="list-container">
-            {pendingAutoBookings.map(b => (
+            {allBookings.length === 0 ? <p>No bookings found.</p> : allBookings.map(b => (
               <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
                 <h4>{b.email}</h4>
                 <p><strong>Booked On:</strong> {new Date(b.bookingDate).toLocaleDateString()}</p>
-                <p><strong>Status:</strong> <span className="status booked">{b.status}</span></p>
+                <p><strong>Status:</strong> <span className={`status ${b.status}`}>{b.status}</span></p>
+                {b.status === 'cancelled' && (
+                  <p><strong>Cancelled On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
+                )}
               </div>
             ))}
           </div>
         );
-
-      case 'cancelled-bookings':
-        return (
-          <div className="list-container">
-            {cancelledBookings.map(b => (
-              <div key={b._id} className="list-item card">
-                <h4>{b.email}</h4>
-                <p><strong>Cancelled On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
-                <p><strong>Status:</strong> <span className="status cancelled">{b.status}</span></p>
-              </div>
-            ))}
-          </div>
-        );
-        
-      // case 'feedback': // <-- REMOVED case for friend's feedback
 
       case 'my-feedback':
         return (
@@ -353,15 +372,16 @@ export default function Dashboard() {
       'dashboard-summary': 'Dashboard Summary',
       'users': 'All Users',
       'requests-list': 'Pending Connection Requests',
-      'payments': 'All Payments',
-      'auto-bookings': 'Pending Auto-Bookings',
-      'cancelled-bookings': 'Cancelled Bookings',
+      'initial-payments': 'Initial Connection Payments',
+      'refill-payments': 'Gas Refill Payments',
+      'auto-bookings': 'Bookings',
       'my-feedback': "Feedback"
     };
     return titles[activeSection] || 'Admin Panel';
   };
   
   const myUrgentFeedbackCount = myFeedback.filter(fb => fb.type === 'Urgent').length;
+  const pendingBookingsCount = allBookings.filter(b => b.status === 'booked').length;
 
   return (
     <div className="dashboard">
@@ -372,10 +392,9 @@ export default function Dashboard() {
             <li className={activeSection === 'dashboard-summary' ? 'active' : ''} onClick={() => handleSidebarNav('dashboard-summary')}>Dashboard</li>
             <li className={activeSection === 'users' ? 'active' : ''} onClick={() => handleSidebarNav('users')}>Users</li>
             <li className={activeSection === 'requests-list' ? 'active' : ''} onClick={() => handleSidebarNav('requests-list')}>Requests {pendingRequests.length > 0 && <span className="pending-count">({pendingRequests.length})</span>}</li>
-            <li className={activeSection === 'payments' ? 'active' : ''} onClick={() => handleSidebarNav('payments')}>Payments</li>
-            <li className={activeSection === 'auto-bookings' ? 'active' : ''} onClick={() => handleSidebarNav('auto-bookings')}>Pending Bookings {pendingAutoBookings.length > 0 && <span className="pending-count">({pendingAutoBookings.length})</span>}</li>
-            <li className={activeSection === 'cancelled-bookings' ? 'active' : ''} onClick={() => handleSidebarNav('cancelled-bookings')}>Cancelled Bookings</li>
-            {/* <li className... > Friend's Feedback </li> */} {/* <-- REMOVED sidebar link */}
+            <li className={activeSection === 'initial-payments' ? 'active' : ''} onClick={() => handleSidebarNav('initial-payments')}>Initial Payments</li>
+            <li className={activeSection === 'refill-payments' ? 'active' : ''} onClick={() => handleSidebarNav('refill-payments')}>Refill Payments</li>
+            <li className={activeSection === 'auto-bookings' ? 'active' : ''} onClick={() => handleSidebarNav('auto-bookings')}>Bookings {pendingBookingsCount > 0 && <span className="pending-count">({pendingBookingsCount})</span>}</li>
             <li className={activeSection === 'my-feedback' ? 'active' : ''} onClick={() => handleSidebarNav('my-feedback')}>
               Feedback 
               {myUrgentFeedbackCount > 0 && 
@@ -426,3 +445,19 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

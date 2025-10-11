@@ -25,4 +25,28 @@ router.get('/cancelled', async (req, res) => {
   }
 });
 
+// ✅ NEW: GET all auto-bookings (both booked and cancelled)
+router.get('/all', async (req, res) => {
+  try {
+    const allBookings = await AutoBooking.find({}).sort({ bookingDate: -1 });
+    res.json(allBookings);
+  } catch (err) {
+    console.error("❌ Error fetching all auto-bookings:", err);
+    res.status(500).json({ message: "Server error while fetching all auto-bookings." });
+  }
+});
+
 module.exports = router;
+
+
+
+
+
+
+
+
+
+
+
+
+
