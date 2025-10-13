@@ -487,6 +487,93 @@
   margin-top: 2rem;
 }
 
+/* Report Modal Styles */
+.report-modal {
+  max-width: 700px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.report-form {
+  margin-bottom: 1rem;
+}
+
+.report-form label {
+  display: block;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.report-results {
+  margin-top: 2rem;
+  border-top: 2px solid #dee2e6;
+  padding-top: 1.5rem;
+}
+
+.report-results h4 {
+  color: #212529;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 1.3rem;
+}
+
+.report-summary {
+  margin-bottom: 1.5rem;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.report-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 4px solid #007bff;
+}
+
+.report-item.highlight {
+  background-color: #e8f5e8;
+  border-left-color: #28a745;
+  font-weight: 600;
+  grid-column: 1 / -1;
+}
+
+.report-label {
+  color: #495057;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.report-value {
+  color: #212529;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.report-item.highlight .report-value {
+  color: #28a745;
+  font-size: 1.3rem;
+}
+
+.download-btn:hover {
+  background-color: #218838 !important;
+  transform: translateY(-1px);
+}
+
+.report-btn:hover {
+  background-color: #138496 !important;
+  transform: translateY(-1px);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .dashboard {
@@ -532,7 +619,8 @@
     width: 100%;
   }
 }
-  margin-top: 20px;
+
+.margin-top: 20px;
 
 
 .report-btn,
@@ -644,8 +732,6 @@
   }
 }
 
-/* ... all your existing styles */
-
 /* Specific styles for feedback cards */
 .feedback-card {
   border-left-width: 5px;
@@ -712,52 +798,7 @@
 }
 
 
-/* ... add this to your existing adminDashboard.css file ... */
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap; /* Allows search bar to wrap on smaller screens */
-  gap: 1rem;
-}
-
-.page-title {
-  margin: 0; /* Remove default margin */
-}
-
-.search-bar-container {
-  display: flex;
-  align-items: center;
-}
-
-.search-input {
-  padding: 0.75rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  width: 300px; /* Adjust width as needed */
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-}
-
-/* Responsive adjustments for the search bar */
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .search-input {
-    width: 100%;
-  }
-}
 
 
 
