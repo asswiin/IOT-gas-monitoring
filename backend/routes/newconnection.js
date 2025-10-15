@@ -230,7 +230,7 @@ router.put("/:email/cancel-booking", async (req, res) => {
   try { 
     const userEmail = req.params.email;
 
-    // MODIFIED: Find the pending booking and update its status to 'cancelled'.
+    // Find and cancel the pending booking
     const cancelledBooking = await AutoBooking.findOneAndUpdate(
       { 
         email: userEmail,
@@ -241,11 +241,16 @@ router.put("/:email/cancel-booking", async (req, res) => {
     );
 
     if (!cancelledBooking) {
-      // If no booking was found to cancel.
       return res.status(404).json({ message: "No pending booking found to cancel." });
     }
     
-    // The user's main KYC status remains 'active', no change is needed.
+    // Ensure the user's KYC status remains 'active'
+    await KYC.findOneAndUpdate(
+      { email: userEmail },
+      { $set: { status: 'active' } }
+    );
+    
+    console.log(`Booking cancelled for ${userEmail}`);
     res.json({ 
       message: "Booking cancelled successfully!", 
       cancelledBooking: cancelledBooking 

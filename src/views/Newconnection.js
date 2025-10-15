@@ -143,6 +143,22 @@ function KYCForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // NEW: Calculate date restrictions
+  const getCurrentDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  const getMaxAllowedDate = () => {
+    const today = new Date();
+    const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    return eighteenYearsAgo.toISOString().split('T')[0];
+  };
+
+  // Set minimum date to 1950 and maximum date to 18 years ago from today
+  const minDate = '1950-01-01';
+  const maxDate = getMaxAllowedDate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
@@ -159,16 +175,23 @@ function KYCForm() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid Email.";
     }
+    // MODIFIED: Enhanced age validation
     if (formData.dob) {
       const today = new Date();
       const birthDate = new Date(formData.dob);
       let age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
+      
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
+      
       if (age < 18) {
-        newErrors.dob = "You must be at least 18 years old to apply.";
+        newErrors.dob = "You must be at least 18 years old to apply for a new connection.";
+      }
+      
+      if (birthDate > today) {
+        newErrors.dob = "Date of birth cannot be in the future.";
       }
     } else {
       newErrors.dob = "Date of Birth is required.";
@@ -233,8 +256,20 @@ function KYCForm() {
         </div>
         <div className="form-group">
           <label>Date of Birth*</label>
-          <input type="date" name="dob" value={formData.dob || ''} onChange={handleChange} required />
+          <input 
+            type="date" 
+            name="dob" 
+            value={formData.dob || ''} 
+            onChange={handleChange} 
+            required 
+            min={minDate}
+            max={maxDate}
+            title="You must be at least 18 years old to apply"
+          />
           {errors.dob && <p className="error">{errors.dob}</p>}
+          <small className="date-help-text">
+            You must be at least 18 years old to apply for a new connection.
+          </small>
         </div>
         <fieldset>
           <legend>Close Relative</legend>

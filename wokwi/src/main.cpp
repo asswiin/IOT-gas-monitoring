@@ -20,7 +20,7 @@
 // --- USER CONFIGURATION ---
 // =================================================================
 // Target user for monitoring. Set to the user's email used in your backend.
-String userEmail = "b@gmail.com";
+String userEmail = "a@gmail.com";
 
 // --- WiFi Configuration ---
 const char* ssid = "Wokwi-GUEST";
@@ -293,7 +293,7 @@ void runGasSimulation() {
  * @brief Updates alarms and hardware (LED, Buzzer) based on current status.
  */
 void updateAlarmsAndHardware() {
-    int reportedDigitalValue = simulatedLeakActive ? 1 : 0; // If leak is active, report 1 (leak)
+    int reportedDigitalValue = simulatedLeakActive ? 1 : 0;
     bool isLowGas = (userGasLevel <= lowGasThreshold);
     bool isLeaking = (reportedDigitalValue == 1);
     bool criticalStatus = isLowGas || isLeaking;
@@ -304,21 +304,26 @@ void updateAlarmsAndHardware() {
     } else if (isLeaking) {
         statusText = "ALARM: Gas Leak Detected!";
     } else if (isLowGas) {
-        statusText = "WARNING: Low Gas";
+        statusText = "WARNING: Low Gas - Auto-booking should trigger";
     }
 
     if (criticalStatus) {
         digitalWrite(ledPin, HIGH);
         digitalWrite(buzzerPin, HIGH);
+        // Always send data when critical, regardless of threshold
         sendDataToServer(userGasLevel, isLeaking);
     } else {
         digitalWrite(ledPin, LOW);
         digitalWrite(buzzerPin, LOW);
     }
     
-    // Print status log
+    // Print status log with more detail when at 20%
     Serial.println("---");
     Serial.println("[STATUS] Tank Level: " + String(userGasLevel, 1) + "% | Status: " + statusText);
+    
+    if (userGasLevel <= lowGasThreshold && !isLeaking) {
+        Serial.println("[AUTO-BOOKING] Gas level at/below 20% - Backend should create auto-booking");
+    }
 }
 
 

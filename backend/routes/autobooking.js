@@ -1,12 +1,14 @@
+
+
 const express = require('express');
 const router = express.Router();
 const AutoBooking = require('../models/AutoBooking');
 
-// ✅ MODIFIED: GET only PENDING auto-bookings (for the main admin view)
+// ✅ CORRECTED: GET only PENDING auto-bookings (for the main admin view)
 router.get('/', async (req, res) => {
   try {
-    // We define 'pending' bookings as those with the status 'booked'
-    const pendingBookings = await AutoBooking.find({ status: 'booked' }).sort({ bookingDate: -1 });
+    // Corrected to find 'booking_pending' status to match the model and application logic
+    const pendingBookings = await AutoBooking.find({ status: 'booking_pending' }).sort({ bookingDate: -1 });
     res.json(pendingBookings);
   } catch (err) {
     console.error("❌ Error fetching pending auto-bookings:", err);
@@ -25,7 +27,7 @@ router.get('/cancelled', async (req, res) => {
   }
 });
 
-// ✅ NEW: GET all auto-bookings (both booked and cancelled)
+// ✅ NEW: GET all auto-bookings (including paid, fulfilled, etc.)
 router.get('/all', async (req, res) => {
   try {
     const allBookings = await AutoBooking.find({}).sort({ bookingDate: -1 });
@@ -37,6 +39,11 @@ router.get('/all', async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+
+
 
 
 
