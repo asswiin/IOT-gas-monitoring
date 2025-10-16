@@ -1,33 +1,4 @@
-// const express = require("express");
-// const router = express.Router();
-// const KYC = require("../models/Newconnection");
-// const Payment = require("../models/Payment");
-// const GasLevel = require("../models/Gaslevel");
-// const AutoBooking = require("../models/AutoBooking"); // Import the new model
-
-// // GET all pending approval requests for admin
-// router.get("/requests/pending", async (req, res) => {
-//   try {
-//     const pendingRequests = await KYC.find({ status: 'pending_approval' });
-//     res.json(pendingRequests);
-//   } catch (err) {
-//     console.error("❌ Error fetching pending requests:", err);
-//     res.status(500).json({ message: "Server error while fetching pending KYC requests" });
-//   }
-// });
-
-// // GET all users/KYC records for admin 'Users' section
-// router.get("/", async (req, res) => {
-//   try {
-//     const allUsers = await KYC.find({});
-//     res.json(allUsers);
-//   } catch (err) {
-//     console.error("❌ Error fetching all users:", err);
-//     res.status(500).json({ message: "Server error while fetching all user data" });
-//   }
-// });
-
-// // GET existing KYC data by email
+//  email
 // router.get("/:email", async (req, res) => {
 //   try {
 //     const kycData = await KYC.findOne({ email: req.params.email });
@@ -326,28 +297,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const express = require("express");
 const router = express.Router();
 const KYC = require("../models/Newconnection");
@@ -412,7 +361,6 @@ router.post("/", async (req, res) => {
 });
 
 // PUT to update KYC status after payment (or admin approval/rejection)
-// ✅ MODIFIED: Handle 'rejected' status the same way 'delete' would for consistency
 router.put("/:email/status", async (req, res) => {
     try {
       const { status } = req.body;
@@ -423,7 +371,6 @@ router.put("/:email/status", async (req, res) => {
         if (!deletedKYC) {
           return res.status(404).json({ message: "KYC record not found for rejection." });
         }
-        // ✅ Cascade delete associated payments, gas level, and auto-bookings
         await Payment.deleteMany({ kycId: deletedKYC._id }); 
         await GasLevel.deleteOne({ email: userEmail });
         await AutoBooking.deleteMany({ userId: deletedKYC._id });
@@ -433,13 +380,12 @@ router.put("/:email/status", async (req, res) => {
           { email: userEmail },
           { $set: { status: status } },
           { new: true }
-        ).select('+_id');  // Explicitly include _id in the response
+        ).select('+_id');
         
         if (!updatedKYC) {
           return res.status(404).json({ message: "KYC record not found for update." });
         }
 
-        // If status is approved, send all necessary details for payment
         if (status === 'approved') {
           const kycDetails = {
             _id: updatedKYC._id,
@@ -521,7 +467,7 @@ router.put("/:email/profile", async (req, res) => {
   }
 });
 
-// ✅ NEW ROUTE: Deactivate user account (sets status to 'deactivated')
+// Deactivate user account (sets status to 'deactivated')
 router.put("/:email/deactivate", async (req, res) => {
   try {
     const userEmail = req.params.email;
@@ -541,31 +487,18 @@ router.put("/:email/deactivate", async (req, res) => {
   }
 });
 
-// ✅ NEW ROUTE: Admin-specific DELETE user and their payments
-// This route is distinct from setting status to 'rejected' for pending requests.
-// This is for deleting an *existing* user (approved, active, or deactivated).
+// Admin-specific DELETE user and their payments
 router.delete("/:email", async (req, res) => {
   try {
     const userEmail = req.params.email;
-
-    // 1. Find the KYC record to get its _id
     const userToDelete = await KYC.findOne({ email: userEmail });
     if (!userToDelete) {
       return res.status(404).json({ message: "User not found for deletion." });
     }
-
     const kycId = userToDelete._id;
-
-    // 2. Delete associated payment records
     await Payment.deleteMany({ kycId: kycId });
-
-    // 3. Delete the GasLevel record
     await GasLevel.deleteOne({ email: userEmail });
-
-    // 4. Delete associated AutoBooking records
     await AutoBooking.deleteMany({ userId: kycId });
-
-    // 5. Delete the KYC record
     await KYC.deleteOne({ email: userEmail });
 
     res.json({ message: "User and all associated data deleted successfully!" });
@@ -575,12 +508,10 @@ router.delete("/:email", async (req, res) => {
   }
 });
 
-// Cancel a pending booking (user-initiated, keeps KYC active)
+// Cancel a pending booking
 router.put("/:email/cancel-booking", async (req, res) => {
   try { 
     const userEmail = req.params.email;
-
-    // Find and cancel the pending booking
     const cancelledBooking = await AutoBooking.findOneAndUpdate(
       { 
         email: userEmail,
@@ -594,7 +525,6 @@ router.put("/:email/cancel-booking", async (req, res) => {
       return res.status(404).json({ message: "No pending booking found to cancel." });
     }
     
-    // Ensure the user's KYC status remains 'active'
     await KYC.findOneAndUpdate(
       { email: userEmail },
       { $set: { status: 'active' } }
@@ -611,6 +541,7 @@ router.put("/:email/cancel-booking", async (req, res) => {
   }
 });
 
+// Manually re-book after cancellation
 router.post("/:email/rebook", async (req, res) => {
   try {
     const userEmail = req.params.email;

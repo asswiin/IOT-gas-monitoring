@@ -3,7 +3,7 @@
 // import React, { useState, useEffect, useCallback } from 'react';
 // import { useNavigate } from 'react-router-dom';
 // import axios from 'axios';
-// import '../styles/userDashboard.css'; // Make sure your CSS path is correct
+// import '../styles/userDashboard.css';
 // import { getEndpoint } from '../config';
 
 // // Define BOOKING_THRESHOLD here as it's used in frontend logic
@@ -12,6 +12,7 @@
 // const UserDashboard = () => {
 //   const navigate = useNavigate();
 //   const [gasLevelData, setGasLevelData] = useState(null);
+//   const [kycData, setKycData] = useState(null); // Add KYC data state for tube expiry
 //   const [loadingGas, setLoadingGas] = useState(true);
 //   const [errorGas, setErrorGas] = useState(null);
 //   const [showCancelPopup, setShowCancelPopup] = useState(false);
@@ -21,6 +22,59 @@
 //   const [errorMessage, setErrorMessage] = useState("");
 //   const [showCancelledMessage, setShowCancelledMessage] = useState(false); // State for cancellation message
 //   const userEmail = localStorage.getItem("userEmail");
+
+//   // Utility function to calculate tube expiry date (5 years from connection)
+//   const calculateTubeExpiryDate = (connectionDate) => {
+//     if (!connectionDate) return null;
+//     const expiryDate = new Date(connectionDate);
+//     expiryDate.setFullYear(expiryDate.getFullYear() + 5);
+//     return expiryDate.toLocaleDateString('en-IN', {
+//       day: '2-digit',
+//       month: '2-digit',
+//       year: 'numeric'
+//     });
+//   };
+
+//   // Enhanced utility to get days remaining until tube expiry
+//   const getDaysUntilTubeExpiry = (connectionDate) => {
+//     if (!connectionDate) return null;
+//     const expiryDate = new Date(connectionDate);
+//     expiryDate.setFullYear(expiryDate.getFullYear() + 5);
+//     const today = new Date();
+//     const timeDiff = expiryDate.getTime() - today.getTime();
+//     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+//     return daysDiff;
+//   };
+
+//   // Check if tube expiry is approaching (within 6 months)
+//   const isTubeExpiryApproaching = (connectionDate) => {
+//     if (!connectionDate) return false;
+//     const daysRemaining = getDaysUntilTubeExpiry(connectionDate);
+//     return daysRemaining !== null && daysRemaining <= 180; // 6 months = ~180 days
+//   };
+
+//   // Check if tube has already expired
+//   const isTubeExpired = (connectionDate) => {
+//     if (!connectionDate) return false;
+//     const daysRemaining = getDaysUntilTubeExpiry(connectionDate);
+//     return daysRemaining !== null && daysRemaining <= 0;
+//   };
+
+//   // Calculate estimated refill date based on current usage
+//   const calculateEstimatedRefillDate = (currentLevel) => {
+//     if (!currentLevel || currentLevel <= 0) return "N/A";
+    
+//     // Assuming normal consumption rate of 0.5% per day
+//     const daysRemaining = Math.ceil(currentLevel / 0.5);
+//     const refillDate = new Date();
+//     refillDate.setDate(refillDate.getDate() + daysRemaining);
+    
+//     return refillDate.toLocaleDateString('en-IN', {
+//       day: '2-digit',
+//       month: '2-digit',
+//       year: 'numeric'
+//     });
+//   };
 
 //   const triggerLeakAlerts = () => {
 //     const audio = new Audio('/alert.mp3'); // Ensure this path is correct
@@ -54,8 +108,14 @@
 //       return;
 //     }
 //     try {
-//       const response = await axios.get(getEndpoint.gasLevel(userEmail));
-//       const currentData = response.data; // This now includes hasPaidForRefill and bookingStatus fields
+//       // Fetch both gas level and KYC data
+//       const [gasResponse, kycResponse] = await Promise.all([
+//         axios.get(getEndpoint.gasLevel(userEmail)),
+//         axios.get(getEndpoint.newConnection(userEmail))
+//       ]);
+
+//       const currentData = gasResponse.data;
+//       const connectionData = kycResponse.data;
 
 //       setGasLevelData(prevGasLevel => {
 //         // Trigger alert only if it wasn't leaking before and is leaking now
@@ -65,15 +125,17 @@
 //         return currentData;
 //       });
 
+//       setKycData(connectionData);
 //       setErrorGas(null);
 //     } catch (err) {
-//       console.error("Failed to fetch gas level:", err);
+//       console.error("Failed to fetch data:", err);
 //       if (err.response && err.response.status === 404) {
 //         setErrorGas("Your user profile was not found. Please log in again.");
 //       } else {
-//         setErrorGas("Could not fetch gas level. Is the simulation running?");
+//         setErrorGas("Could not fetch data. Is the simulation running?");
 //       }
-//       setGasLevelData(null); // Clear gas data on error
+//       setGasLevelData(null);
+//       setKycData(null);
 //     } finally {
 //       setLoadingGas(false);
 //     }
@@ -215,11 +277,77 @@
 //               </>
 //             ) : (<p>No gas data available.</p>)}
 //           </div>
-//           <div className="stat-box"><h3>📅 Estimated Refill Date</h3><p>📈 Calculated based on usage...</p></div>
-//           <div className="stat-box"><h3>⏰ Tube Expiry Date</h3><p>📋 DD/MM/YYYY</p></div>
+          
+//           <div className="stat-box">
+//             <h3>📅 Estimated Refill Date</h3>
+//             {gasLevelData ? (
+//               <>
+//                 <p className="refill-date">
+//                   {calculateEstimatedRefillDate(gasLevelData.currentLevel)}
+//                 </p>
+//                 {gasLevelData.currentLevel > 0 && (
+//                   <small className="refill-info">
+//                     Based on current usage pattern
+//                   </small>
+//                 )}
+//               </>
+//             ) : (
+//               <p>📈 Calculating...</p>
+//             )}
+//           </div>
+          
+//           <div className="stat-box">
+//             <h3>⏰ Tube Expiry Date</h3>
+//             {kycData ? (
+//               <>
+//                 <p className={`tube-expiry-date ${isTubeExpired(kycData.createdAt) ? 'expiry-expired' : isTubeExpiryApproaching(kycData.createdAt) ? 'expiry-warning' : ''}`}>
+//                   {calculateTubeExpiryDate(kycData.createdAt)}
+//                 </p>
+//                 {isTubeExpired(kycData.createdAt) ? (
+//                   <small className="expiry-expired-text">
+//                     🚨 Tube has expired! Contact support immediately.
+//                   </small>
+//                 ) : isTubeExpiryApproaching(kycData.createdAt) ? (
+//                   <small className="expiry-warning-text">
+//                     ⚠️ Expires in {getDaysUntilTubeExpiry(kycData.createdAt)} days
+//                   </small>
+//                 ) : (
+//                   <small className="expiry-normal-text">
+//                     ✅ Valid for {getDaysUntilTubeExpiry(kycData.createdAt)} more days
+//                   </small>
+//                 )}
+//               </>
+//             ) : (
+//               <p>📋 Loading...</p>
+//             )}
+//           </div>
 //         </div>
+        
 //         <div className="alerts-container">
 //           <h3>Alerts</h3>
+          
+//           {/* Tube Expiry Critical Alert */}
+//           {kycData && isTubeExpired(kycData.createdAt) && (
+//             <div className="alert-box danger tube-expiry-critical">
+//               <i className="danger-icon">🚨</i>
+//               <div>
+//                 <p><strong>CRITICAL: Tube Expired!</strong></p>
+//                 <p>Your LPG tube expired on {calculateTubeExpiryDate(kycData.createdAt)}. Gas supply must be disconnected immediately for safety.</p>
+//                 <p><strong>Action Required:</strong> Contact customer service for tube replacement.</p>
+//               </div>
+//             </div>
+//           )}
+
+//           {/* Tube Expiry Warning Alert */}
+//           {kycData && isTubeExpiryApproaching(kycData.createdAt) && !isTubeExpired(kycData.createdAt) && (
+//             <div className="alert-box warning tube-expiry-warning">
+//               <i className="warning-icon">⏰</i>
+//               <div>
+//                 <p><strong>Tube Expiry Notice:</strong> Your LPG tube will expire on {calculateTubeExpiryDate(kycData.createdAt)} ({getDaysUntilTubeExpiry(kycData.createdAt)} days remaining).</p>
+//                 <p><strong>Action Required:</strong> Please contact customer service to schedule tube replacement before the expiry date.</p>
+//               </div>
+//             </div>
+//           )}
           
 //           {gasLevelData && gasLevelData.isLeaking && (<div className="alert-box danger"><i className="danger-icon">🔥</i><p>Immediate Action: Gas Leak Detected! Ventilate and contact emergency services.</p></div>)}
           
@@ -270,6 +398,15 @@
         
 //         <div className="notifications-container">
 //           <h3>Notifications</h3>
+          
+//           {/* Connection Anniversary Notification */}
+//           {kycData && (
+//             <div className="notification-box info">
+//               <i className="info-icon">🎉</i>
+//               <p>Connection established on {new Date(kycData.createdAt).toLocaleDateString('en-IN')}. Thank you for being with us!</p>
+//             </div>
+//           )}
+
 //           {gasLevelData && gasLevelData.hasPaidForRefill && (<div className="notification-box info"><i className="info-icon">ℹ️</i><p>Refill payment confirmed. A new cylinder is ready for activation.</p></div>)}
 //           <div className="notification-box success"><i className="success-icon">✅</i><p>Your connection is active and running smoothly.</p></div>
 //           <div className="notification-box info"><i className="info-icon">ℹ️</i><p>Welcome to Quick LPG Connect!</p></div>
@@ -296,6 +433,60 @@
 // };
 
 // export default UserDashboard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -551,6 +742,7 @@ const UserDashboard = () => {
         <div className="nav-actions">
           <button className="nav-btn" onClick={() => navigate("/userdashboard")}>Dashboard</button>
           <button className="nav-btn" onClick={() => navigate("/history")}>History</button>
+          <button className="nav-btn" onClick={() => navigate("/report")}>Report</button>
           <button className="nav-btn" onClick={() => navigate("/feedback")}>Feedback</button>
           <div className="profile-section">
             <button className="profile-button" onClick={handleProfileClick} title="View Profile">

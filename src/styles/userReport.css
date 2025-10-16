@@ -1,0 +1,101 @@
+.report-container {
+    background-color: #f8f9fa;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.report-header h2 {
+    color: #343a40;
+    margin: 0;
+}
+
+.print-btn {
+    padding: 0.6rem 1.2rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.print-btn:hover {
+    background-color: #0056b3;
+}
+
+.report-section {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.report-section h3 {
+    color: #495057;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.report-table th, .report-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.report-table th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+}
+
+.report-table tbody tr:hover {
+    background-color: #f1f3f5;
+}
+
+.status-pill {
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #fff;
+}
+
+.status-pill.fulfilled { background-color: #28a745; }
+.status-pill.booking_pending, .status-pill.refill_payment_pending { background-color: #ffc107; color: #212529;}
+.status-pill.cancelled { background-color: #6c757d; }
+.status-pill.paid { background-color: #17a2b8; }
+
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    body, .dashboard-container, .dashboard-main, .report-section {
+        background-color: #fff !important;
+        box-shadow: none !important;
+        margin: 0;
+        padding: 0;
+    }
+    .report-header h2 {
+        font-size: 1.2rem;
+    }
+    .report-table {
+        font-size: 10pt;
+    }
+}

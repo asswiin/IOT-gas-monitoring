@@ -38,6 +38,17 @@ router.get('/all', async (req, res) => {
   }
 });
 
+router.get("/user/:email", async (req, res) => {
+  try {
+    const userEmail = req.params.email;
+    const userBookings = await AutoBooking.find({ email: userEmail }).sort({ createdAt: -1 });
+    res.json(userBookings);
+  } catch (err) {
+    console.error(`❌ Error fetching bookings for user ${req.params.email}:`, err);
+    res.status(500).json({ message: "Server error while fetching user booking data." });
+  }
+});
+
 module.exports = router;
 
 
