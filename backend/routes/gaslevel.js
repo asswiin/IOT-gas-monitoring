@@ -1,4 +1,5 @@
 
+
 const express = require('express');
 const router = express.Router();
 const GasLevel = require('../models/Gaslevel');
@@ -45,33 +46,17 @@ router.get('/:email', async (req, res) => {
       }
     }
 
-    // --- ✅ CORRECTED: Cylinder activation logic ---
-    // When the current cylinder is depleted and a refill has been paid for...
+    // --- Cylinder activation logic ---
     if (currentGasLevelDoc.currentLevel <= 0 && currentGasLevelDoc.hasPaidForRefill) {
         console.log(`User ${userEmail}: Old cylinder depleted. Activating new cylinder.`);
-
-        // Find the original 'paid' booking to get user details from it.
-        // We sort by `updatedAt` descending to get the most recent paid booking.
-        const paidBooking = await AutoBooking.findOne({
-            email: userEmail,
-            status: 'paid'
-        }).sort({ updatedAt: -1 });
-
+        const paidBooking = await AutoBooking.findOne({ email: userEmail, status: 'paid' }).sort({ updatedAt: -1 });
         if (paidBooking) {
-            // THE KEY CHANGE: Create a new 'fulfilled' record. Do NOT update the 'paid' one.
-            const fulfilledBooking = new AutoBooking({
-                userId: paidBooking.userId,
-                email: paidBooking.email,
-                status: 'fulfilled',
-                // The 'bookingDate' will default to Date.now(), correctly timestamping the fulfillment.
-            });
+            const fulfilledBooking = new AutoBooking({ userId: paidBooking.userId, email: paidBooking.email, status: 'fulfilled' });
             await fulfilledBooking.save();
             console.log(`✅ New 'fulfilled' booking record created for ${userEmail}. The 'paid' record is preserved.`);
         } else {
             console.warn(`Could not find a 'paid' booking for ${userEmail} to create a 'fulfilled' record from.`);
         }
-
-        // Now, reset the gas level for the new cylinder.
         currentGasLevelDoc.currentLevel = 100;
         currentGasLevelDoc.hasPaidForRefill = false;
         currentGasLevelDoc.isLeaking = false;
@@ -79,6 +64,8 @@ router.get('/:email', async (req, res) => {
 
     // Update leak status
     currentGasLevelDoc.isLeaking = checkForLeak(currentGasLevelDoc.currentLevel);
+    
+    let relevantBooking = await AutoBooking.findOne({ email: userEmail, status: { $in: ['booking_pending', 'refill_payment_pending'] } });
 
     // AUTO-BOOKING LOGIC
     if (currentGasLevelDoc.currentLevel <= BOOKING_THRESHOLD && 
@@ -86,35 +73,49 @@ router.get('/:email', async (req, res) => {
         !currentGasLevelDoc.isLeaking && 
         !currentGasLevelDoc.hasPaidForRefill) {
       
-      const existingActiveBooking = await AutoBooking.findOne({ email: userEmail, status: { $in: ['booking_pending', 'refill_payment_pending', 'paid'] } });
+      const paidBookingExists = await AutoBooking.findOne({ email: userEmail, status: 'paid' });
 
-      if (!existingActiveBooking) {
+      if (!relevantBooking && !paidBookingExists) {
         const newAutoBooking = new AutoBooking({ userId: kycUser._id, email: userEmail, status: 'booking_pending' });
-        await newAutoBooking.save();
-        console.log(`🎯 Auto-booking created for ${userEmail} - Gas level: ${currentGasLevelDoc.currentLevel}%`);
+        relevantBooking = await newAutoBooking.save();
+        
+        // --- ✅ FIX: Update KYC status at the same time ---
+        // This ensures the frontend receives the correct state immediately.
+        kycUser.status = 'booking_pending'; 
+        
+        console.log(`🎯 Auto-booking created and KYC status updated for ${userEmail}`);
       }
     }
 
     // REVERT STATUS LOGIC
-    if ((kycUser.status === 'booking_pending' || kycUser.status === 'refill_payment_pending') && 
-        currentGasLevelDoc.currentLevel > BOOKING_THRESHOLD && 
-        !currentGasLevelDoc.hasPaidForRefill) {
+    if (currentGasLevelDoc.currentLevel > BOOKING_THRESHOLD && 
+        (kycUser.status === 'booking_pending' || kycUser.status === 'refill_payment_pending')) {
       
       kycUser.status = 'active';
-      await kycUser.save();
       console.log(`User ${userEmail} status reverted to 'active' as gas level is sufficient.`);
       
-      await AutoBooking.findOneAndUpdate(
-        { email: userEmail, status: { $in: ['booking_pending', 'refill_payment_pending'] } },
-        { $set: { status: 'cancelled' } }
-      );
+      // Also cancel the associated booking record
+      if (relevantBooking) {
+        relevantBooking.status = 'cancelled';
+        await relevantBooking.save();
+        relevantBooking = null; // Clear it so it's not sent in the response
+      } else {
+        // Fallback for safety
+        await AutoBooking.findOneAndUpdate(
+          { email: userEmail, status: { $in: ['booking_pending', 'refill_payment_pending'] } },
+          { $set: { status: 'cancelled' } }
+        );
+      }
     }
 
-    await currentGasLevelDoc.save();
+    // Save any changes made to KYC and GasLevel documents
+    await Promise.all([kycUser.save(), currentGasLevelDoc.save()]);
     
-    const currentBooking = await AutoBooking.findOne({ email: userEmail, status: { $in: ['booking_pending', 'refill_payment_pending'] } });
-
-    res.json({ ...currentGasLevelDoc.toObject(), kycStatus: kycUser.status, bookingStatus: currentBooking ? currentBooking.status : null });
+    res.json({ 
+      ...currentGasLevelDoc.toObject(), 
+      kycStatus: kycUser.status, 
+      bookingStatus: relevantBooking ? relevantBooking.status : null 
+    });
 
   } catch (err) {
     console.error(`Error fetching gas level for ${userEmail}:`, err);
@@ -169,29 +170,3 @@ router.put('/:email/refill', async (req, res) => {
 });
 
 module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

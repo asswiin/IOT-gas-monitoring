@@ -34,7 +34,7 @@ const gasLevelSchema = new mongoose.Schema({
   },
   // NEW FIELD: Indicates if a refill has been paid for but not yet applied
   hasPaidForRefill: {
-    type: Boolean,
+    type: Boolean,  
     default: false
   }
 });
@@ -46,6 +46,10 @@ gasLevelSchema.pre('save', function(next) {
 });
 
 module.exports = mongoose.model('GasLevel', gasLevelSchema);
+
+
+
+
 
 
 

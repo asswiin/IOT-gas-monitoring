@@ -20,7 +20,7 @@
 // --- USER CONFIGURATION ---
 // =================================================================
 // Target user for monitoring. Set to the user's email used in your backend.
-String userEmail = "a@gmail.com";
+String userEmail = "aswin18@gmail.com";
 
 // --- WiFi Configuration ---
 const char* ssid = "Wokwi-GUEST";
