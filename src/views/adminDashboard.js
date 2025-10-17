@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -193,6 +191,7 @@ export default function Dashboard() {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const [
         requestsRes, usersRes, paymentsRes,
         allBookingsRes,
@@ -208,12 +207,8 @@ export default function Dashboard() {
       setPendingRequests(requestsRes.data);
       setAllUsers(usersRes.data);
       setAllPayments(paymentsRes.data);
-
-      const initial = paymentsRes.data.filter(p => p.paymentType === 'initial_connection' || !p.paymentType);
-      const refill = paymentsRes.data.filter(p => p.paymentType === 'gas_refill');
-      setInitialPayments(initial);
-      setRefillPayments(refill);
-
+      setInitialPayments(paymentsRes.data.filter(p => p.paymentType === 'initial_connection' || !p.paymentType));
+      setRefillPayments(paymentsRes.data.filter(p => p.paymentType === 'gas_refill'));
       setAllBookings(allBookingsRes.data);
       setMyFeedback(myFeedbackRes.data);
 
@@ -227,7 +222,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 10000);
+    const interval = setInterval(fetchData, 30000); // Poll every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -283,8 +278,127 @@ export default function Dashboard() {
     setActiveSection(section);
   };
 
-  const generateReport = async () => { /* ... Full report logic ... */ };
-  const downloadReport = () => { /* ... Full report logic ... */ };
+  // ========================================================
+  //  ✅ --- REPORT GENERATION LOGIC ---
+  // ========================================================
+  
+  const generateReport = async () => {
+    if (!reportDate) {
+      showNotification("Please select a month and year to generate a report.", 'error');
+      return;
+    }
+    
+    setGeneratingReport(true);
+    setReportData(null); // Clear previous report
+
+    try {
+      // Simulate network delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const [year, month] = reportDate.split('-').map(Number);
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+      
+      const filterByMonth = (items, dateField = 'createdAt') => {
+        return items.filter(item => {
+          const itemDate = new Date(item[dateField]);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+      };
+
+      // Calculate statistics
+      const monthlyNewUsers = filterByMonth(allUsers, 'createdAt');
+      const monthlyDeactivatedUsers = allUsers.filter(user => 
+        user.status === 'deactivated' && 
+        new Date(user.updatedAt) >= startDate && 
+        new Date(user.updatedAt) <= endDate
+      );
+      const monthlyBookings = filterByMonth(allBookings, 'createdAt');
+      const monthlyCancelledBookings = monthlyBookings.filter(b => b.status === 'cancelled');
+      const monthlyInitialPayments = filterByMonth(initialPayments, 'createdAt');
+      const monthlyRefillPayments = filterByMonth(refillPayments, 'createdAt');
+      
+      const totalRevenue = [...monthlyInitialPayments, ...monthlyRefillPayments]
+        .reduce((sum, payment) => sum + (payment.amountDue || 0), 0);
+
+      const report = {
+        month: startDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
+        newUsers: monthlyNewUsers.length,
+        deactivatedUsers: monthlyDeactivatedUsers.length,
+        approvedRequests: monthlyNewUsers.filter(u => u.status !== 'pending_approval').length,
+        totalBookings: monthlyBookings.length,
+        cancelledBookings: monthlyCancelledBookings.length,
+        initialPayments: monthlyInitialPayments.length,
+        refillPayments: monthlyRefillPayments.length,
+        totalRevenue: totalRevenue.toFixed(2),
+        // Store detailed data for download
+        details: {
+          monthlyInitialPayments,
+          monthlyRefillPayments
+        }
+      };
+      
+      setReportData(report);
+
+    } catch (e) {
+      showNotification("An error occurred while generating the report.", 'error');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  const downloadReport = () => {
+    if (!reportData) {
+      showNotification("Please generate a report first.", 'error');
+      return;
+    }
+
+    let content = `Quick LPG Connect - Monthly Report\n`;
+    content += `Month: ${reportData.month}\n\n`;
+    content += `========================================\n`;
+    content += `SUMMARY\n`;
+    content += `========================================\n`;
+    content += `New Users: ${reportData.newUsers}\n`;
+    content += `Deactivated Users: ${reportData.deactivatedUsers}\n`;
+    content += `Total Bookings: ${reportData.totalBookings}\n`;
+    content += `Cancelled Bookings: ${reportData.cancelledBookings}\n`;
+    content += `Initial Connection Payments: ${reportData.initialPayments}\n`;
+    content += `Gas Refill Payments: ${reportData.refillPayments}\n`;
+    content += `----------------------------------------\n`;
+    content += `TOTAL REVENUE: ₹${reportData.totalRevenue}\n`;
+    content += `========================================\n\n`;
+
+    content += `DETAILED PAYMENTS\n`;
+    content += `========================================\n`;
+    content += `Initial Payments:\n`;
+    if (reportData.details.monthlyInitialPayments.length > 0) {
+      reportData.details.monthlyInitialPayments.forEach(p => {
+        content += `- ${p.customerName} (${p.email}) paid ₹${p.amountDue} on ${new Date(p.createdAt).toLocaleDateString()}\n`;
+      });
+    } else {
+      content += `- None\n`;
+    }
+    
+    content += `\nRefill Payments:\n`;
+    if (reportData.details.monthlyRefillPayments.length > 0) {
+      reportData.details.monthlyRefillPayments.forEach(p => {
+        content += `- ${p.customerName} (${p.email}) paid ₹${p.amountDue} on ${new Date(p.createdAt).toLocaleDateString()}\n`;
+      });
+    } else {
+      content += `- None\n`;
+    }
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report-${reportDate}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+  // ========================================================
 
   const handleSearchChange = (section, value) => {
     setSearchQueries(prev => ({ ...prev, [section]: value.toLowerCase() }));
