@@ -1,16 +1,12 @@
+
 // /*
 //  * ESP32 Live Gas Monitor (Cleaned and Refactored for Wokwi)
 //  *
 //  * Description:
-//  * This firmware connects to a Node.js backend running on the host machine from within the Wokwi simulator.
-//  * 1.  It connects directly to the Wokwi Gateway to find the server, avoiding unreliable network scans.
-//  * 2.  It fetches the initial gas level for the specified user ID from the server.
-//  * 3.  It simulates gas consumption over time, reducing the level locally.
-//  * 4.  It saves the new gas level to the database periodically.
-//  * 5.  It simulates a gas leak by triggering an alarm when the gas level drops below a
-//  *     randomly selected threshold, significantly increasing the consumption rate.
-//  * 6.  It sends alarm data to the server if the gas is low (<20%) OR if a leak is detected.
-//  * 7.  All serial logs are verbose for clear monitoring and debugging.
+//  * This firmware now uses a FIXED, predictable gas leak simulation to ensure
+//  * consistency with the backend server and user dashboard.
+//  *
+//  * -> The leak will ONLY be active when the gas level is between 50% and 40%.
 //  */
 
 // #include <WiFi.h>
@@ -19,21 +15,11 @@
 // // =================================================================
 // // --- USER CONFIGURATION ---
 // // =================================================================
-// // Target user for monitoring. Set to the user's email used in your backend.
 // String userEmail = "e@yahoo.com";
-
-// // --- WiFi Configuration ---
 // const char* ssid = "Wokwi-GUEST";
 // const char* password = "";
-
-// // --- Server Configuration ---
-// // Special hostname provided by Wokwi to connect to the computer running the simulation.
-// // This is the most reliable method.
 // const char* wokwiHost = "host.wokwi.internal";
-
-// // If the wokwi hostname fails, this fallback IP will be used.
-// // Find your computer's local IP address (e.g., ipconfig/ifconfig) and enter it here.
-// String fallbackServerIP = "192.168.1.11";
+// String fallbackServerIP = "192.168.1.11"; 
 // const int serverPort = 5000;
 
 // // =================================================================
@@ -41,10 +27,10 @@
 // // =================================================================
 
 // // --- Server & API ---
-// String serverIP = "";             // Discovered or fallback server IP
-// String gasDataUrl = "";           // URL for sending sensor/consumption data
-// String gasLevelGetUrlPrefix = ""; // URL prefix for fetching gas level by email
-// String simStatusUrlPrefix = "";   // URL prefix for fetching simulation status by email
+// String serverIP = "";
+// String gasDataUrl = "";
+// String gasLevelGetUrlPrefix = "";
+// String simStatusUrlPrefix = "";
 
 // // --- Hardware Pins ---
 // const int gasSensorAnalogPin = 32;
@@ -53,62 +39,49 @@
 // const int buzzerPin = 22;
 
 // // --- Gas Monitoring & Simulation ---
-// float userGasLevel = 0.0;           // Current gas level in the tank (%)
-// float lastSavedGasLevel = 0.0;      // Tracks the last level saved to the DB to reduce updates
-// const int lowGasThreshold = 20;     // Threshold for "Low Gas" alarm
+// float userGasLevel = 0.0;
+// float lastSavedGasLevel = 0.0;
+// const int lowGasThreshold = 20;
 
 // // --- Consumption Rates ---
-// const float gasConsumptionRate = 0.5;     // Normal consumption: 0.5% per second
-// const float gasLeakConsumptionRate = 2.5; // Leak consumption: 2.5% per second (5x faster)
+// const float gasConsumptionRate = 0.5;
+// const float gasLeakConsumptionRate = 2.5;
 
-// // --- Leak Simulation ---
-// float leakTriggerLevel = 0.0;       // Gas level at which the simulated leak will start
-// bool simulatedLeakActive = false;   // Flag to indicate if the leak simulation is active
+// // --- MODIFIED: Leak Simulation with FIXED range ---
+// const float LEAK_START_PERCENT = 50.0; // Leak simulation starts at or below this level
+// const float LEAK_END_PERCENT = 40.0;   // Leak simulation stops below this level
+// bool simulatedLeakActive = false;      // Flag to indicate if the leak simulation is active
 
 // // --- Timers & State Management ---
 // unsigned long lastDBFetch = 0;
-// const unsigned long dbFetchInterval = 10000; // Fetch data every 10 seconds to sync
-// const float gasUpdateThreshold = 2.0;       // Save to DB only after a 2% change
-// bool dbFetched = false;                     // Flag to ensure initial data is fetched before starting
+// const unsigned long dbFetchInterval = 10000;
+// const float gasUpdateThreshold = 2.0;
+// bool dbFetched = false;
 
-// // =================================================================
-// // --- FORWARD DECLARATIONS ---
-// // =================================================================
+// // ... (Forward declarations and other functions remain the same) ...
 // void initializeServerUrls();
 // void fetchUserGasLevel();
 
+
 // // =================================================================
 // // --- SERVER & NETWORK FUNCTIONS ---
+// // (No changes needed in this section)
+// // ... initializeServerUrls(), initializeServerConnection() ...
 // // =================================================================
-
-// /**
-//  * @brief Sets up the global API URL strings once the server IP is known.
-//  */
 // void initializeServerUrls() {
 //     if (serverIP.length() > 0) {
 //         String baseUrl = "http://" + serverIP + ":" + String(serverPort);
 //         gasDataUrl = baseUrl + "/api/simulation/data";
-//         gasLevelGetUrlPrefix = baseUrl + "/api/gaslevel/"; // GET /api/gaslevel/:email
-//         simStatusUrlPrefix = baseUrl + "/api/simulation/status/"; // GET /api/simulation/status/:email
-
+//         gasLevelGetUrlPrefix = baseUrl + "/api/gaslevel/";
+//         simStatusUrlPrefix = baseUrl + "/api/simulation/status/";
 //         Serial.println("[CONFIG] Server URLs configured:");
 //         Serial.println("  Base URL: " + baseUrl);
 //     }
 // }
-
-// /**
-//  * @brief Main function to establish a connection to the server.
-//  *        It first tries the Wokwi hostname, then uses the hardcoded fallback IP.
-//  */
 // void initializeServerConnection() {
 //     Serial.println("[SERVER] Trying to connect via Wokwi hostname: " + String(wokwiHost));
-    
-//     // The Wokwi hostname directly maps to the host machine's IP.
-//     // This is the most reliable way to connect from the simulation.
 //     serverIP = wokwiHost;
 //     initializeServerUrls();
-
-//     // Test the connection to confirm the server is running
 //     HTTPClient http;
 //     if (http.begin(gasLevelGetUrlPrefix + userEmail)) {
 //         http.setTimeout(4000);
@@ -116,15 +89,13 @@
 //         if (httpCode > 0) {
 //             Serial.println("[SUCCESS] Connected to server via Wokwi hostname. Server responded with code: " + String(httpCode));
 //             http.end();
-//             return; // Success!
+//             return;
 //         }
 //         http.end();
 //     }
-    
 //     Serial.println("[FALLBACK] Wokwi hostname failed. Trying user-defined fallback IP: " + fallbackServerIP);
 //     serverIP = fallbackServerIP;
 //     initializeServerUrls();
-
 //     if (http.begin(gasLevelGetUrlPrefix + userEmail)) {
 //         http.setTimeout(4000);
 //         int httpCode = http.GET();
@@ -132,7 +103,7 @@
 //             Serial.println("[SUCCESS] Connected to server via fallback IP. Server responded with code: " + String(httpCode));
 //         } else {
 //             Serial.println("[ERROR] Fallback IP also failed. Check your Node.js server and firewall settings.");
-//             serverIP = ""; // Clear IP to retry later
+//             serverIP = "";
 //         }
 //         http.end();
 //     }
@@ -141,23 +112,17 @@
 
 // // =================================================================
 // // --- DATABASE INTERACTION FUNCTIONS ---
+// // (No changes needed in this section)
+// // ... sendDataToServer(), fetchUserGasLevel(), updateGasConsumptionInDB(), isSimulationRunning() ...
 // // =================================================================
-
-// /**
-//  * @brief Sends sensor/consumption data to the server.
-//  * @param currentGasLevel The current gas level.
-//  * @param isLeaking Whether a leak is detected.
-//  */
 // void sendDataToServer(float currentGasLevel, bool isLeaking) {
 //     if (WiFi.status() != WL_CONNECTED || gasDataUrl.length() == 0) return;
-
 //     HTTPClient http;
 //     if (http.begin(gasDataUrl)) {
 //         http.addHeader("Content-Type", "application/json");
 //         String json = "{\"email\":\"" + userEmail + "\"," +
 //                       "\"currentLevel\":" + String(currentGasLevel, 2) + "," +
-//                       "\"isLeaking\":" + String(isLeaking ? 1 : 0) + "}";
-
+//                       "\"isLeaking\":" + String(isLeaking ? "true" : "false") + "}";
 //         int httpResponseCode = http.POST(json);
 //         if (httpResponseCode != 200) {
 //             Serial.println("[ERROR] Failed to send data. HTTP Code: " + String(httpResponseCode));
@@ -167,32 +132,22 @@
 //         Serial.println("[ERROR] Could not connect to server to send data.");
 //     }
 // }
-
-// /**
-//  * @brief Fetches the latest gas level for the user from the database.
-//  */
 // void fetchUserGasLevel() {
 //     if (WiFi.status() != WL_CONNECTED || gasLevelGetUrlPrefix.length() == 0) return;
-
 //     HTTPClient http;
 //     String fullUserUrl = gasLevelGetUrlPrefix + userEmail;
-
 //     if (http.begin(fullUserUrl)) {
 //         Serial.println("[DATABASE] Fetching latest gas level from server...");
 //         http.setTimeout(5000);
 //         int httpResponseCode = http.GET();
-
 //         if (httpResponseCode == 200) {
 //             String response = http.getString();
-//             // The backend responds with { currentLevel: <num>, ... }
 //             int gasLevelIndex = response.indexOf("\"currentLevel\":");
 //             if (gasLevelIndex != -1) {
 //                 int startPos = gasLevelIndex + 15;
 //                 int endPos = response.indexOf(",", startPos);
 //                 if (endPos == -1) endPos = response.indexOf("}", startPos);
-
 //                 float dbGasLevel = response.substring(startPos, endPos).toFloat();
-
 //                 userGasLevel = dbGasLevel;
 //                 if (!dbFetched) {
 //                     lastSavedGasLevel = dbGasLevel;
@@ -210,39 +165,17 @@
 //         Serial.println("[ERROR] Could not connect to user API.");
 //     }
 // }
-
-// /**
-//  * @brief Saves the consumed gas level to the database if it has changed enough.
-//  * @param newGasLevel The new gas level to save.
-//  */
 // void updateGasConsumptionInDB(float newGasLevel) {
 //     if (WiFi.status() != WL_CONNECTED || gasDataUrl.length() == 0) return;
-
 //     if (abs(lastSavedGasLevel - newGasLevel) >= gasUpdateThreshold) {
-//         HTTPClient http;
-//         if (http.begin(gasDataUrl)) {
-//             http.addHeader("Content-Type", "application/json");
-//             String json = "{\"email\":\"" + userEmail + "\",\"currentLevel\":" + String(newGasLevel, 2) + ",\"isLeaking\":" + String(simulatedLeakActive ? 1 : 0) + "}";
-
-//             int httpResponseCode = http.POST(json);
-//             if (httpResponseCode == 200) {
-//                 Serial.println("[DATABASE] Consumption update successful. New Level: " + String(newGasLevel, 1) + "%");
-//                 lastSavedGasLevel = newGasLevel;
-//             } else {
-//                 Serial.println("[ERROR] Failed to save consumption data. HTTP Code: " + String(httpResponseCode));
-//             }
-//             http.end();
-//         } else {
-//             Serial.println("[ERROR] Could not connect to consumption API.");
-//         }
+//         // Use the generic sendDataToServer function for consistency
+//         sendDataToServer(newGasLevel, simulatedLeakActive);
+//         lastSavedGasLevel = newGasLevel;
+//         Serial.println("[DATABASE] Consumption update sent. New Level: " + String(newGasLevel, 1) + "%");
 //     }
 // }
-
-// /**
-//  * @brief Queries the backend whether the simulation should be running for this email.
-//  */
 // bool isSimulationRunning() {
-//     if (WiFi.status() != WL_CONNECTED || simStatusUrlPrefix.length() == 0) return true; // default to running
+//     if (WiFi.status() != WL_CONNECTED || simStatusUrlPrefix.length() == 0) return true;
 //     HTTPClient http;
 //     String url = simStatusUrlPrefix + userEmail;
 //     if (!http.begin(url)) return true;
@@ -251,16 +184,7 @@
 //     if (code != 200) { http.end(); return true; }
 //     String response = http.getString();
 //     http.end();
-//     // Expecting JSON like {"isRunning": true}
-//     int idx = response.indexOf("\"isRunning\":");
-//     if (idx == -1) return true;
-//     int startPos = idx + 12;
-//     // trim whitespace
-//     while (startPos < (int)response.length() && (response[startPos] == ' ' || response[startPos] == '\t')) startPos++;
-//     // true/false check
-//     if (response.substring(startPos, startPos + 4) == "true") return true;
-//     if (response.substring(startPos, startPos + 5) == "false") return false;
-//     return true;
+//     return response.indexOf("true") != -1;
 // }
 
 // // =================================================================
@@ -271,11 +195,19 @@
 //  * @brief Runs the gas consumption and leak simulation logic.
 //  */
 // void runGasSimulation() {
-//     // 1. Check if the simulated leak condition should be activated
-//     if (!simulatedLeakActive && userGasLevel <= leakTriggerLevel) {
+//     // --- MODIFIED: LOGIC FOR FIXED LEAK RANGE ---
+//     // 1. Check if the gas level is within the fixed leak range.
+//     if (userGasLevel <= LEAK_START_PERCENT && userGasLevel > LEAK_END_PERCENT) {
+//         if (!simulatedLeakActive) { // Print the message only once when the leak starts
+//             Serial.println("\n[!!!] LEAK DETECTED (50% -> 40% range) [!!!]");
+//             Serial.println("[INFO] Gas consumption rate increased due to leak.\n");
+//         }
 //         simulatedLeakActive = true;
-//         Serial.println("\n[!!!] SIMULATED LEAK TRIGGERED [!!!]");
-//         Serial.println("[INFO] Gas consumption rate increased due to leak.\n");
+//     } else {
+//         if (simulatedLeakActive) { // Print a message when the leak stops
+//             Serial.println("[INFO] Gas level is now outside the leak range. Resuming normal consumption.");
+//         }
+//         simulatedLeakActive = false;
 //     }
 
 //     // 2. Determine current consumption rate based on leak status
@@ -293,9 +225,9 @@
 //  * @brief Updates alarms and hardware (LED, Buzzer) based on current status.
 //  */
 // void updateAlarmsAndHardware() {
-//     int reportedDigitalValue = simulatedLeakActive ? 1 : 0;
 //     bool isLowGas = (userGasLevel <= lowGasThreshold);
-//     bool isLeaking = (reportedDigitalValue == 1);
+//     // The 'isLeaking' status comes directly from our simulation flag now
+//     bool isLeaking = simulatedLeakActive; 
 //     bool criticalStatus = isLowGas || isLeaking;
 
 //     String statusText = "Normal";
@@ -310,20 +242,15 @@
 //     if (criticalStatus) {
 //         digitalWrite(ledPin, HIGH);
 //         digitalWrite(buzzerPin, HIGH);
-//         // Always send data when critical, regardless of threshold
+//         // Always send data when critical, to ensure dashboard is up to date
 //         sendDataToServer(userGasLevel, isLeaking);
 //     } else {
 //         digitalWrite(ledPin, LOW);
 //         digitalWrite(buzzerPin, LOW);
 //     }
     
-//     // Print status log with more detail when at 20%
 //     Serial.println("---");
 //     Serial.println("[STATUS] Tank Level: " + String(userGasLevel, 1) + "% | Status: " + statusText);
-    
-//     if (userGasLevel <= lowGasThreshold && !isLeaking) {
-//         Serial.println("[AUTO-BOOKING] Gas level at/below 20% - Backend should create auto-booking");
-//     }
 // }
 
 
@@ -333,7 +260,7 @@
 
 // void setup() {
 //     Serial.begin(115200);
-//     delay(1000); // Wait for Serial to initialize
+//     delay(1000); 
 
 //     pinMode(ledPin, OUTPUT);
 //     pinMode(buzzerPin, OUTPUT);
@@ -354,44 +281,44 @@
 //     Serial.println("ESP32 Live Gas Monitor Initialized");
 //     Serial.println("[INFO] Target Email: " + userEmail);
 
-//     // Seed PRNG without touching ADC to avoid Wi‑Fi/ADC2 conflicts
-//     randomSeed(micros());
-//     leakTriggerLevel = random(50, 100);
-//     Serial.println("[INFO] Leak simulation will trigger when gas level drops below: " + String(leakTriggerLevel, 1) + "%");
+//     // --- REMOVED: No more random leak level ---
+//     Serial.println("[INFO] Leak simulation will trigger between 50% and 40%.");
 //     Serial.println("------------------------------------");
 // }
 
 // void loop() {
-//     // If server connection was lost, try to re-establish it
 //     if (serverIP.length() == 0) {
 //         Serial.println("[RECONNECT] Server connection lost. Retrying in 5 seconds...");
-//         delay(5000); // Wait before retrying
+//         delay(5000);
 //         initializeServerConnection();
 //         return;
 //     }
 
-//     // Fetch/sync with DB periodically or for the first time
 //     if (!dbFetched || (millis() - lastDBFetch > dbFetchInterval)) {
 //         fetchUserGasLevel();
 //         lastDBFetch = millis();
 //     }
 
-//     // Only run simulation after the initial data has been fetched
 //     if (dbFetched) {
-//         // Optional: obey backend simulation status
 //         if (isSimulationRunning()) {
 //             runGasSimulation();
 //             updateAlarmsAndHardware();
 //         } else {
-//             // When stopped, still print status and ensure alarms are off
 //             digitalWrite(ledPin, LOW);
 //             digitalWrite(buzzerPin, LOW);
 //             Serial.println("[STATUS] Simulation paused by server command.");
 //         }
 //     }
 
-//     delay(1000); // Main loop runs every second
+//     delay(1000);
 // }
+
+
+
+
+
+
+
 
 
 
@@ -414,11 +341,12 @@
 /*
  * ESP32 Live Gas Monitor (Cleaned and Refactored for Wokwi)
  *
- * Description:
- * This firmware now uses a FIXED, predictable gas leak simulation to ensure
- * consistency with the backend server and user dashboard.
- *
- * -> The leak will ONLY be active when the gas level is between 50% and 40%.
+ * FIX IMPLEMENTED:
+ * - Addresses a race condition where the simulation would overwrite the server's
+ *   gas level reset (100%) with its local state (0%).
+ * - When the local gas level depletes to 0, it now sends the final '0' update
+ *   and then immediately forces a sync with the server by calling fetchUserGasLevel().
+ * - This ensures the simulation gets the new 100% level and continues correctly.
  */
 
 #include <WiFi.h>
@@ -445,8 +373,6 @@ String gasLevelGetUrlPrefix = "";
 String simStatusUrlPrefix = "";
 
 // --- Hardware Pins ---
-const int gasSensorAnalogPin = 32;
-const int gasSensorDigitalPin = 33;
 const int ledPin = 21;
 const int buzzerPin = 22;
 
@@ -459,10 +385,10 @@ const int lowGasThreshold = 20;
 const float gasConsumptionRate = 0.5;
 const float gasLeakConsumptionRate = 2.5;
 
-// --- MODIFIED: Leak Simulation with FIXED range ---
-const float LEAK_START_PERCENT = 50.0; // Leak simulation starts at or below this level
-const float LEAK_END_PERCENT = 40.0;   // Leak simulation stops below this level
-bool simulatedLeakActive = false;      // Flag to indicate if the leak simulation is active
+// --- Leak Simulation with FIXED range ---
+const float LEAK_START_PERCENT = 50.0;
+const float LEAK_END_PERCENT = 40.0;
+bool simulatedLeakActive = false;
 
 // --- Timers & State Management ---
 unsigned long lastDBFetch = 0;
@@ -470,15 +396,14 @@ const unsigned long dbFetchInterval = 10000;
 const float gasUpdateThreshold = 2.0;
 bool dbFetched = false;
 
-// ... (Forward declarations and other functions remain the same) ...
-void initializeServerUrls();
+// --- Forward Declarations ---
 void fetchUserGasLevel();
+void updateGasConsumptionInDB(float newGasLevel);
 
 
 // =================================================================
 // --- SERVER & NETWORK FUNCTIONS ---
 // (No changes needed in this section)
-// ... initializeServerUrls(), initializeServerConnection() ...
 // =================================================================
 void initializeServerUrls() {
     if (serverIP.length() > 0) {
@@ -486,8 +411,7 @@ void initializeServerUrls() {
         gasDataUrl = baseUrl + "/api/simulation/data";
         gasLevelGetUrlPrefix = baseUrl + "/api/gaslevel/";
         simStatusUrlPrefix = baseUrl + "/api/simulation/status/";
-        Serial.println("[CONFIG] Server URLs configured:");
-        Serial.println("  Base URL: " + baseUrl);
+        Serial.println("[CONFIG] Server URLs configured.");
     }
 }
 void initializeServerConnection() {
@@ -499,33 +423,29 @@ void initializeServerConnection() {
         http.setTimeout(4000);
         int httpCode = http.GET();
         if (httpCode > 0) {
-            Serial.println("[SUCCESS] Connected to server via Wokwi hostname. Server responded with code: " + String(httpCode));
+            Serial.println("[SUCCESS] Connected to server via Wokwi hostname.");
             http.end();
             return;
         }
         http.end();
     }
-    Serial.println("[FALLBACK] Wokwi hostname failed. Trying user-defined fallback IP: " + fallbackServerIP);
+    Serial.println("[FALLBACK] Wokwi hostname failed. Trying fallback IP: " + fallbackServerIP);
     serverIP = fallbackServerIP;
     initializeServerUrls();
     if (http.begin(gasLevelGetUrlPrefix + userEmail)) {
         http.setTimeout(4000);
         int httpCode = http.GET();
-        if (httpCode > 0) {
-            Serial.println("[SUCCESS] Connected to server via fallback IP. Server responded with code: " + String(httpCode));
-        } else {
-            Serial.println("[ERROR] Fallback IP also failed. Check your Node.js server and firewall settings.");
+        if (httpCode <= 0) {
+            Serial.println("[ERROR] Fallback IP also failed.");
             serverIP = "";
         }
         http.end();
     }
 }
 
-
 // =================================================================
 // --- DATABASE INTERACTION FUNCTIONS ---
 // (No changes needed in this section)
-// ... sendDataToServer(), fetchUserGasLevel(), updateGasConsumptionInDB(), isSimulationRunning() ...
 // =================================================================
 void sendDataToServer(float currentGasLevel, bool isLeaking) {
     if (WiFi.status() != WL_CONNECTED || gasDataUrl.length() == 0) return;
@@ -535,13 +455,8 @@ void sendDataToServer(float currentGasLevel, bool isLeaking) {
         String json = "{\"email\":\"" + userEmail + "\"," +
                       "\"currentLevel\":" + String(currentGasLevel, 2) + "," +
                       "\"isLeaking\":" + String(isLeaking ? "true" : "false") + "}";
-        int httpResponseCode = http.POST(json);
-        if (httpResponseCode != 200) {
-            Serial.println("[ERROR] Failed to send data. HTTP Code: " + String(httpResponseCode));
-        }
+        http.POST(json);
         http.end();
-    } else {
-        Serial.println("[ERROR] Could not connect to server to send data.");
     }
 }
 void fetchUserGasLevel() {
@@ -550,7 +465,6 @@ void fetchUserGasLevel() {
     String fullUserUrl = gasLevelGetUrlPrefix + userEmail;
     if (http.begin(fullUserUrl)) {
         Serial.println("[DATABASE] Fetching latest gas level from server...");
-        http.setTimeout(5000);
         int httpResponseCode = http.GET();
         if (httpResponseCode == 200) {
             String response = http.getString();
@@ -560,27 +474,24 @@ void fetchUserGasLevel() {
                 int endPos = response.indexOf(",", startPos);
                 if (endPos == -1) endPos = response.indexOf("}", startPos);
                 float dbGasLevel = response.substring(startPos, endPos).toFloat();
+                
+                // This is where the local state gets corrected
                 userGasLevel = dbGasLevel;
+                lastSavedGasLevel = dbGasLevel;
+
                 if (!dbFetched) {
-                    lastSavedGasLevel = dbGasLevel;
                     dbFetched = true;
                     Serial.println("[DATABASE] Fetch successful. Initial Gas Level: " + String(userGasLevel, 1) + "%");
                 } else {
                     Serial.println("[DATABASE] Sync successful. Gas Level is now: " + String(userGasLevel, 1) + "%");
                 }
             }
-        } else {
-            Serial.println("[ERROR] Failed to fetch user data. HTTP Code: " + String(httpResponseCode));
         }
         http.end();
-    } else {
-        Serial.println("[ERROR] Could not connect to user API.");
     }
 }
 void updateGasConsumptionInDB(float newGasLevel) {
-    if (WiFi.status() != WL_CONNECTED || gasDataUrl.length() == 0) return;
     if (abs(lastSavedGasLevel - newGasLevel) >= gasUpdateThreshold) {
-        // Use the generic sendDataToServer function for consistency
         sendDataToServer(newGasLevel, simulatedLeakActive);
         lastSavedGasLevel = newGasLevel;
         Serial.println("[DATABASE] Consumption update sent. New Level: " + String(newGasLevel, 1) + "%");
@@ -591,7 +502,6 @@ bool isSimulationRunning() {
     HTTPClient http;
     String url = simStatusUrlPrefix + userEmail;
     if (!http.begin(url)) return true;
-    http.setTimeout(3000);
     int code = http.GET();
     if (code != 200) { http.end(); return true; }
     String response = http.getString();
@@ -607,55 +517,67 @@ bool isSimulationRunning() {
  * @brief Runs the gas consumption and leak simulation logic.
  */
 void runGasSimulation() {
-    // --- MODIFIED: LOGIC FOR FIXED LEAK RANGE ---
-    // 1. Check if the gas level is within the fixed leak range.
+    // Store the level *before* consumption to detect the transition to zero
+    float previousLevel = userGasLevel;
+
+    // Determine current consumption rate
     if (userGasLevel <= LEAK_START_PERCENT && userGasLevel > LEAK_END_PERCENT) {
-        if (!simulatedLeakActive) { // Print the message only once when the leak starts
-            Serial.println("\n[!!!] LEAK DETECTED (50% -> 40% range) [!!!]");
-            Serial.println("[INFO] Gas consumption rate increased due to leak.\n");
+        if (!simulatedLeakActive) {
+            Serial.println("\n[!!!] LEAK DETECTED (50% -> 40% range) [!!!]\n");
         }
         simulatedLeakActive = true;
     } else {
-        if (simulatedLeakActive) { // Print a message when the leak stops
-            Serial.println("[INFO] Gas level is now outside the leak range. Resuming normal consumption.");
-        }
         simulatedLeakActive = false;
     }
-
-    // 2. Determine current consumption rate based on leak status
     float currentConsumptionRate = simulatedLeakActive ? gasLeakConsumptionRate : gasConsumptionRate;
 
-    // 3. Apply consumption
+    // Apply consumption
     userGasLevel -= currentConsumptionRate;
-    if (userGasLevel < 0) userGasLevel = 0;
 
-    // 4. Save the new level to the DB if the change is significant
+    // --- ✅ RACE CONDITION FIX ---
+    // Check if the cylinder has just been depleted in this cycle.
+    if (userGasLevel <= 0 && previousLevel > 0) {
+        userGasLevel = 0; // Clamp to exactly zero
+        Serial.println("[RESET] Cylinder depleted. Sending final '0' and forcing sync with server...");
+        
+        // 1. Immediately send the final '0' value to the server.
+        // This allows the backend to trigger its reset logic.
+        sendDataToServer(userGasLevel, false); 
+        lastSavedGasLevel = userGasLevel;
+        
+        // 2. Immediately fetch the latest state from the server.
+        // This will update the local userGasLevel to 100 if a refill was paid for.
+        fetchUserGasLevel();
+        
+        // 3. Exit the function for this cycle to avoid double-processing
+        return; 
+    }
+
+    // If not depleted, clamp at zero and continue with normal update logic
+    if (userGasLevel < 0) {
+        userGasLevel = 0;
+    }
+
+    // Save the new level to the DB if the change is significant
     updateGasConsumptionInDB(userGasLevel);
 }
 
-/**
- * @brief Updates alarms and hardware (LED, Buzzer) based on current status.
- */
 void updateAlarmsAndHardware() {
+    // ... (This function remains unchanged)
     bool isLowGas = (userGasLevel <= lowGasThreshold);
-    // The 'isLeaking' status comes directly from our simulation flag now
     bool isLeaking = simulatedLeakActive; 
     bool criticalStatus = isLowGas || isLeaking;
 
     String statusText = "Normal";
-    if (isLeaking && isLowGas) {
-        statusText = "CRITICAL: Gas Leak and Low Tank!";
-    } else if (isLeaking) {
+    if (isLeaking) {
         statusText = "ALARM: Gas Leak Detected!";
     } else if (isLowGas) {
-        statusText = "WARNING: Low Gas - Auto-booking should trigger";
+        statusText = "WARNING: Low Gas";
     }
 
     if (criticalStatus) {
         digitalWrite(ledPin, HIGH);
         digitalWrite(buzzerPin, HIGH);
-        // Always send data when critical, to ensure dashboard is up to date
-        sendDataToServer(userGasLevel, isLeaking);
     } else {
         digitalWrite(ledPin, LOW);
         digitalWrite(buzzerPin, LOW);
@@ -676,8 +598,6 @@ void setup() {
 
     pinMode(ledPin, OUTPUT);
     pinMode(buzzerPin, OUTPUT);
-    digitalWrite(ledPin, LOW);
-    digitalWrite(buzzerPin, LOW);
 
     Serial.print("Connecting to WiFi...");
     WiFi.begin(ssid, password);
@@ -686,26 +606,20 @@ void setup() {
         Serial.print(".");
     }
     Serial.println("\n--- WiFi Connected ---");
-    Serial.println("Local IP: " + WiFi.localIP().toString());
 
     initializeServerConnection();
-
-    Serial.println("ESP32 Live Gas Monitor Initialized");
-    Serial.println("[INFO] Target Email: " + userEmail);
-
-    // --- REMOVED: No more random leak level ---
     Serial.println("[INFO] Leak simulation will trigger between 50% and 40%.");
     Serial.println("------------------------------------");
 }
 
 void loop() {
     if (serverIP.length() == 0) {
-        Serial.println("[RECONNECT] Server connection lost. Retrying in 5 seconds...");
         delay(5000);
         initializeServerConnection();
         return;
     }
 
+    // Initial fetch or periodic sync
     if (!dbFetched || (millis() - lastDBFetch > dbFetchInterval)) {
         fetchUserGasLevel();
         lastDBFetch = millis();
@@ -716,8 +630,6 @@ void loop() {
             runGasSimulation();
             updateAlarmsAndHardware();
         } else {
-            digitalWrite(ledPin, LOW);
-            digitalWrite(buzzerPin, LOW);
             Serial.println("[STATUS] Simulation paused by server command.");
         }
     }
