@@ -1,143 +1,127 @@
 # ESP32 Gas Monitor - Wokwi Project
 
-## Fixes Applied
+## Overview
 
-### 1. **Pin Configuration**
-- Fixed gas sensor analog pin from `A0` to `32` (ESP32 compatible)
-- Added separate digital pin `33` for digital gas sensor output
-- Properly configured LED (pin 21) and Buzzer (pin 22) pins
+This project provides real-time gas monitoring using ESP32 with automatic gas level simulation and leak detection. The system integrates with the main backend database to provide realistic gas consumption patterns.
 
-### 2. **Backend Integration**
-- Fixed server route references from `sensor` to `Sensors.js`
-- Added gas routes integration with `/api/gas/sensor` endpoint
-- Enhanced sensor data model to include `gasLevel`, `gasValue`, and `digitalValue`
-- Added status detection (normal, low, medium, leak)
+## Key Features
 
-### 3. **Wokwi Configuration**
-- Updated `wokwi.toml` to use PlatformIO build output
-- Added analog output connection in `diagram.json`
-- Fixed firmware path to use compiled binary
+### 1. **Continuous Gas Simulation**
+- Automatic gas consumption at 0.5% per second (normal usage)
+- Leak simulation between 50%-40% gas levels (2.5% consumption rate)
+- Automatic cylinder replacement when gas reaches 0%
+- Real-time hardware alerts (LED and buzzer)
 
-### 4. **Code Improvements**
-- Enhanced ESP32 code with proper analog/digital reading
-- Added WiFi connection status checking
-- Improved error handling and logging
-- Added threshold-based alarm activation
+### 2. **Database Integration**
+- Fetches real user gas levels from backend database
+- Updates consumption patterns every 2% change
+- Maintains gas usage history
+- Supports refill activation system
 
-### 5. **Build System**
-- Added PlatformIO configuration with required libraries
-- Created build scripts for Windows and Unix systems
-- Proper library dependencies (WiFi, HTTPClient, ArduinoJson)
+### 3. **Hardware Components**
+- **Gas Sensor**: Analog pin 32, Digital pin 33
+- **LED Alert**: Pin 21 (active during low gas/leak)
+- **Buzzer**: Pin 22 (active during alerts)
+- **WiFi Connectivity**: For database communication
 
 ## User Configuration
 
-### **Getting Real User IDs from Backend:**
+### **Getting Real User Emails:**
 
-1. **Run API Test:**
-   ```bash
-   cd backend
-   node test-api.js
-   ```
+1. **Use existing test users:**
+   - `e@yahoo.com` (configured in ESP32 code)
+   - `user@example.com`
+   - `test@gmail.com`
 
-2. **Or use these pre-configured users:**
-   - **Admin (aswin)**: `689b67d4e9bd7690bca0c0c7`
-   - **User (jaseem)**: `68a73147aab2a2fb0656cc5d`
-   - **User (mohammed jaseem)**: `68deac8f17b9f4f894ce9d69`
-   - See `USER_CONFIG.cpp` for complete list
-
-3. **Update ESP32 code:**
+2. **Update ESP32 for your user:**
    ```cpp
-   // In src/main.cpp, replace this line:
-   String userId = "689b67d4e9bd7690bca0c0c7"; // Choose your user ID
+   // In src/main.cpp, line 8:
+   String userEmail = "your-registered-user@email.com";
    ```
 
-## Usage
+## Usage Instructions
 
-### **Option 1: Wokwi Simulation (Recommended for Testing)**
+### **Wokwi Simulation (Recommended)**
 
-1. **Run in Wokwi:**
-   - Open the project in Wokwi
-   - Click the "Play" button to start simulation
-   - **To test gas detection:** Click on the gas sensor component
-   - Adjust the "Gas concentration" slider (0-100%)
-   - Watch the serial monitor for real-time readings
-   - LED and buzzer will activate when gas is detected
+1. **Open Wokwi Project**: Click "Play" to start simulation
+2. **Monitor Serial Output**: Shows real-time gas levels and status
+3. **Test Gas Detection**: 
+   - Normal operation: 100% → 50% (green status)
+   - Leak simulation: 50% → 40% (red alert, buzzer active)
+   - Low gas: 40% → 0% (yellow warning)
+4. **Refill Testing**: When gas reaches 0%, system checks for paid refills
 
-2. **Testing Gas Levels:**
-   - **0-20%**: Normal operation, no alarm
-   - **20-50%**: Medium gas detection  
-   - **50%+**: High gas - alarm activated
-   - **Digital trigger**: Immediate alarm regardless of analog value
+### **Real Hardware Setup**
 
-3. **Network Testing:**
-   - The simulation uses a test endpoint (httpbin.org)
-   - Connection errors are expected and handled gracefully
-   - Focus on sensor readings and local alarm functionality
-
-### **Option 2: Real Hardware Integration**
-
-1. **Build the project:**
+1. **Build firmware:**
    ```bash
-   # Windows
-   build.bat
-   
-   # Linux/Mac
-   ./build.sh
-   
-   # Or manually
-   pio run
+   # Windows: build.bat
+   # Linux/Mac: ./build.sh
+   # Or: pio run
    ```
 
-2. **Configure for Real Server:**
-   - Open `src/main.cpp`
-   - Update WiFi credentials
-   - Change `serverUrl` to your server IP
-   - Set `useRealServer = true`
+2. **Configure for your setup:**
+   - Update WiFi credentials in `src/main.cpp`
+   - Set `serverIP` to your server's IP address
+   - Ensure backend is running on port 5000
 
-3. **Test Server (Optional):**
-   ```bash
-   cd wokwi
-   npm install express cors
-   node test-server.js
-   # Use http://YOUR_IP:3001/sensor as serverUrl
-   ```
+## System Behavior
 
-4. **Backend Integration:**
-   - Ensure main backend is running on port 5000
-   - ESP32 will send data to `/api/gas/sensor` endpoint
-   - View logs in backend console for received data
+### **Gas Consumption Rates:**
+- **Normal**: 0.5% per second
+- **Leak (50%-40%)**: 2.5% per second  
+- **Database Sync**: Every 2% change or 10 seconds
 
-## Database-Driven Gas Monitoring
+### **Alert Thresholds:**
+- **Normal**: > 40% gas level
+- **Low Gas Warning**: 20-40% gas level
+- **Critical/Leak**: < 20% or leak detected
+- **Hardware Alert**: LED + Buzzer active during critical states
 
-The system now integrates with real database for gas levels:
+### **Automatic Features:**
+- **Auto-booking**: Triggered at 20% gas level in backend
+- **Cylinder Replacement**: When gas reaches 0% and refill paid
+- **Leak Detection**: Simulated between 50%-40% range
+- **Status Reporting**: Continuous updates to dashboard
 
-- **Data Source**: Fetches actual gas levels from database every 10 seconds
-- **Consumption Rate**: 0.05% per reading (realistic usage)
-- **Database Updates**: Updates DB every 0.5% gas level change
-- **User Tracking**: Real user data from backend database
-- **Sensor Separation**: Physical sensor leaks separate from gas level warnings
+## API Integration
 
-## Sensor Data Format
+### **Endpoints Used:**
+- `POST /api/simulation/data` - Send sensor readings to backend
+- `GET /api/gaslevel/:email` - Fetch current user gas level
+- Backend handles auto-booking and refill logic
 
+### **Data Format:**
 ```json
 {
-  "gasLevel": 75,        // User's remaining gas percentage (0-100)
-  "gasValue": 1234,      // Raw sensor analog value (0-4095)
-  "digitalValue": 0,     // Digital sensor output (0 or 1)
-  "userId": "USER001"    // User identifier
+  "email": "user@example.com",
+  "currentLevel": 45.2,
+  "isLeaking": false
 }
 ```
 
-## Status Levels
+## Troubleshooting
 
-- **Normal**: Gas level > 70% and no sensor leak
-- **Medium**: Gas level 40-70%
-- **Low**: Gas level 20-40%
-- **Critical**: Gas level < 20% OR sensor leak detected
-- **Auto-Refill**: Occurs automatically at 5% level
+### **Connection Issues:**
+- Verify backend server is running on port 5000
+- Check WiFi credentials in ESP32 code
+- Ensure user email exists in database
 
-## API Endpoints
+### **Simulation Not Working:**
+- Check serial monitor for error messages
+- Verify user has active gas connection in backend
+- Ensure database connection is successful
 
-- `POST /api/gas/sensor` - Receive ESP32 sensor data
-- `POST /api/gas/refill` - Manual gas refill (testing)
-- `GET /api/gas/status` - Get current gas status
+### **No Alerts:**
+- Confirm hardware connections (LED pin 21, Buzzer pin 22)
+- Check gas level is within alert thresholds
+- Verify leak simulation range (50%-40%)
+
+## Development Notes
+
+- **Wokwi Testing**: Use built-in gas sensor controls to test leak detection
+- **Real Hardware**: Connect MQ-2 or similar gas sensor to pins 32/33
+- **Database Simulation**: System works with or without real backend connection
+- **Consumption Rate**: Adjustable in code for different testing scenarios
+
+The system now runs continuously without requiring manual start/stop commands, providing a more realistic gas monitoring experience.
