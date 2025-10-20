@@ -281,6 +281,12 @@
   border: 1px solid #e1bee7;
 }
 
+/* Enhanced card styling for refill payments */
+.list-item.refill-payment {
+  border-left-color: #4a148c;
+  background: linear-gradient(90deg, #faf5ff 0%, #ffffff 100%);
+}
+
 /* Detail Views */
 .request-detail-card, .user-detail-card, .payment-detail-card {
   background: #ffffff;
@@ -670,12 +676,6 @@
   padding: 1rem;
   transition: all 0.3s ease;
   position: relative;
-  margin-bottom: 0.75rem;
-}
-
-.list-item:hover {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
   border-color: #007bff;
 }
 

@@ -1,5 +1,3 @@
-
-
 // routes/payment.js
 const express = require("express");
 const router = express.Router();
@@ -8,38 +6,73 @@ const Payment = require("../models/Payment");
 // POST new Payment
 router.post("/", async (req, res) => {
   try {
-    const newForm = new Payment({ ...req.body, status: 'completed' });
-    await newForm.save();
-    res.status(200).json({ message: "✅ Payment saved successfully!" });
+    console.log("Payment submission received:", req.body);
+    
+    // Ensure payment type is set correctly
+    const paymentData = {
+      ...req.body,
+      paymentType: req.body.paymentType || 'initial_connection' // Default fallback
+    };
+    
+    const newPayment = new Payment(paymentData);
+    const savedPayment = await newPayment.save();
+    
+    console.log(`✅ Payment saved successfully:`, {
+      id: savedPayment._id,
+      email: savedPayment.email,
+      amount: savedPayment.amountDue,
+      type: savedPayment.paymentType
+    });
+    
+    res.status(201).json({ 
+      message: "Payment saved successfully!", 
+      payment: savedPayment 
+    });
   } catch (err) {
-    console.error("❌ Save Error:", err);
-    res.status(500).json({ message: "Error saving payment data." });
+    console.error("❌ Payment save error:", err);
+    res.status(500).json({ 
+      message: "Error saving payment", 
+      error: err.message 
+    });
   }
 });
 
 // GET all Payments (For Admin)
 router.get("/", async (req, res) => {
   try {
-    const allPayments = await Payment.find({});
-    res.json(allPayments);
+    const payments = await Payment.find({}).sort({ createdAt: -1 });
+    
+    console.log(`📊 Fetched ${payments.length} total payments for admin dashboard`);
+    console.log(`   - Initial payments: ${payments.filter(p => p.paymentType === 'initial_connection' || !p.paymentType).length}`);
+    console.log(`   - Refill payments: ${payments.filter(p => p.paymentType === 'gas_refill').length}`);
+    
+    res.json(payments);
   } catch (err) {
-    console.error("❌ Error fetching all payments:", err);
-    res.status(500).json({ message: "Server error while fetching all payment data." });
+    console.error("❌ Error fetching payments:", err);
+    res.status(500).json({ 
+      message: "Server error while fetching payments", 
+      error: err.message 
+    });
   }
 });
 
 // ✅ NEW ROUTE: GET all payments for a specific user
 router.get("/user/:email", async (req, res) => {
   try {
-    const userEmail = req.params.email;
-    const userPayments = await Payment.find({ email: userEmail }).sort({ createdAt: -1 }); // Sort by most recent
+    const userEmail = req.params.email.toLowerCase();
+    const userPayments = await Payment.find({ email: userEmail }).sort({ createdAt: -1 });
+    
+    console.log(`📊 Fetched ${userPayments.length} payments for user: ${userEmail}`);
+    
     res.json(userPayments);
   } catch (err) {
-    console.error(`❌ Error fetching payments for user ${req.params.email}:`, err);
-    res.status(500).json({ message: "Server error while fetching user payment data." });
+    console.error("❌ Error fetching user payments:", err);
+    res.status(500).json({ 
+      message: "Server error while fetching user payments", 
+      error: err.message 
+    });
   }
 });
-
 
 // DELETE Payment records by KYC ID
 router.delete("/kyc/:kycId", async (req, res) => {

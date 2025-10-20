@@ -18,6 +18,14 @@ const Feedback = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Prevent navigation flicker
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+      document.body.style.overflow = 'auto';
+    }, 500);
+  }, []);
+
   // Use useCallback to prevent re-creating the function on every render
   const fetchHistory = useCallback(async () => {
     try {
@@ -78,57 +86,67 @@ const Feedback = () => {
 
   return (
     <div className="feedback-page-container">
-      <header className="feedback-page-header">
-        <h1>Feedback & History</h1>
-        <button onClick={() => navigate('/userdashboard')} className="back-btn">
-          ← Back to Dashboard
-        </button>
+      <header className="dashboard-header no-print">
+        <h1>⛽ Gas Monitor</h1>
+        <div className="nav-actions">
+          <button className="nav-btn" onClick={() => navigate("/userdashboard")}>Dashboard</button>
+          <button className="nav-btn" onClick={() => navigate("/history")}>History</button>
+          <button className="nav-btn" onClick={() => navigate("/report")}>Report</button>
+          <button className="nav-btn" onClick={() => navigate("/feedback")}>Feedback</button>
+        </div>
       </header>
-      <main className="feedback-page-main">
-        {/* Section 1: Submission Form */}
-        <section className="feedback-form-section card">
-          <h3>Submit a New Message</h3>
-          <p>We value your input. Please select a message type and let us know your thoughts.</p>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="feedbackType">Message Type</label>
-              <select id="feedbackType" value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)}>
-                <option value="Feedback">Feedback</option>
-                <option value="Complaint">Complaint</option>
-                <option value="Urgent">Urgent</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="message">Your Message</label>
-              <textarea id="message" rows="6" placeholder="Please provide details here..." value={message} onChange={(e) => setMessage(e.target.value)}></textarea>
-            </div>
-            <button type="submit" className="submit-btn">Submit Message</button>
-          </form>
-        </section>
 
-        {/* Section 2: Submission History */}
-        <section className="feedback-history-section">
-          <h3>Your Submission History</h3>
-          {loading && <p>Loading history...</p>}
-          {error && <p className="error-message">{error}</p>}
-          {!loading && !error && (
-            history.length > 0 ? (
-              <div className="history-list">
-                {history.map(item => (
-                  <div key={item._id} className={`feedback-item card ${getCardClass(item.type)}`}>
-                    <div className="feedback-item-header">
-                      <span className="feedback-type">{item.type}</span>
-                      <span className="feedback-date">{new Date(item.createdAt).toLocaleString()}</span>
-                    </div>
-                    <p className="feedback-message">{item.message}</p>
-                  </div>
-                ))}
+      <main className="dashboard-main">
+        <div className="feedback-page-header">
+          <h1>Feedback & History</h1>
+        </div>
+        
+        <div className="feedback-page-main">
+          {/* Section 1: Submission Form */}
+          <section className="feedback-form-section card">
+            <h3>Submit a New Message</h3>
+            <p>We value your input. Please select a message type and let us know your thoughts.</p>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="feedbackType">Message Type</label>
+                <select id="feedbackType" value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)}>
+                  <option value="Feedback">Feedback</option>
+                  <option value="Complaint">Complaint</option>
+                  <option value="Urgent">Urgent</option>
+                </select>
               </div>
-            ) : (
-              <p>You have not submitted any feedback yet.</p>
-            )
-          )}
-        </section>
+              <div className="form-group">
+                <label htmlFor="message">Your Message</label>
+                <textarea id="message" rows="6" placeholder="Please provide details here..." value={message} onChange={(e) => setMessage(e.target.value)}></textarea>
+              </div>
+              <button type="submit" className="submit-btn">Submit Message</button>
+            </form>
+          </section>
+
+          {/* Section 2: Submission History */}
+          <section className="feedback-history-section">
+            <h3>Your Submission History</h3>
+            {loading && <p>Loading history...</p>}
+            {error && <p className="error-message">{error}</p>}
+            {!loading && !error && (
+              history.length > 0 ? (
+                <div className="history-list">
+                  {history.map(item => (
+                    <div key={item._id} className={`feedback-item card ${getCardClass(item.type)}`}>
+                      <div className="feedback-item-header">
+                        <span className="feedback-type">{item.type}</span>
+                        <span className="feedback-date">{new Date(item.createdAt).toLocaleString()}</span>
+                      </div>
+                      <p className="feedback-message">{item.message}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>You have not submitted any feedback yet.</p>
+              )
+            )}
+          </section>
+        </div>
       </main>
 
       {/* Notification Popup */}

@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -136,7 +133,13 @@ export default function PaymentPage() {
     try {
       if (!userEmail) throw new Error("User email not found in state.");
       
-      const paymentDataToSubmit = { ...formData, paymentType: isRefillPayment ? 'gas_refill' : 'initial_connection' };
+      // Ensure payment type is correctly set based on payment type
+      const paymentDataToSubmit = { 
+        ...formData, 
+        paymentType: isRefillPayment ? 'gas_refill' : 'initial_connection' 
+      };
+      
+      // Submit payment to database
       await axios.post(endpoints.payment, paymentDataToSubmit);
 
       if (isRefillPayment) {

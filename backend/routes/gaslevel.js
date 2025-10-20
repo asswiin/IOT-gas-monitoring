@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const GasLevel = require('../models/Gaslevel');
@@ -158,8 +157,8 @@ router.put('/:email/refill', async (req, res) => {
 
         if (updatedBooking) {
           console.log(`✅ Auto-booking for ${userEmail} marked as 'paid'.`);
+          console.log(`💳 Refill payment completed for ${userEmail} - should appear in admin dashboard.`);
         } else {
-          // This can happen if the payment page was opened but the booking was cancelled elsewhere.
           console.warn(`Could not find a 'booking_pending' record for ${userEmail} to mark as paid.`);
         }
 

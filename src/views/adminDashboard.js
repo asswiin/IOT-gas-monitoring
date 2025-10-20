@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -207,8 +206,22 @@ export default function Dashboard() {
       setPendingRequests(requestsRes.data);
       setAllUsers(usersRes.data);
       setAllPayments(paymentsRes.data);
-      setInitialPayments(paymentsRes.data.filter(p => p.paymentType === 'initial_connection' || !p.paymentType));
-      setRefillPayments(paymentsRes.data.filter(p => p.paymentType === 'gas_refill'));
+      
+      // Improved payment filtering with better logging
+      const initialPayments = paymentsRes.data.filter(p => 
+        p.paymentType === 'initial_connection' || !p.paymentType
+      );
+      const refillPayments = paymentsRes.data.filter(p => 
+        p.paymentType === 'gas_refill'
+      );
+      
+      console.log(`📊 Admin Dashboard Payment Summary:`);
+      console.log(`   - Total payments: ${paymentsRes.data.length}`);
+      console.log(`   - Initial payments: ${initialPayments.length}`);
+      console.log(`   - Refill payments: ${refillPayments.length}`);
+      
+      setInitialPayments(initialPayments);
+      setRefillPayments(refillPayments);
       setAllBookings(allBookingsRes.data);
       setMyFeedback(myFeedbackRes.data);
 
@@ -455,7 +468,11 @@ export default function Dashboard() {
             <Card title="Pending Requests"><p>{pendingRequests.length}</p></Card>
             <Card title="Pending Bookings"><p>{allBookings.filter(b => b.status === 'booking_pending').length}</p></Card>
             <Card title="Fulfilled Bookings"><p>{allBookings.filter(b => b.status === 'fulfilled').length}</p></Card>
-            <Card title="Total Payments"><p>{allPayments.length}</p></Card>
+            <Card title="Initial Payments"><p>{initialPayments.length}</p></Card>
+            <Card title="Refill Payments"><p>{refillPayments.length}</p></Card>
+            <Card title="Total Revenue">
+              <p>₹{allPayments.reduce((total, payment) => total + (payment.amountDue || 0), 0)}</p>
+            </Card>
             <div className="card">
               <h3>📊 Generate Report</h3>
               <p style={{ fontSize: '0.9rem', color: '#6c757d', marginBottom: '1rem' }}>
@@ -534,6 +551,7 @@ export default function Dashboard() {
                   <h4>{p.customerName} (₹{p.amountDue})</h4>
                   <p><strong>Email:</strong> {p.email}</p>
                   <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
+                  <p><strong>Type:</strong> <span className="payment-type refill">Gas Refill</span></p>
                 </div>
               )) : <p className="no-results">No refill payments found.</p>}
             </div>
@@ -689,19 +707,3 @@ export default function Dashboard() {
                     <div className="report-item"><span className="report-label">✅ Approved Requests:</span><span className="report-value">{reportData.approvedRequests}</span></div>
                     <div className="report-item"><span className="report-label">📋 Total Bookings:</span><span className="report-value">{reportData.totalBookings}</span></div>
                     <div className="report-item"><span className="report-label">🚫 Cancelled Bookings:</span><span className="report-value">{reportData.cancelledBookings}</span></div>
-                    <div className="report-item"><span className="report-label">🔄 Refill Payments:</span><span className="report-value">{reportData.refillPayments}</span></div>
-                    <div className="report-item"><span className="report-label">🆕 Initial Payments:</span><span className="report-value">{reportData.initialPayments}</span></div>
-                    <div className="report-item highlight"><span className="report-label">💰 Total Revenue:</span><span className="report-value">₹{reportData.totalRevenue}</span></div>
-                  </div>
-                </div>
-                <button onClick={downloadReport} className="download-btn">
-                  📥 Download Detailed Report
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}

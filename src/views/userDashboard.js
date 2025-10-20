@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -12,7 +10,7 @@ const BOOKING_THRESHOLD = 20;
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [gasLevelData, setGasLevelData] = useState(null);
-  const [kycData, setKycData] = useState(null); // Add KYC data state for tube expiry
+  const [kycData, setKycData] = useState(null);
   const [loadingGas, setLoadingGas] = useState(true);
   const [errorGas, setErrorGas] = useState(null);
   const [showCancelPopup, setShowCancelPopup] = useState(false);
@@ -148,7 +146,6 @@ const UserDashboard = () => {
     }
   }, [gasLevelData, showCancelledMessage]);
 
-
   useEffect(() => {
     fetchGasLevel(); // Initial fetch
     const interval = setInterval(fetchGasLevel, 3000); // Poll every 3 seconds
@@ -238,8 +235,23 @@ const UserDashboard = () => {
     return '#dc3545'; // Red
   };
 
+  // Prevent navigation flicker by pre-loading critical data
+  useEffect(() => {
+    const preloadData = async () => {
+      // Pre-load any shared data or components here if needed
+      document.body.style.overflow = 'hidden'; // Prevent scroll during transition
+      
+      setTimeout(() => {
+        document.body.style.overflow = 'auto'; // Restore scroll after animation
+      }, 500);
+    };
+    
+    preloadData();
+  }, []);
+
   return (
     <div className="dashboard-container">
+      {/* Standardized header */}
       <header className="dashboard-header">
         <h1>⛽ Gas Monitor</h1>
         <div className="nav-actions">
@@ -254,6 +266,7 @@ const UserDashboard = () => {
           </div>
         </div>
       </header>
+      
       <main className="dashboard-main">
         <h2>🎛️ Control Center</h2>
         <div className="stats-container">
