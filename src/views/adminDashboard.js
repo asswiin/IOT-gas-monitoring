@@ -1,7 +1,33 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "../styles/adminDashboard.css"; // Ensure this path is correct
+import "../styles/adminDashboard.css";
+
+// Import Chart.js components for the project graph
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // ===================================================================================
 //  1. SUB-COMPONENTS & HELPERS
@@ -434,6 +460,135 @@ export default function Dashboard() {
   const getFilteredFeedback = () => filterBySearch(myFeedback, searchQueries.feedback, ['email']);
   const getFilteredBookings = () => filterBySearch(allBookings, searchQueries.bookings, ['email', 'status']);
 
+  // PROJECT GRAPH DATA - New function
+  const getProjectGraphData = () => {
+    if (!allUsers.length || !allPayments.length) return null;
+
+    // Get last 6 months of data
+    const months = [];
+    const currentDate = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      months.push({
+        label: date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
+        year: date.getFullYear(),
+        month: date.getMonth()
+      });
+    }
+
+    const userData = months.map(month => {
+      return allUsers.filter(user => {
+        const userDate = new Date(user.createdAt);
+        return userDate.getFullYear() === month.year && userDate.getMonth() === month.month;
+      }).length;
+    });
+
+    const revenueData = months.map(month => {
+      return allPayments.filter(payment => {
+        const paymentDate = new Date(payment.createdAt);
+        return paymentDate.getFullYear() === month.year && paymentDate.getMonth() === month.month;
+      }).reduce((sum, payment) => sum + (payment.amountDue || 0), 0);
+    });
+
+    return {
+      labels: months.map(m => m.label),
+      datasets: [
+        {
+          label: 'New Users',
+          data: userData,
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Revenue (₹)',
+          data: revenueData,
+          backgroundColor: 'rgba(255, 99, 132, 0.6)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1,
+          yAxisID: 'y1'
+        }
+      ]
+    };
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          font: {
+            size: 14,
+            weight: '600'
+          },
+          usePointStyle: true,
+          padding: 20
+        }
+      },
+      title: {
+        display: true,
+        text: 'Project Growth - Last 6 Months',
+        font: {
+          size: 18,
+          weight: '700'
+        },
+        padding: 20
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#333',
+        bodyColor: '#333',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        cornerRadius: 8
+      }
+    },
+    scales: {
+      y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        title: {
+          display: true,
+          text: 'Number of Users',
+          font: { weight: '600' }
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)'
+        }
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        title: {
+          display: true,
+          text: 'Revenue (₹)',
+          font: { weight: '600' }
+        },
+        grid: {
+          drawOnChartArea: false
+        },
+        ticks: {
+          callback: function(value) {
+            return '₹' + value;
+          }
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Month',
+          font: { weight: '600' }
+        }
+      }
+    }
+  };
+
   const renderContent = () => {
     if (loading) return <div className="loading-spinner">Loading Dashboard...</div>;
     if (error) return <p className="error-message">{error}</p>;
@@ -462,25 +617,40 @@ export default function Dashboard() {
     switch (activeSection) {
       case 'dashboard-summary':
         return (
-          <div className="card-grid">
-            <Card title="Total Users"><p>{allUsers.length}</p></Card>
-            <Card title="Active Connections"><p>{allUsers.filter(u => u.status === 'active').length}</p></Card>
-            <Card title="Pending Requests"><p>{pendingRequests.length}</p></Card>
-            <Card title="Pending Bookings"><p>{allBookings.filter(b => b.status === 'booking_pending').length}</p></Card>
-            <Card title="Fulfilled Bookings"><p>{allBookings.filter(b => b.status === 'fulfilled').length}</p></Card>
-            <Card title="Initial Payments"><p>{initialPayments.length}</p></Card>
-            <Card title="Refill Payments"><p>{refillPayments.length}</p></Card>
-            <Card title="Total Revenue">
-              <p>₹{allPayments.reduce((total, payment) => total + (payment.amountDue || 0), 0)}</p>
-            </Card>
-            <div className="card">
-              <h3>📊 Generate Report</h3>
-              <p style={{ fontSize: '0.9rem', color: '#6c757d', marginBottom: '1rem' }}>
-                Generate comprehensive monthly reports.
-              </p>
-              <button onClick={() => setShowReportModal(true)} className="report-btn">
-                📊 Generate Monthly Report
-              </button>
+          <div>
+            {/* Essential Metrics - Only 3 cards */}
+            <div className="simplified-card-grid">
+              <Card title="Total Users">
+                <p>{allUsers.length}</p>
+              </Card>
+              <Card title="Active Connections">
+                <p>{allUsers.filter(u => u.status === 'active').length}</p>
+              </Card>
+              <div className="card">
+                <h3>📊 Generate Report</h3>
+                <p style={{ fontSize: '0.9rem', color: '#6c757d', marginBottom: '1rem' }}>
+                  Generate comprehensive monthly reports.
+                </p>
+                <button onClick={() => setShowReportModal(true)} className="report-btn">
+                  📊 Generate Monthly Report
+                </button>
+              </div>
+            </div>
+
+            {/* Project Graph */}
+            <div className="graph-section">
+              <div className="graph-container">
+                <h3>📈 Project Overview</h3>
+                {getProjectGraphData() ? (
+                  <div className="chart-wrapper">
+                    <Bar data={getProjectGraphData()} options={chartOptions} />
+                  </div>
+                ) : (
+                  <div className="no-chart-data">
+                    <p>Loading project data...</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         );
