@@ -707,3 +707,19 @@ export default function Dashboard() {
                     <div className="report-item"><span className="report-label">✅ Approved Requests:</span><span className="report-value">{reportData.approvedRequests}</span></div>
                     <div className="report-item"><span className="report-label">📋 Total Bookings:</span><span className="report-value">{reportData.totalBookings}</span></div>
                     <div className="report-item"><span className="report-label">🚫 Cancelled Bookings:</span><span className="report-value">{reportData.cancelledBookings}</span></div>
+                    <div className="report-item"><span className="report-label">🔄 Refill Payments:</span><span className="report-value">{reportData.refillPayments}</span></div>
+                    <div className="report-item"><span className="report-label">🆕 Initial Payments:</span><span className="report-value">{reportData.initialPayments}</span></div>
+                    <div className="report-item highlight"><span className="report-label">💰 Total Revenue:</span><span className="report-value">₹{reportData.totalRevenue}</span></div>
+                  </div>
+                </div>
+                <button onClick={downloadReport} className="download-btn">
+                  📥 Download Detailed Report
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
