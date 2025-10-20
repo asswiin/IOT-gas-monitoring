@@ -1,10 +1,12 @@
+
+
 #include <WiFi.h>
 #include <HTTPClient.h>
 
 // =================================================================
 // --- USER CONFIGURATION ---
 // =================================================================
-String userEmail = "e@yahoo.com";
+String userEmail = "d@gmail.com";
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 const char* wokwiHost = "host.wokwi.internal";
@@ -19,6 +21,7 @@ const int serverPort = 5000;
 String serverIP = "";
 String gasDataUrl = "";
 String gasLevelGetUrlPrefix = "";
+String simulationStatusUrlPrefix = ""; // NEW: For polling the sim status
 
 // --- Hardware Pins ---
 const int ledPin = 21;
@@ -28,6 +31,7 @@ const int buzzerPin = 22;
 float userGasLevel = 0.0;
 float lastSavedGasLevel = 0.0;
 const int lowGasThreshold = 20;
+bool isSimulationRunning = false; // NEW: Controls the simulation
 
 // --- Consumption Rates ---
 const float gasConsumptionRate = 0.5;
@@ -40,13 +44,16 @@ bool simulatedLeakActive = false;
 
 // --- Timers & State Management ---
 unsigned long lastDBFetch = 0;
+unsigned long lastStatusPoll = 0; // NEW: Timer for status polling
 const unsigned long dbFetchInterval = 10000;
+const unsigned long statusPollInterval = 2000; // NEW: Poll every 2 seconds
 const float gasUpdateThreshold = 2.0;
 bool dbFetched = false;
 
 // --- Forward Declarations ---
 void fetchUserGasLevel();
 void updateGasConsumptionInDB(float newGasLevel);
+void fetchSimulationStatus();
 
 
 // =================================================================
@@ -57,6 +64,7 @@ void initializeServerUrls() {
         String baseUrl = "http://" + serverIP + ":" + String(serverPort);
         gasDataUrl = baseUrl + "/api/simulation/data";
         gasLevelGetUrlPrefix = baseUrl + "/api/gaslevel/";
+        simulationStatusUrlPrefix = baseUrl + "/api/simulation/status/"; // NEW
         Serial.println("[CONFIG] Server URLs configured.");
     }
 }
@@ -148,7 +156,32 @@ void updateGasConsumptionInDB(float newGasLevel) {
 // =================================================================
 // --- CORE LOGIC ---
 // =================================================================
+
+// NEW FUNCTION: Polls the backend for the simulation running state
+void fetchSimulationStatus() {
+    if (WiFi.status() != WL_CONNECTED || simulationStatusUrlPrefix.length() == 0) return;
+    HTTPClient http;
+    String statusUrl = simulationStatusUrlPrefix + userEmail;
+    if (http.begin(statusUrl)) {
+        int httpCode = http.GET();
+        if (httpCode == 200) {
+            String response = http.getString();
+            bool serverState = (response.indexOf("true") != -1);
+            if (serverState != isSimulationRunning) {
+                isSimulationRunning = serverState;
+                Serial.println(isSimulationRunning ? "[CONTROL] Received START command." : "[CONTROL] Received STOP command.");
+            }
+        }
+        http.end();
+    }
+}
+
 void runGasSimulation() {
+    // MODIFIED: The simulation will only run if this flag is true
+    if (!isSimulationRunning) {
+        return; 
+    }
+    
     float previousLevel = userGasLevel;
 
     // Determine current consumption rate
@@ -196,6 +229,12 @@ void updateAlarmsAndHardware() {
         statusText = "WARNING: Low Gas";
     }
 
+    // MODIFIED: Added simulation running status to the log
+    String simStatus = isSimulationRunning ? "RUNNING" : "STOPPED";
+    if (!dbFetched) {
+      simStatus = "WAITING";
+    }
+
     if (criticalStatus) {
         digitalWrite(ledPin, HIGH);
         digitalWrite(buzzerPin, HIGH);
@@ -205,7 +244,7 @@ void updateAlarmsAndHardware() {
     }
     
     Serial.println("---");
-    Serial.println("[STATUS] Tank Level: " + String(userGasLevel, 1) + "% | Status: " + statusText);
+    Serial.println("[STATUS] Tank Level: " + String(userGasLevel, 1) + "% | Simulation: " + simStatus + " | Status: " + statusText);
 }
 
 // =================================================================
@@ -227,8 +266,9 @@ void setup() {
     Serial.println("\n--- WiFi Connected ---");
 
     initializeServerConnection();
+    // MODIFIED: Updated instructions
     Serial.println("[INFO] Leak simulation will trigger between 50% and 40%.");
-    Serial.println("[INFO] Simulation runs continuously - no start/stop commands needed.");
+    Serial.println("[INFO] Waiting for 'Start' command from dashboard...");
     Serial.println("------------------------------------");
 }
 
@@ -245,7 +285,13 @@ void loop() {
         lastDBFetch = millis();
     }
 
-    // Run simulation continuously once data is fetched
+    // NEW: Periodically check for start/stop commands
+    if (millis() - lastStatusPoll > statusPollInterval) {
+        fetchSimulationStatus();
+        lastStatusPoll = millis();
+    }
+
+    // Run simulation and update hardware state
     if (dbFetched) {
         runGasSimulation();
         updateAlarmsAndHardware();
