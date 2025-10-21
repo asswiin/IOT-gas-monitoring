@@ -34,11 +34,11 @@ const int lowGasThreshold = 20;
 bool isSimulationRunning = false; // NEW: Controls the simulation
 
 // --- Consumption Rates ---
-const float gasConsumptionRate = 0.5;
+const float gasConsumptionRate = 1.0;
 const float gasLeakConsumptionRate = 2.5;
 
 // --- Leak Simulation with FIXED range ---
-const float LEAK_START_PERCENT = 50.0;
+const float LEAK_START_PERCENT = 60.0;
 const float LEAK_END_PERCENT = 40.0;
 bool simulatedLeakActive = false;
 

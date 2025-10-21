@@ -300,18 +300,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -335,7 +323,6 @@ const UserDashboard = () => {
   const [showRebookConfirmPopup, setShowRebookConfirmPopup] = useState(false);
   const userEmail = localStorage.getItem("userEmail");
   
-  // NEW: State to track notification permission status
   const [notificationPermission, setNotificationPermission] = useState('default');
 
   // Utility functions (calculateTubeExpiryDate, etc.) remain unchanged...
@@ -369,13 +356,11 @@ const UserDashboard = () => {
     return refillDate.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  // This function is now correct because permission will be pre-approved
   const triggerLeakAlerts = () => {
     const audio = new Audio('/alert.mp3');
     audio.play().catch(e => console.error('Audio play failed:', e));
 
     if (!("Notification" in window) || Notification.permission !== "granted") {
-      // If permission is not granted, the on-page alert is the fallback.
       return;
     }
     
@@ -383,6 +368,19 @@ const UserDashboard = () => {
       body: "Immediate action required! Ventilate the area and check your connection.",
       icon: "/danger-icon.png",
       tag: "gas-leak-alert",
+    });
+  };
+
+  // <-- NEW: Function to trigger auto-booking desktop notification -->
+  const triggerAutoBookingNotification = () => {
+    if (!("Notification" in window) || Notification.permission !== "granted") {
+      return; // Don't show notification if permission is not granted
+    }
+  
+    new Notification("⛽ Gas Auto-Booked!", {
+      body: "Your gas level is low. A new cylinder has been booked. Please proceed to payment.",
+      icon: "/gas-icon.png", // Make sure you have a 'gas-icon.png' in your public folder
+      tag: "gas-autobook-alert",
     });
   };
 
@@ -402,9 +400,20 @@ const UserDashboard = () => {
       const connectionData = kycResponse.data;
 
       setGasLevelData(prevGasLevel => {
+        // Trigger leak alert only when the state changes from not-leaking to leaking
         if (currentData.isLeaking && (!prevGasLevel || !prevGasLevel.isLeaking)) {
           triggerLeakAlerts();
         }
+
+        // <-- NEW: Trigger desktop notification for auto-booking -->
+        // Check if the booking status just changed to pending
+        const wasAlreadyBooked = prevGasLevel?.bookingStatus === 'booking_pending' || prevGasLevel?.bookingStatus === 'refill_payment_pending';
+        const isNowBooked = currentData.bookingStatus === 'booking_pending' || currentData.bookingStatus === 'refill_payment_pending';
+
+        if (isNowBooked && !wasAlreadyBooked) {
+          triggerAutoBookingNotification();
+        }
+        
         return currentData;
       });
 
@@ -420,7 +429,6 @@ const UserDashboard = () => {
     }
   }, [userEmail]);
 
-  // NEW: useEffect to check notification permission on load
   useEffect(() => {
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission);
@@ -433,14 +441,13 @@ const UserDashboard = () => {
     return () => clearInterval(interval);
   }, [fetchGasLevel]);
 
-  // NEW: Handler function for the "Enable Notifications" button
   const handleRequestNotificationPermission = async () => {
     if (!("Notification" in window)) {
       alert("This browser does not support desktop notifications.");
       return;
     }
     const permission = await Notification.requestPermission();
-    setNotificationPermission(permission); // Update state with user's choice
+    setNotificationPermission(permission);
     if (permission === 'granted') {
         setSuccessMessage("Notifications enabled! You will now receive critical alerts.");
         setShowSuccessPopup(true);
@@ -468,21 +475,15 @@ const UserDashboard = () => {
   const handleConfirmRebook = useCallback(async () => {
     setShowRebookConfirmPopup(false);
     try {
-      // This call will either succeed (201) or throw an error.
       await axios.post(getEndpoint.rebook(userEmail));
-      // If it succeeds, we navigate directly to payment.
-      navigate('/payment', { state: { isRefill: true } });
     } catch (err) {
-      // If the error is a 409 Conflict, it's an expected outcome. Proceed to payment.
-      if (err.response && err.response.status === 409) {
-        navigate('/payment', { state: { isRefill: true } });
-      } else {
-        // Any other error is a real problem. Show the error popup.
-        console.error("Failed to place manual booking:", err.response || err);
+      if (err.response?.status !== 409) {
         setErrorMessage(err.response?.data?.message || "Could not place a new booking.");
         setShowErrorPopup(true);
+        return;
       }
     }
+    navigate('/payment', { state: { isRefill: true } });
   }, [userEmail, navigate]);
   const handleCancelClick = () => setShowCancelPopup(true);
   const getGasLevelColor = (level) => {
@@ -512,7 +513,6 @@ const UserDashboard = () => {
       <main className="dashboard-main">
         <h2>🎛️ Control Center</h2>
         <div className="stats-container">
-          {/* Gas Level, Refill Date, Tube Expiry boxes remain unchanged */}
           <div className="stat-box gas-level-box">
             <h3>⛽ Current Gas Level</h3>
             {loadingGas ? (<p>Loading...</p>) : 
@@ -551,7 +551,6 @@ const UserDashboard = () => {
         
         <div className="alerts-container">
           <h3>Alerts</h3>
-          {/* All other alerts (Tube Expiry, Leak, Booking) remain unchanged */}
           {kycData && isTubeExpired(kycData.createdAt) && (<div className="alert-box danger"><i className="danger-icon">🚨</i><p><strong>CRITICAL:</strong> Your LPG tube has expired. Contact support immediately.</p></div>)}
           {kycData && isTubeExpiryApproaching(kycData.createdAt) && !isTubeExpired(kycData.createdAt) && (<div className="alert-box warning"><i className="warning-icon">⏰</i><p><strong>Tube Expiry Notice:</strong> Your tube expires in {getDaysUntilTubeExpiry(kycData.createdAt)} days. Please schedule a replacement.</p></div>)}
           {gasLevelData && gasLevelData.isLeaking && (<div className="alert-box danger"><i className="danger-icon">🔥</i><p>Immediate Action: Gas Leak Detected! Ventilate and contact emergency services.</p></div>)}
@@ -562,7 +561,6 @@ const UserDashboard = () => {
         
         <div className="notifications-container">
           <h3>Notifications</h3>
-          {/* NEW: UI for enabling notifications */}
           {notificationPermission === 'default' && (
              <div className="notification-box info enable-notifications">
                 <i className="info-icon">🔔</i>
@@ -579,14 +577,12 @@ const UserDashboard = () => {
              </div>
           )}
           
-          {/* Other notifications remain unchanged */}
           {kycData && (<div className="notification-box info"><i className="info-icon">🎉</i><p>Connection established on {new Date(kycData.createdAt).toLocaleDateString('en-IN')}.</p></div>)}
           {gasLevelData && gasLevelData.hasPaidForRefill && (<div className="notification-box info"><i className="info-icon">ℹ️</i><p>Refill payment confirmed. A new cylinder is ready.</p></div>)}
           <div className="notification-box success"><i className="success-icon">✅</i><p>Your connection is active and running smoothly.</p></div>
         </div>
       </main>
       
-      {/* Popups remain unchanged */}
       {showCancelPopup && (<div className="popup-overlay"><div className="popup-content"><h3>Cancel Booking Confirmation</h3><p>Are you sure you want to cancel this booking?</p><div className="popup-buttons"><button onClick={handleCancelBooking} className="confirm-yes">Yes, Cancel</button><button onClick={() => setShowCancelPopup(false)} className="confirm-no">No</button></div></div></div>)}
       {showRebookConfirmPopup && kycData && (<div className="popup-overlay"><div className="popup-content"><h3>Confirm Manual Booking</h3><p>Please confirm your details before proceeding to payment.</p><div className="user-details-confirm" style={{backgroundColor: '#f9f9f9', border: '1px solid #eee', borderRadius: '8px', padding: '15px', margin: '20px 0', textAlign: 'left'}}><p><strong>Name:</strong> {kycData.firstName} {kycData.lastName}</p><p><strong>Email:</strong> {kycData.email}</p><p><strong>Mobile:</strong> {kycData.mobileNumber}</p><p><strong>Address:</strong> {`${kycData.houseName}, ${kycData.streetName}, ${kycData.town}, ${kycData.district}`}</p></div><div className="popup-buttons"><button onClick={handleConfirmRebook} className="confirm-yes">Confirm & Pay</button><button onClick={() => setShowRebookConfirmPopup(false)} className="confirm-no">Cancel</button></div></div></div>)}
       {showSuccessPopup && (<div className="popup-overlay"><div className="popup-content notification success"><h3>✅ Success</h3><p>{successMessage}</p><button onClick={() => setShowSuccessPopup(false)} className="popup-ok">OK</button></div></div>)}
