@@ -6,7 +6,7 @@
 // =================================================================
 // --- USER CONFIGURATION ---
 // =================================================================
-String userEmail = "aswin18@gmail.com";
+String userEmail = "z@gmail.com";
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 const char* wokwiHost = "host.wokwi.internal";
@@ -34,7 +34,7 @@ const int lowGasThreshold = 20;
 bool isSimulationRunning = false; // NEW: Controls the simulation
 
 // --- Consumption Rates ---
-const float gasConsumptionRate = 1.0;
+const float gasConsumptionRate = 10.0;
 const float gasLeakConsumptionRate = 2.5;
 
 // --- Leak Simulation with FIXED range ---
