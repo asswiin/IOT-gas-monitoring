@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -165,6 +164,30 @@ export default function PaymentPage() {
             <div className="form-group"><label>Address</label><textarea value={formData.address} readOnly /></div>
             <div className="form-group"><label>Date of Payment</label><input type="date" value={formData.dateOfPayment} readOnly /></div>
             <div className="amount-due"><h3>Amount Due: ₹{formData.amountDue}</h3></div>
+            
+            {/* Enhanced Customer Information Display */}
+            <div className="customer-info-section">
+              <h4>📋 Customer Information Summary</h4>
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-label">👤 Name:</span>
+                  <span className="info-value">{formData.customerName}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">📞 Contact:</span>
+                  <span className="info-value">{formData.mobileNumber}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">📧 Email:</span>
+                  <span className="info-value">{formData.email}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">🏠 Address:</span>
+                  <span className="info-value">{formData.address}</span>
+                </div>
+              </div>
+            </div>
+
             <div className="payment-method">
                 <h3>Select Payment Method</h3>
                 <div className="method-buttons">

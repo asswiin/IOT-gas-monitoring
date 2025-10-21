@@ -1,4 +1,3 @@
-
 // models/AutoBooking.js
 const mongoose = require('mongoose');
 
@@ -13,6 +12,19 @@ const autoBookingSchema = new mongoose.Schema({
     required: true,
     lowercase: true,
     trim: true,
+  },
+  // NEW: Customer details for better tracking
+  customerName: {
+    type: String,
+    required: false // Will be populated from KYC data
+  },
+  mobileNumber: {
+    type: String,
+    required: false // Will be populated from KYC data
+  },
+  address: {
+    type: String,
+    required: false // Will be populated from KYC data
   },
   bookingDate: {
     type: Date,

@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const KYC = require("../models/Newconnection");
@@ -270,9 +269,22 @@ router.post("/:email/rebook", async (req, res) => {
       return res.status(409).json({ message: "An active booking already exists. Please proceed to payment.", booking: existingActiveBooking });
     }
 
+    // Create customer address string
+    const customerAddress = [
+      user.houseName,
+      user.streetName,
+      user.town,
+      user.district,
+      user.state,
+      user.pinCode
+    ].filter(Boolean).join(', ');
+
     const newBooking = new AutoBooking({
       userId: user._id,
       email: userEmail,
+      customerName: `${user.firstName} ${user.lastName}`.trim(),
+      mobileNumber: user.mobileNumber,
+      address: customerAddress,
       status: 'booking_pending'
     });
     await newBooking.save();

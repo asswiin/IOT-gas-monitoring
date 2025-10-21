@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const router = express.Router();
 const GasLevel = require('../models/Gaslevel');
@@ -93,16 +91,30 @@ router.get('/:email', async (req, res) => {
       
       if (!relevantBooking) {
         console.log(`🎯 Gas level for ${userEmail} is low. Creating auto-booking.`);
+        
+        // Create customer address string
+        const customerAddress = [
+          kycUser.houseName,
+          kycUser.streetName,
+          kycUser.town,
+          kycUser.district,
+          kycUser.state,
+          kycUser.pinCode
+        ].filter(Boolean).join(', ');
+
         const newAutoBooking = new AutoBooking({ 
             userId: kycUser._id, 
             email: userEmail, 
+            customerName: `${kycUser.firstName} ${kycUser.lastName}`.trim(),
+            mobileNumber: kycUser.mobileNumber,
+            address: customerAddress,
             status: 'booking_pending' 
         });
         
         relevantBooking = await newAutoBooking.save();
         
         kycUser.status = 'booking_pending'; 
-        console.log(`   -> Booking created and KYC status updated for ${userEmail}.`);
+        console.log(`   -> Booking created with customer details for ${userEmail}.`);
       }
     }
 
