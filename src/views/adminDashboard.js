@@ -1,3 +1,4 @@
+
 // import React, { useState, useEffect } from "react";
 // import axios from "axios";
 // import { useNavigate } from "react-router-dom";
@@ -187,7 +188,7 @@
 //       <div className="detail-section">
 //         <h4>Payment Information</h4>
 //         <p><strong>Amount Paid:</strong> ₹{payment.amountDue}</p>
-//         <p><strong>Payment Date:</strong> {new Date(payment.dateOfPayment || payment.createdAt).toLocaleString()}</p>
+//         <p><strong>Payment Date:</strong> {new Date(payment.createdAt).toLocaleString()}</p>
 //         <p><strong>Payment Type:</strong> {payment.paymentType ? payment.paymentType.replace(/_/g, ' ') : 'Initial Connection'}</p>
 //         <p><strong>Payment ID:</strong> {payment._id}</p>
 //       </div>
@@ -258,6 +259,7 @@
 //   const [refillPayments, setRefillPayments] = useState([]);
 //   const [pendingBookings, setPendingBookings] = useState([]);
 //   const [fulfilledBookings, setFulfilledBookings] = useState([]);
+//   const [cancelledBookings, setCancelledBookings] = useState([]);
 //   const [allBookings, setAllBookings] = useState([]);
 //   const [myFeedback, setMyFeedback] = useState([]);
 
@@ -280,6 +282,7 @@
 //     refillPayments: '',
 //     bookings: '',
 //     fulfilledBookings: '',
+//     cancelledBookings: '',
 //     feedback: ''
 //   });
 
@@ -290,13 +293,14 @@
 //       setLoading(true);
 //       const [
 //         requestsRes, usersRes, paymentsRes,
-//         allBookingsRes, fulfilledBookingsRes, myFeedbackRes
+//         allBookingsRes, fulfilledBookingsRes, cancelledBookingsRes, myFeedbackRes
 //       ] = await Promise.all([
 //         axios.get("http://localhost:5000/api/newconnection/requests/pending"),
 //         axios.get("http://localhost:5000/api/newconnection"),
 //         axios.get("http://localhost:5000/api/payment"),
 //         axios.get("http://localhost:5000/api/autobooking/all"),
 //         axios.get("http://localhost:5000/api/autobooking/fulfilled"),
+//         axios.get("http://localhost:5000/api/autobooking/cancelled"),
 //         axios.get("http://localhost:5000/api/myfeedback")
 //       ]);
 
@@ -313,6 +317,7 @@
 //       setAllBookings(allBookingsRes.data);
 //       setPendingBookings(allBookingsRes.data.filter(b => b.status === 'booking_pending'));
 //       setFulfilledBookings(fulfilledBookingsRes.data);
+//       setCancelledBookings(cancelledBookingsRes.data);
 //       setMyFeedback(myFeedbackRes.data);
 
 //     } catch (err) {
@@ -513,8 +518,9 @@
 //   const getFilteredInitialPayments = () => filterBySearch(initialPayments, searchQueries.initialPayments, ['customerName', 'email']);
 //   const getFilteredRefillPayments = () => filterBySearch(refillPayments, searchQueries.refillPayments, ['customerName', 'email']);
 //   const getFilteredFeedback = () => filterBySearch(myFeedback, searchQueries.feedback, ['email']);
-//   const getFilteredBookings = () => filterBySearch(pendingBookings, searchQueries.bookings, ['email', 'status']);
-//   const getFilteredFulfilledBookings = () => filterBySearch(fulfilledBookings, searchQueries.fulfilledBookings, ['email', 'status']);
+//   const getFilteredBookings = () => filterBySearch(pendingBookings, searchQueries.bookings, ['email', 'status', 'customerName']);
+//   const getFilteredFulfilledBookings = () => filterBySearch(fulfilledBookings, searchQueries.fulfilledBookings, ['email', 'status', 'customerName']);
+//   const getFilteredCancelledBookings = () => filterBySearch(cancelledBookings, searchQueries.cancelledBookings, ['email', 'status', 'customerName']);
 
 //   const getProjectGraphData = () => {
 //     if (!allUsers.length || !allPayments.length) return null;
@@ -690,7 +696,8 @@
 //                     <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
 //                       <h4>{p.customerName} (₹{p.amountDue})</h4>
 //                       <p><strong>Email:</strong> {p.email}</p>
-//                       <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
+//                       {/* <-- FIX: Using createdAt for accurate timestamp --> */}
+//                       <p><strong>Date:</strong> {new Date(p.createdAt).toLocaleString()}</p>
 //                       <p><strong>Type:</strong> <span className="payment-type initial">Initial Connection</span></p>
 //                     </div>
 //                   )) : <p className="no-results">No initial payments found.</p>}
@@ -705,7 +712,8 @@
 //                     <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
 //                       <h4>{p.customerName} (₹{p.amountDue})</h4>
 //                       <p><strong>Email:</strong> {p.email}</p>
-//                       <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
+//                       {/* <-- FIX: Using createdAt for accurate timestamp --> */}
+//                       <p><strong>Date:</strong> {new Date(p.createdAt).toLocaleString()}</p>
 //                       <p><strong>Type:</strong> <span className="payment-type refill">Gas Refill</span></p>
 //                     </div>
 //                   )) : <p className="no-results">No refill payments found.</p>}
@@ -731,6 +739,12 @@
 //               >
 //                 Fulfilled Bookings ({fulfilledBookings.length})
 //               </button>
+//               <button 
+//                 className={`tab-btn ${activeSubSection === 'cancelled' ? 'active' : ''}`}
+//                 onClick={() => setActiveSubSection('cancelled')}
+//               >
+//                 Cancelled Bookings ({cancelledBookings.length})
+//               </button>
 //             </div>
 
 //             {activeSubSection === 'pending' ? (
@@ -742,13 +756,13 @@
 //                     <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
 //                       <h4>{b.customerName || 'Customer'} ({b.email})</h4>
 //                       <p><strong>Contact:</strong> {b.mobileNumber || 'Not available'}</p>
-//                       <p><strong>Booked On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
+//                       <p><strong>Booked On:</strong> {new Date(b.updatedAt).toLocaleString()}</p>
 //                       <p><strong>Status:</strong> <span className={`status ${b.status}`}>{formatBookingStatus(b.status)}</span></p>
 //                     </div>
 //                   )) : <p className="no-results">No pending bookings found.</p>}
 //                 </div>
 //               </div>
-//             ) : (
+//             ) : activeSubSection === 'fulfilled' ? (
 //               <div>
 //                 <SearchBar section="fulfilledBookings" placeholder="Search by email..." value={searchQueries.fulfilledBookings} onChange={handleSearchChange} onClear={handleSearchChange} />
 //                 <ResultsCount total={fulfilledBookings.length} filtered={getFilteredFulfilledBookings().length} query={searchQueries.fulfilledBookings} />
@@ -757,10 +771,25 @@
 //                     <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
 //                       <h4>{b.customerName || 'Customer'} ({b.email})</h4>
 //                       <p><strong>Contact:</strong> {b.mobileNumber || 'Not available'}</p>
-//                       <p><strong>Fulfilled On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
+//                       <p><strong>Fulfilled On:</strong> {new Date(b.updatedAt).toLocaleString()}</p>
 //                       <p><strong>Status:</strong> <span className={`status ${b.status}`}>{formatBookingStatus(b.status)}</span></p>
 //                     </div>
 //                   )) : <p className="no-results">No fulfilled bookings found.</p>}
+//                 </div>
+//               </div>
+//             ) : (
+//               <div>
+//                 <SearchBar section="cancelledBookings" placeholder="Search by email or name..." value={searchQueries.cancelledBookings} onChange={handleSearchChange} onClear={handleSearchChange} />
+//                 <ResultsCount total={cancelledBookings.length} filtered={getFilteredCancelledBookings().length} query={searchQueries.cancelledBookings} />
+//                 <div className="list-container">
+//                   {getFilteredCancelledBookings().length > 0 ? getFilteredCancelledBookings().map(b => (
+//                     <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
+//                       <h4>{b.customerName || 'Customer'} ({b.email})</h4>
+//                       <p><strong>Contact:</strong> {b.mobileNumber || 'Not available'}</p>
+//                       <p><strong>Cancelled On:</strong> {new Date(b.updatedAt).toLocaleString()}</p>
+//                       <p><strong>Status:</strong> <span className={`status ${b.status}`}>{formatBookingStatus(b.status)}</span></p>
+//                     </div>
+//                   )) : <p className="no-results">No cancelled bookings found.</p>}
 //                 </div>
 //               </div>
 //             )}
@@ -911,6 +940,33 @@
 //     </div>
 //   );
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1211,6 +1267,8 @@ export default function Dashboard() {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [showSignOutPopup, setShowSignOutPopup] = useState(false);
 
+  const [newRefillCount, setNewRefillCount] = useState(0);
+
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportDate, setReportDate] = useState('');
   const [reportData, setReportData] = useState(null);
@@ -1231,7 +1289,6 @@ export default function Dashboard() {
 
   const fetchData = async () => {
     try {
-      setLoading(true);
       const [
         requestsRes, usersRes, paymentsRes,
         allBookingsRes, fulfilledBookingsRes, cancelledBookingsRes, myFeedbackRes
@@ -1254,6 +1311,12 @@ export default function Dashboard() {
       
       setInitialPayments(initialPaymentsData);
       setRefillPayments(refillPaymentsData);
+
+      const lastSeenRefillCount = parseInt(localStorage.getItem('lastSeenRefillCount') || '0');
+      const currentRefillCount = refillPaymentsData.length;
+      if (currentRefillCount > lastSeenRefillCount) {
+        setNewRefillCount(currentRefillCount - lastSeenRefillCount);
+      }
 
       setAllBookings(allBookingsRes.data);
       setPendingBookings(allBookingsRes.data.filter(b => b.status === 'booking_pending'));
@@ -1637,7 +1700,6 @@ export default function Dashboard() {
                     <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
                       <h4>{p.customerName} (₹{p.amountDue})</h4>
                       <p><strong>Email:</strong> {p.email}</p>
-                      {/* <-- FIX: Using createdAt for accurate timestamp --> */}
                       <p><strong>Date:</strong> {new Date(p.createdAt).toLocaleString()}</p>
                       <p><strong>Type:</strong> <span className="payment-type initial">Initial Connection</span></p>
                     </div>
@@ -1653,7 +1715,6 @@ export default function Dashboard() {
                     <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
                       <h4>{p.customerName} (₹{p.amountDue})</h4>
                       <p><strong>Email:</strong> {p.email}</p>
-                      {/* <-- FIX: Using createdAt for accurate timestamp --> */}
                       <p><strong>Date:</strong> {new Date(p.createdAt).toLocaleString()}</p>
                       <p><strong>Type:</strong> <span className="payment-type refill">Gas Refill</span></p>
                     </div>
@@ -1762,10 +1823,8 @@ export default function Dashboard() {
     }
   };
   
-  // Add state for sub-sections
-  const [activeSubSection, setActiveSubSection] = useState('initial'); // For payments: 'initial' or 'refill'
+  const [activeSubSection, setActiveSubSection] = useState('initial');
 
-  // Update section titles
   const getSectionTitle = () => {
     if (selectedItem) return "Details View";
     const titles = {
@@ -1790,9 +1849,16 @@ export default function Dashboard() {
             <li className={activeSection === 'dashboard-summary' ? 'active' : ''} onClick={() => handleSidebarNav('dashboard-summary')}>Dashboard</li>
             <li className={activeSection === 'users' ? 'active' : ''} onClick={() => handleSidebarNav('users')}>Users</li>
             <li className={activeSection === 'requests-list' ? 'active' : ''} onClick={() => handleSidebarNav('requests-list')}>Requests {pendingRequests.length > 0 && <span className="pending-count">({pendingRequests.length})</span>}</li>
-            <li className={activeSection === 'payments' ? 'active' : ''} onClick={() => { handleSidebarNav('payments'); setActiveSubSection('initial'); }}>
-              Payments ({allPayments.length})
+            
+            <li className={activeSection === 'payments' ? 'active' : ''} onClick={() => { 
+              handleSidebarNav('payments'); 
+              setActiveSubSection('initial');
+              setNewRefillCount(0);
+              localStorage.setItem('lastSeenRefillCount', refillPayments.length.toString());
+            }}>
+              Payments {newRefillCount > 0 && <span className="pending-count">({newRefillCount})</span>}
             </li>
+
             <li className={activeSection === 'bookings' ? 'active' : ''} onClick={() => { handleSidebarNav('bookings'); setActiveSubSection('pending'); }}>
               Bookings {pendingBookings.length > 0 && <span className="pending-count">({pendingBookings.length})</span>}
             </li>
