@@ -156,66 +156,211 @@ export default function PaymentPage() {
   return (
     <div className="payment-container">
       <div className="payment-card">
-        <h2 className="payment-title">{isRefillPayment ? "Gas Refill Payment" : "Initial Connection Payment"}</h2>
+        {/* Back button for refill payments */}
+        {isRefillPayment && (
+          <button 
+            onClick={() => navigate('/userdashboard')} 
+            className="back-to-dashboard-btn"
+            type="button"
+          >
+            ← Back to Dashboard
+          </button>
+        )}
+        
+        {/* Payment Header */}
+        <div className="payment-header">
+          <h1 className="payment-title">
+            {isRefillPayment ? "🔄 Gas Refill Payment" : "🆕 Initial Connection Payment"}
+          </h1>
+          <p className="payment-subtitle">Secure and encrypted payment processing</p>
+        </div>
+        
         <form onSubmit={handleSubmit} className="payment-form">
-            <div className="form-group"><label>Customer Name</label><input type="text" value={formData.customerName} readOnly /></div>
-            <div className="form-group"><label>Email</label><input type="email" value={formData.email} readOnly /></div>
-            <div className="form-group"><label>Mobile Number</label><input type="text" value={formData.mobileNumber} readOnly /></div>
-            <div className="form-group"><label>Address</label><textarea value={formData.address} readOnly /></div>
-            <div className="form-group"><label>Date of Payment</label><input type="date" value={formData.dateOfPayment} readOnly /></div>
-            <div className="amount-due"><h3>Amount Due: ₹{formData.amountDue}</h3></div>
-            
-            {/* Enhanced Customer Information Display */}
-            <div className="customer-info-section">
-              <h4>📋 Customer Information Summary</h4>
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="info-label">👤 Name:</span>
-                  <span className="info-value">{formData.customerName}</span>
+          {/* Customer Information Section */}
+          <div className="form-section">
+            <h3 className="section-title">👤 Customer Information</h3>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Customer Name</label>
+                <input type="text" value={formData.customerName} readOnly />
+              </div>
+              <div className="form-group">
+                <label>Mobile Number</label>
+                <input type="text" value={formData.mobileNumber} readOnly />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Email Address</label>
+                <input type="email" value={formData.email} readOnly />
+              </div>
+              <div className="form-group">
+                <label>Payment Date</label>
+                <input type="date" value={formData.dateOfPayment} readOnly />
+              </div>
+            </div>
+            <div className="form-group full-width">
+              <label>Address</label>
+              <textarea value={formData.address} readOnly />
+            </div>
+          </div>
+
+          {/* Amount Due Section */}
+          <div className="amount-section">
+            <div className="amount-title">Amount Due</div>
+            <div className="amount-value">₹{formData.amountDue}</div>
+            <div className="amount-description">
+              {isRefillPayment ? "Gas Refill Payment" : "Initial Connection Fee"}
+            </div>
+          </div>
+
+          {/* Payment Method Section */}
+          <div className="form-section">
+            <h3 className="section-title">💳 Payment Method</h3>
+            <div className="method-buttons">
+              <button 
+                type="button" 
+                onClick={() => setPaymentMethod('credit')} 
+                className={`method-btn ${paymentMethod === 'credit' ? 'active' : ''}`}
+              >
+                <div className="method-icon">💳</div>
+                <div className="method-label">Credit Card</div>
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setPaymentMethod('debit')} 
+                className={`method-btn ${paymentMethod === 'debit' ? 'active' : ''}`}
+              >
+                <div className="method-icon">💰</div>
+                <div className="method-label">Debit Card</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Card Details Section */}
+          {paymentMethod && (
+            <div className="form-section">
+              <h3 className="section-title">🔒 Card Details</h3>
+              <div className="card-details">
+                <div className="form-group">
+                  <label>Card Number</label>
+                  <input 
+                    type="text" 
+                    name="cardNumber" 
+                    placeholder="1234 5678 9012 3456" 
+                    value={cardDetails.cardNumber} 
+                    onChange={handleCardChange} 
+                    required 
+                  />
+                  {errors.cardNumber && <div className="error">{errors.cardNumber}</div>}
                 </div>
-                <div className="info-item">
-                  <span className="info-label">📞 Contact:</span>
-                  <span className="info-value">{formData.mobileNumber}</span>
+                <div className="card-row">
+                  <div className="form-group">
+                    <label>Expiry Month</label>
+                    <input 
+                      type="text" 
+                      name="expiryMonth" 
+                      placeholder="MM" 
+                      value={cardDetails.expiryMonth} 
+                      onChange={handleCardChange} 
+                      required 
+                    />
+                    {errors.expiryMonth && <div className="error">{errors.expiryMonth}</div>}
+                  </div>
+                  <div className="form-group">
+                    <label>Expiry Year</label>
+                    <input 
+                      type="text" 
+                      name="expiryYear" 
+                      placeholder="YYYY" 
+                      value={cardDetails.expiryYear} 
+                      onChange={handleCardChange} 
+                      required 
+                    />
+                    {errors.expiryYear && <div className="error">{errors.expiryYear}</div>}
+                  </div>
+                  <div className="form-group">
+                    <label>CVV</label>
+                    <input 
+                      type="password" 
+                      name="cvv" 
+                      placeholder="123" 
+                      value={cardDetails.cvv} 
+                      onChange={handleCardChange} 
+                      required 
+                    />
+                    {errors.cvv && <div className="error">{errors.cvv}</div>}
+                  </div>
                 </div>
-                <div className="info-item">
-                  <span className="info-label">📧 Email:</span>
-                  <span className="info-value">{formData.email}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">🏠 Address:</span>
-                  <span className="info-value">{formData.address}</span>
+                
+                {/* Security Section */}
+                <div className="security-section">
+                  <div className="security-icon">🔒</div>
+                  <span>Your payment information is secure and encrypted</span>
                 </div>
               </div>
             </div>
+          )}
 
-            <div className="payment-method">
-                <h3>Select Payment Method</h3>
-                <div className="method-buttons">
-                    <button type="button" onClick={() => setPaymentMethod('credit')} className={paymentMethod === 'credit' ? 'active' : ''}>Credit Card</button>
-                    <button type="button" onClick={() => setPaymentMethod('debit')} className={paymentMethod === 'debit' ? 'active' : ''}>Debit Card</button>
-                </div>
-            </div>
-            {paymentMethod && (
-            <div className="card-details-form">
-                <h4>Enter Your Card Details</h4>
-                <div className="form-group"><label>Card Number</label><input type="text" name="cardNumber" placeholder="xxxx xxxx xxxx xxxx" value={cardDetails.cardNumber} onChange={handleCardChange} required />{errors.cardNumber && <p className="error">{errors.cardNumber}</p>}</div>
-                <div className="expiry-cvv-group">
-                    <div className="form-group"><label>Expiry Month</label><input type="text" name="expiryMonth" placeholder="MM" value={cardDetails.expiryMonth} onChange={handleCardChange} required />{errors.expiryMonth && <p className="error">{errors.expiryMonth}</p>}</div>
-                    <div className="form-group"><label>Expiry Year</label><input type="text" name="expiryYear" placeholder="YYYY" value={cardDetails.expiryYear} onChange={handleCardChange} required />{errors.expiryYear && <p className="error">{errors.expiryYear}</p>}</div>
-                    <div className="form-group"><label>CVV</label><input type="password" name="cvv" placeholder="123" value={cardDetails.cvv} onChange={handleCardChange} required />{errors.cvv && <p className="error">{errors.cvv}</p>}</div>
-                </div>
-            </div>
+          {/* Submit Section */}
+          <div className="submit-section">
+            <button type="submit" className="pay-btn">
+              🔒 Pay ₹{formData.amountDue} Securely
+            </button>
+            {errors.form && <div className="error payment-message">{errors.form}</div>}
+            {message && (
+              <div className={`payment-message ${message.includes("✅") ? "success" : "error"}`}>
+                {message}
+              </div>
             )}
-            <div>
-                <button type="submit" className="pay-btn">Pay Now</button>
-                {errors.form && <p className="error payment-message">{errors.form}</p>}
-                {message && (<p className={`payment-message ${message.includes("✅") ? "success" : "error"}`}>{message}</p>)}
+            
+            {/* Trust Indicators */}
+            <div className="trust-indicators">
+              <div className="trust-item">
+                <span>🔒</span>
+                <span>256-bit SSL Encryption</span>
+              </div>
+              <div className="trust-item">
+                <span>🛡️</span>
+                <span>PCI Compliant</span>
+              </div>
+              <div className="trust-item">
+                <span>✅</span>
+                <span>100% Secure</span>
+              </div>
             </div>
+          </div>
         </form>
       </div>
 
-      {showConfirmationPopup && (<div className="popup-overlay"><div className="popup-content"><h3>Confirm {isRefillPayment ? "Refill" : "Initial"} Payment?</h3><div className="popup-buttons"><button onClick={handleConfirmPayment} className="popup-yes">Yes</button><button onClick={() => setShowConfirmationPopup(false)} className="popup-no">No</button></div></div></div>)}
-      {showSuccessPopup && (<div className="popup-overlay"><div className="popup-content"><h3>Payment is Successful!</h3><div className="popup-buttons"><button onClick={handleSuccessOk} className="popup-ok">OK</button></div></div></div>)}
+      {/* Confirmation Popup */}
+      {showConfirmationPopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h3>🔒 Confirm Payment</h3>
+            <p>
+              Are you sure you want to proceed with the {isRefillPayment ? "refill" : "initial"} payment of <strong>₹{formData.amountDue}</strong>?
+            </p>
+            <div className="popup-buttons">
+              <button onClick={handleConfirmPayment} className="popup-yes">Yes, Pay Now</button>
+              <button onClick={() => setShowConfirmationPopup(false)} className="popup-no">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h3>✅ Payment Successful!</h3>
+            <p>Your payment has been processed successfully. You will be redirected to your dashboard shortly.</p>
+            <div className="popup-buttons">
+              <button onClick={handleSuccessOk} className="popup-ok">Continue to Dashboard</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
