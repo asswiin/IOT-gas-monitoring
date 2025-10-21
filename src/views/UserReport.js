@@ -123,11 +123,8 @@ const UserReport = () => {
       </header>
 
       <main className="dashboard-main">
-        <div className="report-header">
+        <div className="report-header-title">
           <h2>Account Report for {userEmail}</h2>
-          <button onClick={handlePrint} className="print-btn no-print">
-            🖨️ Print Report
-          </button>
         </div>
 
         {/* Simple Summary */}
@@ -211,6 +208,13 @@ const UserReport = () => {
           ) : (
             <p className="no-data">No booking records found.</p>
           )}
+        </div>
+
+        {/* Print Button at Bottom */}
+        <div className="print-section no-print">
+          <button onClick={handlePrint} className="print-btn-bottom">
+            🖨️ Print Report
+          </button>
         </div>
       </main>
     </div>
