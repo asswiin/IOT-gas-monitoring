@@ -88,21 +88,32 @@ function UserDetail({ user, onBack, onDeleteUser }) {
 
   return (
     <div className="user-detail-card card">
-      <button onClick={onBack} className="back-btn">← Back to Users List</button>
+      <button onClick={onBack} className="back-btn">
+        <span>←</span> Back to Users List
+      </button>
       <h3>User Details</h3>
       <div className="detail-section">
         <h4>Personal Information</h4>
         <p><strong>Full Name:</strong> {user.firstName} {user.lastName}</p>
         <p><strong>Email:</strong> {user.email}</p>
         <p><strong>Mobile:</strong> {user.mobileNumber}</p>
-        <p><strong>Date of Birth:</strong> {new Date(user.dob).toLocaleDateString()}</p>
-        <p><strong>Status:</strong> <span className={`status ${user.status}`}>{user.status.replace(/_/g, ' ')}</span></p>
+        <p><strong>Date of Birth:</strong> {user.dob ? new Date(user.dob).toLocaleDateString() : 'Not provided'}</p>
+        <p><strong>Status:</strong> <span className={`status ${user.status}`}>{user.status?.replace(/_/g, ' ') || 'Unknown'}</span></p>
       </div>
       <div className="detail-section">
-        <h4>Address</h4>
-        <p><strong>Address:</strong> {`${user.houseName}, ${user.streetName}, ${user.town}, ${user.district}, ${user.state} - ${user.pinCode}`}</p>
+        <h4>Address Information</h4>
+        <p><strong>House Name:</strong> {user.houseName || 'Not provided'}</p>
+        <p><strong>Street:</strong> {user.streetName || 'Not provided'}</p>
+        <p><strong>Town:</strong> {user.town || 'Not provided'}</p>
+        <p><strong>District:</strong> {user.district || 'Not provided'}</p>
+        <p><strong>State:</strong> {user.state || 'Not provided'}</p>
+        <p><strong>Pin Code:</strong> {user.pinCode || 'Not provided'}</p>
       </div>
-      <p><strong>Joined On:</strong> {new Date(user.createdAt).toLocaleString()}</p>
+      <div className="detail-section">
+        <h4>Account Information</h4>
+        <p><strong>Joined On:</strong> {user.createdAt ? new Date(user.createdAt).toLocaleString() : 'Not available'}</p>
+        <p><strong>Last Updated:</strong> {user.updatedAt ? new Date(user.updatedAt).toLocaleString() : 'Not available'}</p>
+      </div>
       <div className="user-actions detail-actions">
         <button onClick={() => setShowDeletePopup(true)} className="delete-btn">Delete User</button>
       </div>
@@ -127,14 +138,30 @@ function RequestDetail({ request, onApprove, onReject, onBack }) {
   if (!request) return null;
   return (
     <div className="request-detail-card card">
-      <button onClick={onBack} className="back-btn">← Back to Requests List</button>
+      <button onClick={onBack} className="back-btn">
+        <span>←</span> Back to Requests List
+      </button>
       <h3>Connection Request Details</h3>
       <div className="detail-section">
+        <h4>Personal Information</h4>
         <p><strong>Full Name:</strong> {request.firstName} {request.lastName}</p>
         <p><strong>Email:</strong> {request.email}</p>
         <p><strong>Mobile:</strong> {request.mobileNumber}</p>
-        <p><strong>Address:</strong> {`${request.houseName}, ${request.streetName}, ${request.town}, ${request.district}`}</p>
+        <p><strong>Date of Birth:</strong> {request.dob ? new Date(request.dob).toLocaleDateString() : 'Not provided'}</p>
+      </div>
+      <div className="detail-section">
+        <h4>Address Information</h4>
+        <p><strong>House Name:</strong> {request.houseName}</p>
+        <p><strong>Street:</strong> {request.streetName}</p>
+        <p><strong>Town:</strong> {request.town}</p>
+        <p><strong>District:</strong> {request.district}</p>
+        <p><strong>State:</strong> {request.state}</p>
+        <p><strong>Pin Code:</strong> {request.pinCode}</p>
+      </div>
+      <div className="detail-section">
+        <h4>Request Information</h4>
         <p><strong>Requested On:</strong> {new Date(request.createdAt).toLocaleString()}</p>
+        <p><strong>Status:</strong> <span className={`status ${request.status}`}>{request.status?.replace(/_/g, ' ')}</span></p>
       </div>
       <div className="request-actions detail-actions">
         <button onClick={() => onApprove(request._id, request.email)} className="approve-btn">Approve</button>
@@ -148,14 +175,20 @@ function PaymentDetail({ payment, onBack }) {
   if (!payment) return null;
   return (
     <div className="payment-detail-card card">
-      <button onClick={onBack} className="back-btn">← Back to Payments List</button>
+      <button onClick={onBack} className="back-btn">
+        <span>←</span> Back to Payments List
+      </button>
       <h3>Payment Details</h3>
       <div className="detail-section">
+        <h4>Customer Information</h4>
         <p><strong>Customer Name:</strong> {payment.customerName}</p>
         <p><strong>Email:</strong> {payment.email}</p>
+      </div>
+      <div className="detail-section">
+        <h4>Payment Information</h4>
         <p><strong>Amount Paid:</strong> ₹{payment.amountDue}</p>
         <p><strong>Payment Date:</strong> {new Date(payment.dateOfPayment || payment.createdAt).toLocaleString()}</p>
-        <p><strong>Payment Type:</strong> {payment.paymentType ? payment.paymentType.replace(/_/g, ' ') : 'N/A'}</p>
+        <p><strong>Payment Type:</strong> {payment.paymentType ? payment.paymentType.replace(/_/g, ' ') : 'Initial Connection'}</p>
         <p><strong>Payment ID:</strong> {payment._id}</p>
       </div>
     </div>
@@ -166,13 +199,42 @@ function AutoBookingDetail({ booking, onBack }) {
   if (!booking) return null;
   return (
     <div className="auto-booking-detail-card card">
-      <button onClick={onBack} className="back-btn">← Back to Bookings List</button>
+      <button onClick={onBack} className="back-btn">
+        <span>←</span> Back to Bookings List
+      </button>
       <h3>Auto-Booking Details</h3>
       <div className="detail-section">
+        <h4>Booking Information</h4>
         <p><strong>User Email:</strong> {booking.email}</p>
-        <p><strong>Event Date:</strong> {new Date(booking.updatedAt).toLocaleString()}</p>
+        <p><strong>Booking Date:</strong> {new Date(booking.createdAt).toLocaleString()}</p>
+        <p><strong>Last Updated:</strong> {new Date(booking.updatedAt).toLocaleString()}</p>
         <p><strong>Status:</strong> <span className={`status ${booking.status}`}>{formatBookingStatus(booking.status)}</span></p>
         <p><strong>Booking ID:</strong> {booking._id}</p>
+      </div>
+    </div>
+  );
+}
+
+function FeedbackDetail({ feedback, onBack }) {
+  if (!feedback) return null;
+  return (
+    <div className="feedback-detail-card card">
+      <button onClick={onBack} className="back-btn">
+        <span>←</span> Back to Feedback List
+      </button>
+      <h3>Feedback Details</h3>
+      <div className="detail-section">
+        <h4>Feedback Information</h4>
+        <p><strong>User Email:</strong> {feedback.email}</p>
+        <p><strong>Type:</strong> <span className={`feedback-type ${feedback.type?.toLowerCase()}`}>{feedback.type}</span></p>
+        <p><strong>Submitted On:</strong> {new Date(feedback.createdAt).toLocaleString()}</p>
+        <p><strong>Feedback ID:</strong> {feedback._id}</p>
+      </div>
+      <div className="detail-section">
+        <h4>Message Content</h4>
+        <p style={{borderBottom: 'none', padding: '1rem', background: '#f8f9fa', borderRadius: '8px', fontStyle: 'italic'}}>
+          "{feedback.message}"
+        </p>
       </div>
     </div>
   );
@@ -188,6 +250,8 @@ export default function Dashboard() {
   const [allPayments, setAllPayments] = useState([]);
   const [initialPayments, setInitialPayments] = useState([]);
   const [refillPayments, setRefillPayments] = useState([]);
+  const [pendingBookings, setPendingBookings] = useState([]);
+  const [fulfilledBookings, setFulfilledBookings] = useState([]);
   const [allBookings, setAllBookings] = useState([]);
   const [myFeedback, setMyFeedback] = useState([]);
 
@@ -209,6 +273,7 @@ export default function Dashboard() {
     initialPayments: '',
     refillPayments: '',
     bookings: '',
+    fulfilledBookings: '',
     feedback: ''
   });
 
@@ -219,13 +284,13 @@ export default function Dashboard() {
       setLoading(true);
       const [
         requestsRes, usersRes, paymentsRes,
-        allBookingsRes,
-        myFeedbackRes
+        allBookingsRes, fulfilledBookingsRes, myFeedbackRes
       ] = await Promise.all([
         axios.get("http://localhost:5000/api/newconnection/requests/pending"),
         axios.get("http://localhost:5000/api/newconnection"),
         axios.get("http://localhost:5000/api/payment"),
         axios.get("http://localhost:5000/api/autobooking/all"),
+        axios.get("http://localhost:5000/api/autobooking/fulfilled"),
         axios.get("http://localhost:5000/api/myfeedback")
       ]);
 
@@ -233,22 +298,15 @@ export default function Dashboard() {
       setAllUsers(usersRes.data);
       setAllPayments(paymentsRes.data);
       
-      // Improved payment filtering with better logging
-      const initialPayments = paymentsRes.data.filter(p => 
-        p.paymentType === 'initial_connection' || !p.paymentType
-      );
-      const refillPayments = paymentsRes.data.filter(p => 
-        p.paymentType === 'gas_refill'
-      );
+      const initialPaymentsData = paymentsRes.data.filter(p => p.paymentType === 'initial_connection' || !p.paymentType);
+      const refillPaymentsData = paymentsRes.data.filter(p => p.paymentType === 'gas_refill');
       
-      console.log(`📊 Admin Dashboard Payment Summary:`);
-      console.log(`   - Total payments: ${paymentsRes.data.length}`);
-      console.log(`   - Initial payments: ${initialPayments.length}`);
-      console.log(`   - Refill payments: ${refillPayments.length}`);
-      
-      setInitialPayments(initialPayments);
-      setRefillPayments(refillPayments);
+      setInitialPayments(initialPaymentsData);
+      setRefillPayments(refillPaymentsData);
+
       setAllBookings(allBookingsRes.data);
+      setPendingBookings(allBookingsRes.data.filter(b => b.status === 'booking_pending'));
+      setFulfilledBookings(fulfilledBookingsRes.data);
       setMyFeedback(myFeedbackRes.data);
 
     } catch (err) {
@@ -297,7 +355,8 @@ export default function Dashboard() {
       showNotification("User and all associated data deleted permanently!");
       setSelectedItem(null);
       fetchData();
-    } catch (err) {
+    } catch (err)
+    {
       showNotification("Failed to delete user.", 'error');
     }
   };
@@ -317,10 +376,6 @@ export default function Dashboard() {
     setActiveSection(section);
   };
 
-  // ========================================================
-  //  ✅ --- REPORT GENERATION LOGIC ---
-  // ========================================================
-  
   const generateReport = async () => {
     if (!reportDate) {
       showNotification("Please select a month and year to generate a report.", 'error');
@@ -328,10 +383,9 @@ export default function Dashboard() {
     }
     
     setGeneratingReport(true);
-    setReportData(null); // Clear previous report
+    setReportData(null); 
 
     try {
-      // Simulate network delay for better UX
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const [year, month] = reportDate.split('-').map(Number);
@@ -344,33 +398,28 @@ export default function Dashboard() {
           return itemDate >= startDate && itemDate <= endDate;
         });
       };
-
-      // Calculate statistics
-      const monthlyNewUsers = filterByMonth(allUsers, 'createdAt');
-      const monthlyDeactivatedUsers = allUsers.filter(user => 
-        user.status === 'deactivated' && 
-        new Date(user.updatedAt) >= startDate && 
-        new Date(user.updatedAt) <= endDate
-      );
-      const monthlyBookings = filterByMonth(allBookings, 'createdAt');
-      const monthlyCancelledBookings = monthlyBookings.filter(b => b.status === 'cancelled');
+      
       const monthlyInitialPayments = filterByMonth(initialPayments, 'createdAt');
       const monthlyRefillPayments = filterByMonth(refillPayments, 'createdAt');
+      const monthlyBookings = filterByMonth(allBookings, 'createdAt');
       
       const totalRevenue = [...monthlyInitialPayments, ...monthlyRefillPayments]
         .reduce((sum, payment) => sum + (payment.amountDue || 0), 0);
 
       const report = {
         month: startDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
-        newUsers: monthlyNewUsers.length,
-        deactivatedUsers: monthlyDeactivatedUsers.length,
-        approvedRequests: monthlyNewUsers.filter(u => u.status !== 'pending_approval').length,
+        newUsers: filterByMonth(allUsers, 'createdAt').length,
+        deactivatedUsers: allUsers.filter(user => 
+          user.status === 'deactivated' && 
+          new Date(user.updatedAt) >= startDate && 
+          new Date(user.updatedAt) <= endDate
+        ).length,
         totalBookings: monthlyBookings.length,
-        cancelledBookings: monthlyCancelledBookings.length,
+        fulfilledBookings: monthlyBookings.filter(b => b.status === 'fulfilled').length,
+        cancelledBookings: monthlyBookings.filter(b => b.status === 'cancelled').length,
         initialPayments: monthlyInitialPayments.length,
         refillPayments: monthlyRefillPayments.length,
         totalRevenue: totalRevenue.toFixed(2),
-        // Store detailed data for download
         details: {
           monthlyInitialPayments,
           monthlyRefillPayments
@@ -400,6 +449,7 @@ export default function Dashboard() {
     content += `New Users: ${reportData.newUsers}\n`;
     content += `Deactivated Users: ${reportData.deactivatedUsers}\n`;
     content += `Total Bookings: ${reportData.totalBookings}\n`;
+    content += `Fulfilled Bookings: ${reportData.fulfilledBookings}\n`;
     content += `Cancelled Bookings: ${reportData.cancelledBookings}\n`;
     content += `Initial Connection Payments: ${reportData.initialPayments}\n`;
     content += `Gas Refill Payments: ${reportData.refillPayments}\n`;
@@ -437,7 +487,6 @@ export default function Dashboard() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-  // ========================================================
 
   const handleSearchChange = (section, value) => {
     setSearchQueries(prev => ({ ...prev, [section]: value.toLowerCase() }));
@@ -458,16 +507,13 @@ export default function Dashboard() {
   const getFilteredInitialPayments = () => filterBySearch(initialPayments, searchQueries.initialPayments, ['customerName', 'email']);
   const getFilteredRefillPayments = () => filterBySearch(refillPayments, searchQueries.refillPayments, ['customerName', 'email']);
   const getFilteredFeedback = () => filterBySearch(myFeedback, searchQueries.feedback, ['email']);
-  const getFilteredBookings = () => filterBySearch(allBookings, searchQueries.bookings, ['email', 'status']);
+  const getFilteredBookings = () => filterBySearch(pendingBookings, searchQueries.bookings, ['email', 'status']);
+  const getFilteredFulfilledBookings = () => filterBySearch(fulfilledBookings, searchQueries.fulfilledBookings, ['email', 'status']);
 
-  // PROJECT GRAPH DATA - New function
   const getProjectGraphData = () => {
     if (!allUsers.length || !allPayments.length) return null;
-
-    // Get last 6 months of data
     const months = [];
     const currentDate = new Date();
-    
     for (let i = 5; i >= 0; i--) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
       months.push({
@@ -476,40 +522,23 @@ export default function Dashboard() {
         month: date.getMonth()
       });
     }
-
     const userData = months.map(month => {
       return allUsers.filter(user => {
         const userDate = new Date(user.createdAt);
         return userDate.getFullYear() === month.year && userDate.getMonth() === month.month;
       }).length;
     });
-
     const revenueData = months.map(month => {
       return allPayments.filter(payment => {
         const paymentDate = new Date(payment.createdAt);
         return paymentDate.getFullYear() === month.year && paymentDate.getMonth() === month.month;
       }).reduce((sum, payment) => sum + (payment.amountDue || 0), 0);
     });
-
     return {
       labels: months.map(m => m.label),
       datasets: [
-        {
-          label: 'New Users',
-          data: userData,
-          backgroundColor: 'rgba(54, 162, 235, 0.6)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-          yAxisID: 'y'
-        },
-        {
-          label: 'Revenue (₹)',
-          data: revenueData,
-          backgroundColor: 'rgba(255, 99, 132, 0.6)',
-          borderColor: 'rgba(255, 99, 132, 1)',
-          borderWidth: 1,
-          yAxisID: 'y1'
-        }
+        { label: 'New Users', data: userData, backgroundColor: 'rgba(54, 162, 235, 0.6)', yAxisID: 'y' },
+        { label: 'Revenue (₹)', data: revenueData, backgroundColor: 'rgba(255, 99, 132, 0.6)', yAxisID: 'y1' }
       ]
     };
   };
@@ -517,75 +546,10 @@ export default function Dashboard() {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          font: {
-            size: 14,
-            weight: '600'
-          },
-          usePointStyle: true,
-          padding: 20
-        }
-      },
-      title: {
-        display: true,
-        text: 'Project Growth - Last 6 Months',
-        font: {
-          size: 18,
-          weight: '700'
-        },
-        padding: 20
-      },
-      tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#333',
-        bodyColor: '#333',
-        borderColor: '#ddd',
-        borderWidth: 1,
-        cornerRadius: 8
-      }
-    },
+    plugins: { legend: { position: 'top' }, title: { display: true, text: 'Project Growth - Last 6 Months' } },
     scales: {
-      y: {
-        type: 'linear',
-        display: true,
-        position: 'left',
-        title: {
-          display: true,
-          text: 'Number of Users',
-          font: { weight: '600' }
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)'
-        }
-      },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        title: {
-          display: true,
-          text: 'Revenue (₹)',
-          font: { weight: '600' }
-        },
-        grid: {
-          drawOnChartArea: false
-        },
-        ticks: {
-          callback: function(value) {
-            return '₹' + value;
-          }
-        }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Month',
-          font: { weight: '600' }
-        }
-      }
+      y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Number of Users' } },
+      y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Revenue (₹)' }, grid: { drawOnChartArea: false } }
     }
   };
 
@@ -595,14 +559,19 @@ export default function Dashboard() {
 
     if (selectedItem) {
       switch (activeSection) {
-        case 'users': return <UserDetail user={selectedItem} onBack={() => setSelectedItem(null)} onDeleteUser={handleDeleteUser} />;
-        case 'requests-list': return <RequestDetail request={selectedItem} onBack={() => setSelectedItem(null)} onApprove={handleApprove} onReject={handleReject} />;
-        case 'initial-payments':
-        case 'refill-payments':
+        case 'users': 
+          return <UserDetail user={selectedItem} onBack={() => setSelectedItem(null)} onDeleteUser={handleDeleteUser} />;
+        case 'requests-list': 
+          return <RequestDetail request={selectedItem} onBack={() => setSelectedItem(null)} onApprove={handleApprove} onReject={handleReject} />;
+        case 'payments':
           return <PaymentDetail payment={selectedItem} onBack={() => setSelectedItem(null)} />;
-        case 'auto-bookings':
+        case 'bookings':
           return <AutoBookingDetail booking={selectedItem} onBack={() => setSelectedItem(null)} />;
-        default: setSelectedItem(null); return null;
+        case 'my-feedback':
+          return <FeedbackDetail feedback={selectedItem} onBack={() => setSelectedItem(null)} />;
+        default: 
+          setSelectedItem(null); 
+          return null;
       }
     }
 
@@ -618,7 +587,6 @@ export default function Dashboard() {
       case 'dashboard-summary':
         return (
           <div>
-            {/* Essential Metrics - Only 3 cards */}
             <div className="simplified-card-grid">
               <Card title="Total Users">
                 <p>{allUsers.length}</p>
@@ -636,8 +604,6 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
-
-            {/* Project Graph */}
             <div className="graph-section">
               <div className="graph-container">
                 <h3>📈 Project Overview</h3>
@@ -691,64 +657,105 @@ export default function Dashboard() {
           </div>
         );
 
-      case 'initial-payments':
-        const filteredInitialPayments = getFilteredInitialPayments();
+      case 'payments':
         return (
           <div>
-            <SearchBar section="initialPayments" placeholder="Search by customer name or email..." value={searchQueries.initialPayments} onChange={handleSearchChange} onClear={handleSearchChange} />
-            <ResultsCount total={initialPayments.length} filtered={filteredInitialPayments.length} query={searchQueries.initialPayments} />
-            <div className="list-container">
-              {filteredInitialPayments.length > 0 ? filteredInitialPayments.map(p => (
-                <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
-                  <h4>{p.customerName} (₹{p.amountDue})</h4>
-                  <p><strong>Email:</strong> {p.email}</p>
-                  <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
-                </div>
-              )) : <p className="no-results">No initial payments found.</p>}
+            <div className="section-tabs">
+              <button 
+                className={`tab-btn ${activeSubSection === 'initial' ? 'active' : ''}`}
+                onClick={() => setActiveSubSection('initial')}
+              >
+                Initial Payments ({initialPayments.length})
+              </button>
+              <button 
+                className={`tab-btn ${activeSubSection === 'refill' ? 'active' : ''}`}
+                onClick={() => setActiveSubSection('refill')}
+              >
+                Refill Payments ({refillPayments.length})
+              </button>
             </div>
+
+            {activeSubSection === 'initial' ? (
+              <div>
+                <SearchBar section="initialPayments" placeholder="Search by customer name or email..." value={searchQueries.initialPayments} onChange={handleSearchChange} onClear={handleSearchChange} />
+                <ResultsCount total={initialPayments.length} filtered={getFilteredInitialPayments().length} query={searchQueries.initialPayments} />
+                <div className="list-container">
+                  {getFilteredInitialPayments().length > 0 ? getFilteredInitialPayments().map(p => (
+                    <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
+                      <h4>{p.customerName} (₹{p.amountDue})</h4>
+                      <p><strong>Email:</strong> {p.email}</p>
+                      <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
+                      <p><strong>Type:</strong> <span className="payment-type initial">Initial Connection</span></p>
+                    </div>
+                  )) : <p className="no-results">No initial payments found.</p>}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <SearchBar section="refillPayments" placeholder="Search by customer name or email..." value={searchQueries.refillPayments} onChange={handleSearchChange} onClear={handleSearchChange} />
+                <ResultsCount total={refillPayments.length} filtered={getFilteredRefillPayments().length} query={searchQueries.refillPayments} />
+                <div className="list-container">
+                  {getFilteredRefillPayments().length > 0 ? getFilteredRefillPayments().map(p => (
+                    <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
+                      <h4>{p.customerName} (₹{p.amountDue})</h4>
+                      <p><strong>Email:</strong> {p.email}</p>
+                      <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
+                      <p><strong>Type:</strong> <span className="payment-type refill">Gas Refill</span></p>
+                    </div>
+                  )) : <p className="no-results">No refill payments found.</p>}
+                </div>
+              </div>
+            )}
           </div>
         );
 
-      case 'refill-payments':
-        const filteredRefillPayments = getFilteredRefillPayments();
+      case 'bookings':
         return (
           <div>
-            <SearchBar section="refillPayments" placeholder="Search by customer name or email..." value={searchQueries.refillPayments} onChange={handleSearchChange} onClear={handleSearchChange} />
-            <ResultsCount total={refillPayments.length} filtered={filteredRefillPayments.length} query={searchQueries.refillPayments} />
-            <div className="list-container">
-              {filteredRefillPayments.length > 0 ? filteredRefillPayments.map(p => (
-                <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
-                  <h4>{p.customerName} (₹{p.amountDue})</h4>
-                  <p><strong>Email:</strong> {p.email}</p>
-                  <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
-                  <p><strong>Type:</strong> <span className="payment-type refill">Gas Refill</span></p>
-                </div>
-              )) : <p className="no-results">No refill payments found.</p>}
+            <div className="section-tabs">
+              <button 
+                className={`tab-btn ${activeSubSection === 'pending' ? 'active' : ''}`}
+                onClick={() => setActiveSubSection('pending')}
+              >
+                Pending Bookings ({pendingBookings.length})
+              </button>
+              <button 
+                className={`tab-btn ${activeSubSection === 'fulfilled' ? 'active' : ''}`}
+                onClick={() => setActiveSubSection('fulfilled')}
+              >
+                Fulfilled Bookings ({fulfilledBookings.length})
+              </button>
             </div>
-          </div>
-        );
 
-      case 'auto-bookings':
-        const filteredBookings = getFilteredBookings();
-        return (
-          <div>
-            <SearchBar
-              section="bookings"
-              placeholder="Search bookings by email or status..."
-              value={searchQueries.bookings}
-              onChange={handleSearchChange}
-              onClear={handleSearchChange}
-            />
-            <ResultsCount total={allBookings.length} filtered={filteredBookings.length} query={searchQueries.bookings} />
-            <div className="list-container">
-              {filteredBookings.length > 0 ? filteredBookings.map(b => (
-                <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
-                  <h4>{b.email}</h4>
-                  <p><strong>Event Date:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
-                  <p><strong>Status:</strong> <span className={`status ${b.status}`}>{formatBookingStatus(b.status)}</span></p>
+            {activeSubSection === 'pending' ? (
+              <div>
+                <SearchBar section="bookings" placeholder="Search bookings by email..." value={searchQueries.bookings} onChange={handleSearchChange} onClear={handleSearchChange} />
+                <ResultsCount total={pendingBookings.length} filtered={getFilteredBookings().length} query={searchQueries.bookings} />
+                <div className="list-container">
+                  {getFilteredBookings().length > 0 ? getFilteredBookings().map(b => (
+                    <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
+                      <h4>{b.email}</h4>
+                      <p><strong>Booked On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
+                      <p><strong>Status:</strong> <span className={`status ${b.status}`}>{formatBookingStatus(b.status)}</span></p>
+                    </div>
+                  )) : <p className="no-results">No pending bookings found.</p>}
                 </div>
-              )) : <p className="no-results">No bookings found.</p>}
-            </div>
+              </div>
+            ) : (
+              <div>
+                <SearchBar section="fulfilledBookings" placeholder="Search by email..." value={searchQueries.fulfilledBookings} onChange={handleSearchChange} onClear={handleSearchChange} />
+                <ResultsCount total={fulfilledBookings.length} filtered={getFilteredFulfilledBookings().length} query={searchQueries.fulfilledBookings} />
+                <div className="list-container">
+                  {getFilteredFulfilledBookings().length > 0 ? getFilteredFulfilledBookings().map(b => (
+                    <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
+                      <h4>{b.email}</h4>
+                      <p><strong>Fulfilled On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
+                      <p><strong>Status:</strong> <span className={`status ${b.status}`}>{formatBookingStatus(b.status)}</span></p>
+                    </div>
+                  )) : <p className="no-results">No fulfilled bookings found.</p>}
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -760,12 +767,12 @@ export default function Dashboard() {
             <ResultsCount total={myFeedback.length} filtered={filteredFeedback.length} query={searchQueries.feedback} />
             <div className="list-container">
               {filteredFeedback.length > 0 ? filteredFeedback.map(fb => (
-                <div key={fb._id} className={`list-item card feedback-card ${getFeedbackCardClass(fb.type)}`}>
+                <div key={fb._id} className={`list-item card feedback-card ${getFeedbackCardClass(fb.type)} clickable`} onClick={() => setSelectedItem(fb)}>
                   <div className="feedback-header">
                     <h4>{fb.email}</h4>
                     <span className="feedback-type">{fb.type}</span>
                   </div>
-                  <p className="feedback-message">{fb.message}</p>
+                  <p className="feedback-message">{fb.message.length > 100 ? fb.message.substring(0, 100) + '...' : fb.message}</p>
                   <p className="feedback-date"><strong>Received On:</strong> {new Date(fb.createdAt).toLocaleString()}</p>
                 </div>
               )) : <p className="no-results">No feedback messages found.</p>}
@@ -777,21 +784,23 @@ export default function Dashboard() {
     }
   };
   
+  // Add state for sub-sections
+  const [activeSubSection, setActiveSubSection] = useState('initial'); // For payments: 'initial' or 'refill'
+
+  // Update section titles
   const getSectionTitle = () => {
     if (selectedItem) return "Details View";
     const titles = {
       'dashboard-summary': 'Dashboard Summary',
       'users': 'All Users',
       'requests-list': 'Pending Connection Requests',
-      'initial-payments': 'Initial Connection Payments',
-      'refill-payments': 'Gas Refill Payments',
-      'auto-bookings': 'All Bookings',
+      'payments': 'Payment Management',
+      'bookings': 'Booking Management',
       'my-feedback': "Feedback"
     };
     return titles[activeSection] || 'Admin Panel';
   };
 
-  const pendingBookingsCount = allBookings.filter(b => b.status === 'booking_pending').length;
   const myUrgentFeedbackCount = myFeedback.filter(fb => fb.type === 'Urgent').length;
 
   return (
@@ -803,10 +812,11 @@ export default function Dashboard() {
             <li className={activeSection === 'dashboard-summary' ? 'active' : ''} onClick={() => handleSidebarNav('dashboard-summary')}>Dashboard</li>
             <li className={activeSection === 'users' ? 'active' : ''} onClick={() => handleSidebarNav('users')}>Users</li>
             <li className={activeSection === 'requests-list' ? 'active' : ''} onClick={() => handleSidebarNav('requests-list')}>Requests {pendingRequests.length > 0 && <span className="pending-count">({pendingRequests.length})</span>}</li>
-            <li className={activeSection === 'initial-payments' ? 'active' : ''} onClick={() => handleSidebarNav('initial-payments')}>Initial Payments</li>
-            <li className={activeSection === 'refill-payments' ? 'active' : ''} onClick={() => handleSidebarNav('refill-payments')}>Refill Payments</li>
-            <li className={activeSection === 'auto-bookings' ? 'active' : ''} onClick={() => handleSidebarNav('auto-bookings')}>
-              Bookings {pendingBookingsCount > 0 && <span className="pending-count">({pendingBookingsCount})</span>}
+            <li className={activeSection === 'payments' ? 'active' : ''} onClick={() => { handleSidebarNav('payments'); setActiveSubSection('initial'); }}>
+              Payments ({allPayments.length})
+            </li>
+            <li className={activeSection === 'bookings' ? 'active' : ''} onClick={() => { handleSidebarNav('bookings'); setActiveSubSection('pending'); }}>
+              Bookings {pendingBookings.length > 0 && <span className="pending-count">({pendingBookings.length})</span>}
             </li>
             <li className={activeSection === 'my-feedback' ? 'active' : ''} onClick={() => handleSidebarNav('my-feedback')}>
               Feedback {myUrgentFeedbackCount > 0 && <span className="pending-count urgent-count">({myUrgentFeedbackCount})</span>}
@@ -874,8 +884,8 @@ export default function Dashboard() {
                   <div className="report-grid">
                     <div className="report-item"><span className="report-label">👥 New Users:</span><span className="report-value">{reportData.newUsers}</span></div>
                     <div className="report-item"><span className="report-label">❌ Deactivated Users:</span><span className="report-value">{reportData.deactivatedUsers}</span></div>
-                    <div className="report-item"><span className="report-label">✅ Approved Requests:</span><span className="report-value">{reportData.approvedRequests}</span></div>
                     <div className="report-item"><span className="report-label">📋 Total Bookings:</span><span className="report-value">{reportData.totalBookings}</span></div>
+                    <div className="report-item"><span className="report-label">✅ Fulfilled Bookings:</span><span className="report-value">{reportData.fulfilledBookings}</span></div>
                     <div className="report-item"><span className="report-label">🚫 Cancelled Bookings:</span><span className="report-value">{reportData.cancelledBookings}</span></div>
                     <div className="report-item"><span className="report-label">🔄 Refill Payments:</span><span className="report-value">{reportData.refillPayments}</span></div>
                     <div className="report-item"><span className="report-label">🆕 Initial Payments:</span><span className="report-value">{reportData.initialPayments}</span></div>
@@ -893,3 +903,31 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

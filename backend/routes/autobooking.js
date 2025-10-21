@@ -1,13 +1,12 @@
 
-
 const express = require('express');
 const router = express.Router();
 const AutoBooking = require('../models/AutoBooking');
 
-// ✅ CORRECTED: GET only PENDING auto-bookings (for the main admin view)
+// GET only PENDING auto-bookings (for the main admin view)
 router.get('/', async (req, res) => {
   try {
-    // Corrected to find 'booking_pending' status to match the model and application logic
+    // This correctly finds 'booking_pending' status for actionable requests
     const pendingBookings = await AutoBooking.find({ status: 'booking_pending' }).sort({ bookingDate: -1 });
     res.json(pendingBookings);
   } catch (err) {
@@ -16,7 +15,29 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ✅ NEW: GET all CANCELLED auto-bookings
+// ✅ NEW: GET only PAID auto-bookings (awaiting delivery/fulfillment)
+router.get('/paid', async (req, res) => {
+  try {
+    const paidBookings = await AutoBooking.find({ status: 'paid' }).sort({ updatedAt: -1 });
+    res.json(paidBookings);
+  } catch (err) {
+    console.error("❌ Error fetching paid auto-bookings:", err);
+    res.status(500).json({ message: "Server error while fetching paid auto-bookings." });
+  }
+});
+
+// ✅ NEW: GET only FULFILLED auto-bookings (for history)
+router.get('/fulfilled', async (req, res) => {
+  try {
+    const fulfilledBookings = await AutoBooking.find({ status: 'fulfilled' }).sort({ updatedAt: -1 });
+    res.json(fulfilledBookings);
+  } catch (err) {
+    console.error("❌ Error fetching fulfilled auto-bookings:", err);
+    res.status(500).json({ message: "Server error while fetching fulfilled auto-bookings." });
+  }
+});
+
+// GET all CANCELLED auto-bookings
 router.get('/cancelled', async (req, res) => {
   try {
     const cancelledBookings = await AutoBooking.find({ status: 'cancelled' }).sort({ updatedAt: -1 });
@@ -27,7 +48,7 @@ router.get('/cancelled', async (req, res) => {
   }
 });
 
-// ✅ NEW: GET all auto-bookings (including paid, fulfilled, etc.)
+// GET all auto-bookings (for comprehensive reports or a combined view)
 router.get('/all', async (req, res) => {
   try {
     const allBookings = await AutoBooking.find({}).sort({ bookingDate: -1 });
@@ -38,6 +59,7 @@ router.get('/all', async (req, res) => {
   }
 });
 
+// GET all bookings for a specific user
 router.get("/user/:email", async (req, res) => {
   try {
     const userEmail = req.params.email;
@@ -50,20 +72,3 @@ router.get("/user/:email", async (req, res) => {
 });
 
 module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
