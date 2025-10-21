@@ -1129,7 +1129,7 @@ function PaymentDetail({ payment, onBack }) {
       <div className="detail-section">
         <h4>Payment Information</h4>
         <p><strong>Amount Paid:</strong> ₹{payment.amountDue}</p>
-        <p><strong>Payment Date:</strong> {new Date(payment.dateOfPayment || payment.createdAt).toLocaleString()}</p>
+        <p><strong>Payment Date:</strong> {new Date(payment.createdAt).toLocaleString()}</p>
         <p><strong>Payment Type:</strong> {payment.paymentType ? payment.paymentType.replace(/_/g, ' ') : 'Initial Connection'}</p>
         <p><strong>Payment ID:</strong> {payment._id}</p>
       </div>
@@ -1200,7 +1200,7 @@ export default function Dashboard() {
   const [refillPayments, setRefillPayments] = useState([]);
   const [pendingBookings, setPendingBookings] = useState([]);
   const [fulfilledBookings, setFulfilledBookings] = useState([]);
-  const [cancelledBookings, setCancelledBookings] = useState([]); // <-- NEW STATE
+  const [cancelledBookings, setCancelledBookings] = useState([]);
   const [allBookings, setAllBookings] = useState([]);
   const [myFeedback, setMyFeedback] = useState([]);
 
@@ -1223,7 +1223,7 @@ export default function Dashboard() {
     refillPayments: '',
     bookings: '',
     fulfilledBookings: '',
-    cancelledBookings: '', // <-- NEW SEARCH QUERY STATE
+    cancelledBookings: '',
     feedback: ''
   });
 
@@ -1234,14 +1234,14 @@ export default function Dashboard() {
       setLoading(true);
       const [
         requestsRes, usersRes, paymentsRes,
-        allBookingsRes, fulfilledBookingsRes, cancelledBookingsRes, myFeedbackRes // <-- ADDED cancelledBookingsRes
+        allBookingsRes, fulfilledBookingsRes, cancelledBookingsRes, myFeedbackRes
       ] = await Promise.all([
         axios.get("http://localhost:5000/api/newconnection/requests/pending"),
         axios.get("http://localhost:5000/api/newconnection"),
         axios.get("http://localhost:5000/api/payment"),
         axios.get("http://localhost:5000/api/autobooking/all"),
         axios.get("http://localhost:5000/api/autobooking/fulfilled"),
-        axios.get("http://localhost:5000/api/autobooking/cancelled"), // <-- NEW API CALL
+        axios.get("http://localhost:5000/api/autobooking/cancelled"),
         axios.get("http://localhost:5000/api/myfeedback")
       ]);
 
@@ -1258,7 +1258,7 @@ export default function Dashboard() {
       setAllBookings(allBookingsRes.data);
       setPendingBookings(allBookingsRes.data.filter(b => b.status === 'booking_pending'));
       setFulfilledBookings(fulfilledBookingsRes.data);
-      setCancelledBookings(cancelledBookingsRes.data); // <-- SET NEW STATE
+      setCancelledBookings(cancelledBookingsRes.data);
       setMyFeedback(myFeedbackRes.data);
 
     } catch (err) {
@@ -1461,7 +1461,7 @@ export default function Dashboard() {
   const getFilteredFeedback = () => filterBySearch(myFeedback, searchQueries.feedback, ['email']);
   const getFilteredBookings = () => filterBySearch(pendingBookings, searchQueries.bookings, ['email', 'status', 'customerName']);
   const getFilteredFulfilledBookings = () => filterBySearch(fulfilledBookings, searchQueries.fulfilledBookings, ['email', 'status', 'customerName']);
-  const getFilteredCancelledBookings = () => filterBySearch(cancelledBookings, searchQueries.cancelledBookings, ['email', 'status', 'customerName']); // <-- NEW FILTER FUNCTION
+  const getFilteredCancelledBookings = () => filterBySearch(cancelledBookings, searchQueries.cancelledBookings, ['email', 'status', 'customerName']);
 
   const getProjectGraphData = () => {
     if (!allUsers.length || !allPayments.length) return null;
@@ -1637,7 +1637,8 @@ export default function Dashboard() {
                     <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
                       <h4>{p.customerName} (₹{p.amountDue})</h4>
                       <p><strong>Email:</strong> {p.email}</p>
-                      <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
+                      {/* <-- FIX: Using createdAt for accurate timestamp --> */}
+                      <p><strong>Date:</strong> {new Date(p.createdAt).toLocaleString()}</p>
                       <p><strong>Type:</strong> <span className="payment-type initial">Initial Connection</span></p>
                     </div>
                   )) : <p className="no-results">No initial payments found.</p>}
@@ -1652,7 +1653,8 @@ export default function Dashboard() {
                     <div key={p._id} className="list-item card clickable" onClick={() => setSelectedItem(p)}>
                       <h4>{p.customerName} (₹{p.amountDue})</h4>
                       <p><strong>Email:</strong> {p.email}</p>
-                      <p><strong>Date:</strong> {new Date(p.dateOfPayment || p.createdAt).toLocaleDateString()}</p>
+                      {/* <-- FIX: Using createdAt for accurate timestamp --> */}
+                      <p><strong>Date:</strong> {new Date(p.createdAt).toLocaleString()}</p>
                       <p><strong>Type:</strong> <span className="payment-type refill">Gas Refill</span></p>
                     </div>
                   )) : <p className="no-results">No refill payments found.</p>}
@@ -1665,7 +1667,6 @@ export default function Dashboard() {
       case 'bookings':
         return (
           <div>
-            {/* --- MODIFIED: ADDED NEW TAB --- */}
             <div className="section-tabs">
               <button 
                 className={`tab-btn ${activeSubSection === 'pending' ? 'active' : ''}`}
@@ -1696,7 +1697,7 @@ export default function Dashboard() {
                     <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
                       <h4>{b.customerName || 'Customer'} ({b.email})</h4>
                       <p><strong>Contact:</strong> {b.mobileNumber || 'Not available'}</p>
-                      <p><strong>Booked On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
+                      <p><strong>Booked On:</strong> {new Date(b.updatedAt).toLocaleString()}</p>
                       <p><strong>Status:</strong> <span className={`status ${b.status}`}>{formatBookingStatus(b.status)}</span></p>
                     </div>
                   )) : <p className="no-results">No pending bookings found.</p>}
@@ -1711,13 +1712,13 @@ export default function Dashboard() {
                     <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
                       <h4>{b.customerName || 'Customer'} ({b.email})</h4>
                       <p><strong>Contact:</strong> {b.mobileNumber || 'Not available'}</p>
-                      <p><strong>Fulfilled On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
+                      <p><strong>Fulfilled On:</strong> {new Date(b.updatedAt).toLocaleString()}</p>
                       <p><strong>Status:</strong> <span className={`status ${b.status}`}>{formatBookingStatus(b.status)}</span></p>
                     </div>
                   )) : <p className="no-results">No fulfilled bookings found.</p>}
                 </div>
               </div>
-            ) : ( // --- NEW: RENDER LOGIC FOR CANCELLED BOOKINGS ---
+            ) : (
               <div>
                 <SearchBar section="cancelledBookings" placeholder="Search by email or name..." value={searchQueries.cancelledBookings} onChange={handleSearchChange} onClear={handleSearchChange} />
                 <ResultsCount total={cancelledBookings.length} filtered={getFilteredCancelledBookings().length} query={searchQueries.cancelledBookings} />
@@ -1726,7 +1727,7 @@ export default function Dashboard() {
                     <div key={b._id} className="list-item card clickable" onClick={() => setSelectedItem(b)}>
                       <h4>{b.customerName || 'Customer'} ({b.email})</h4>
                       <p><strong>Contact:</strong> {b.mobileNumber || 'Not available'}</p>
-                      <p><strong>Cancelled On:</strong> {new Date(b.updatedAt).toLocaleDateString()}</p>
+                      <p><strong>Cancelled On:</strong> {new Date(b.updatedAt).toLocaleString()}</p>
                       <p><strong>Status:</strong> <span className={`status ${b.status}`}>{formatBookingStatus(b.status)}</span></p>
                     </div>
                   )) : <p className="no-results">No cancelled bookings found.</p>}
