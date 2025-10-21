@@ -285,7 +285,8 @@ router.post("/:email/rebook", async (req, res) => {
       customerName: `${user.firstName} ${user.lastName}`.trim(),
       mobileNumber: user.mobileNumber,
       address: customerAddress,
-      status: 'booking_pending'
+      status: 'booking_pending',
+      bookingType: 'manual' // 
     });
     await newBooking.save();
     

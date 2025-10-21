@@ -1,3 +1,4 @@
+
 // models/AutoBooking.js
 const mongoose = require('mongoose');
 
@@ -13,7 +14,6 @@ const autoBookingSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
-  // NEW: Customer details for better tracking
   customerName: {
     type: String,
     required: false // Will be populated from KYC data
@@ -32,29 +32,15 @@ const autoBookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    // MODIFIED: Added booking-specific statuses here.
     enum: ['booking_pending', 'refill_payment_pending', 'paid', 'cancelled', 'fulfilled'],
-    default: 'booking_pending', // The default status when a booking is created.
+    default: 'booking_pending',
+  },
+  // ✅ NEW FIELD: To distinguish between booking origins
+  bookingType: {
+    type: String,
+    enum: ['automatic', 'manual'],
+    default: 'automatic'
   },
 }, { timestamps: true });
 
 module.exports = mongoose.model('AutoBooking', autoBookingSchema);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
