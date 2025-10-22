@@ -75,15 +75,6 @@ const Feedback = () => {
     }
   };
 
-  // Helper to style feedback cards
-  const getCardClass = (type) => {
-    switch (type) {
-      case 'Urgent': return 'urgent';
-      case 'Complaint': return 'complaint';
-      default: return '';
-    }
-  };
-
   return (
     <div className="feedback-page-container">
       <header className="dashboard-header no-print">
@@ -98,52 +89,76 @@ const Feedback = () => {
 
       <main className="dashboard-main">
         <div className="feedback-page-header">
-          <h1>Feedback & History</h1>
+          <h1>💬 Feedback & Support</h1>
+          <p>Share your thoughts, report issues, or request urgent assistance</p>
         </div>
         
         <div className="feedback-page-main">
           {/* Section 1: Submission Form */}
           <section className="feedback-form-section card">
-            <h3>Submit a New Message</h3>
-            <p>We value your input. Please select a message type and let us know your thoughts.</p>
+            <h3>Submit a Message</h3>
+            <p>We value your input. Please select a message type and share your feedback with us.</p>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="feedbackType">Message Type</label>
+                <label htmlFor="feedbackType">📌 Message Type</label>
                 <select id="feedbackType" value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)}>
-                  <option value="Feedback">Feedback</option>
-                  <option value="Complaint">Complaint</option>
-                  <option value="Urgent">Urgent</option>
+                  <option value="Feedback">💡 General Feedback</option>
+                  <option value="Complaint">⚠️ Complaint</option>
+                  <option value="Urgent">🚨 Urgent Issue</option>
                 </select>
               </div>
               <div className="form-group">
-                <label htmlFor="message">Your Message</label>
-                <textarea id="message" rows="6" placeholder="Please provide details here..." value={message} onChange={(e) => setMessage(e.target.value)}></textarea>
+                <label htmlFor="message">✍️ Your Message</label>
+                <textarea 
+                  id="message" 
+                  rows="6" 
+                  placeholder="Please provide detailed information about your feedback, complaint, or urgent issue..." 
+                  value={message} 
+                  onChange={(e) => setMessage(e.target.value)}
+                />
               </div>
-              <button type="submit" className="submit-btn">Submit Message</button>
+              <button type="submit" className="submit-btn">
+                📤 Submit Message
+              </button>
             </form>
           </section>
 
           {/* Section 2: Submission History */}
           <section className="feedback-history-section">
             <h3>Your Submission History</h3>
-            {loading && <p>Loading history...</p>}
-            {error && <p className="error-message">{error}</p>}
-            {!loading && !error && (
-              history.length > 0 ? (
-                <div className="history-list">
-                  {history.map(item => (
-                    <div key={item._id} className={`feedback-item card ${getCardClass(item.type)}`}>
-                      <div className="feedback-item-header">
-                        <span className="feedback-type">{item.type}</span>
-                        <span className="feedback-date">{new Date(item.createdAt).toLocaleString()}</span>
-                      </div>
-                      <p className="feedback-message">{item.message}</p>
+            
+            {loading ? (
+              <div className="loading-history">
+                <div className="loading-spinner"></div>
+                <p>Loading your feedback history...</p>
+              </div>
+            ) : error ? (
+              <p className="error-message">⚠️ {error}</p>
+            ) : history.length > 0 ? (
+              <div className="history-list">
+                {history.map(item => (
+                  <div key={item._id} className={`feedback-item card ${item.type.toLowerCase()}`}>
+                    <div className="feedback-item-header">
+                      <span className="feedback-type">{item.type}</span>
+                      <span className="feedback-date">
+                        {new Date(item.createdAt).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p>You have not submitted any feedback yet.</p>
-              )
+                    <p className="feedback-message">{item.message}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-history">
+                <div className="empty-icon">📭</div>
+                <p>You haven't submitted any feedback yet. Share your thoughts above!</p>
+              </div>
             )}
           </section>
         </div>
@@ -155,7 +170,9 @@ const Feedback = () => {
           <div className={`popup-content notification ${notification.type}`}>
             <h3>{notification.type === 'success' ? '✅ Success' : '❌ Error'}</h3>
             <p>{notification.message}</p>
-            <button onClick={() => setNotification({ ...notification, show: false })} className="popup-ok">OK</button>
+            <button onClick={() => setNotification({ ...notification, show: false })} className="popup-ok">
+              OK
+            </button>
           </div>
         </div>
       )}

@@ -240,10 +240,18 @@
     font-weight: 500;
 }
 
-.stat-card.total { border-left: 4px solid #3498db; }
-.stat-card.average { border-left: 4px solid #2ecc71; }
-.stat-card.max { border-left: 4px solid #e74c3c; }
-.stat-card.days { border-left: 4px solid #9b59b6; }
+.stat-card.total { 
+    border-left: 4px solid #667eea; 
+}
+.stat-card.average { 
+    border-left: 4px solid #28a745; 
+}
+.stat-card.max { 
+    border-left: 4px solid #dc3545; 
+}
+.stat-card.days { 
+    border-left: 4px solid #ffc107; 
+}
 
 /* Table Styles */
 .table-container {
@@ -340,103 +348,141 @@
     width: fit-content;
 }
 
-/* Consumption Cell */
+/* Gas Used Cell */
+.gas-used-cell {
+    min-width: 120px;
+    text-align: center;
+}
+
+.gas-used-text {
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.gas-used-text strong {
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+/* Consumption Cell - Updated */
 .consumption-cell {
-    min-width: 180px;
+    min-width: 200px;
+    padding: 1rem 1.5rem;
 }
 
 .consumption-bar-container {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0;
+    width: 100%;
 }
 
 .consumption-bar {
-    height: 8px;
-    border-radius: 4px;
-    min-width: 80px;
+    height: 12px;
+    border-radius: 6px;
+    min-width: 20px;
     transition: width 0.5s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.consumption-text {
-    font-weight: 600;
-    color: #2c3e50;
-    min-width: 60px;
+/* Updated Status Badge Colors - 3 Categories */
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: inline-block;
 }
 
-/* Level Cell */
+.status-badge.low {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+    border: 2px solid #28a745;
+}
+
+.status-badge.medium {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+    border: 2px solid #ffc107;
+}
+
+.status-badge.high {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+    border: 2px solid #dc3545;
+}
+
+/* Consumption Bar Colors - 3 Categories */
+.consumption-bar.low { 
+    background: linear-gradient(90deg, #28a745, #20c997); 
+}
+
+.consumption-bar.medium { 
+    background: linear-gradient(90deg, #ffc107, #ff9800); 
+}
+
+.consumption-bar.high { 
+    background: linear-gradient(90deg, #dc3545, #c82333); 
+}
+
+/* Level Dot Colors - 3 Categories */
+.level-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.level-dot.low { 
+    background-color: #28a745;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+}
+
+.level-dot.medium { 
+    background-color: #ffc107;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+.level-dot.high { 
+    background-color: #dc3545;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+}
+
+/* Level Indicator */
 .level-indicator {
     display: flex;
     align-items: center;
     gap: 0.8rem;
 }
 
-.level-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-
-/* Status Badges and Colors */
-.status-badge {
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Color Scheme for Usage Levels */
-.very-low {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #4caf50;
-}
-
-.low {
-    background-color: #e3f2fd;
-    color: #1565c0;
-    border: 1px solid #2196f3;
-}
-
+/* Remove old status classes that are no longer used */
+.very-low,
+.very-high,
 .normal {
-    background-color: #fff3e0;
-    color: #ef6c00;
-    border: 1px solid #ff9800;
+    display: none;
 }
 
-.high {
-    background-color: #fce4ec;
-    color: #c2185b;
-    border: 1px solid #e91e63;
+/* Status Cell Styling */
+.status-cell {
+    min-width: 150px;
 }
 
-.very-high {
-    background-color: #ffebee;
-    color: #d32f2f;
-    border: 1px solid #f44336;
+/* Updated Stats Card Colors */
+.stat-card.total { 
+    border-left: 4px solid #667eea; 
 }
-
-/* Consumption Bar Colors */
-.consumption-bar.very-low { background: linear-gradient(90deg, #4caf50, #8bc34a); }
-.consumption-bar.low { background: linear-gradient(90deg, #2196f3, #03a9f4); }
-.consumption-bar.normal { background: linear-gradient(90deg, #ff9800, #ffc107); }
-.consumption-bar.high { background: linear-gradient(90deg, #e91e63, #f06292); }
-.consumption-bar.very-high { background: linear-gradient(90deg, #f44336, #ef5350); }
-
-/* Level Dot Colors */
-.level-dot.very-low { background-color: #4caf50; }
-.level-dot.low { background-color: #2196f3; }
-.level-dot.normal { background-color: #ff9800; }
-.level-dot.high { background-color: #e91e63; }
-.level-dot.very-high { background-color: #f44336; }
+.stat-card.average { 
+    border-left: 4px solid #28a745; 
+}
+.stat-card.max { 
+    border-left: 4px solid #dc3545; 
+}
+.stat-card.days { 
+    border-left: 4px solid #ffc107; 
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {

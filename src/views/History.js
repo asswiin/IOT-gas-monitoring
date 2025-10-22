@@ -50,11 +50,9 @@ const History = () => {
     };
 
     const getConsumptionStatus = (consumption) => {
-        if (consumption < 0.5) return { text: 'Very Low', class: 'very-low' };
-        if (consumption < 2) return { text: 'Low', class: 'low' };
-        if (consumption < 5) return { text: 'Normal', class: 'normal' };
-        if (consumption < 10) return { text: 'High', class: 'high' };
-        return { text: 'Very High', class: 'very-high' };
+        if (consumption <= 5) return { text: 'Low', class: 'low' };
+        if (consumption <= 20) return { text: 'Medium', class: 'medium' };
+        return { text: 'High', class: 'high' };
     };
 
     const calculateStats = () => {
@@ -147,21 +145,21 @@ const History = () => {
                                     <div className="stat-icon">📊</div>
                                     <div className="stat-content">
                                         <h3>{stats.total.toFixed(1)}%</h3>
-                                        <p>Total Consumed</p>
+                                        <p>Total Gas Used</p>
                                     </div>
                                 </div>
                                 <div className="stat-card average">
                                     <div className="stat-icon">📈</div>
                                     <div className="stat-content">
                                         <h3>{stats.average.toFixed(1)}%</h3>
-                                        <p>Daily Average</p>
+                                        <p>Average Daily Use</p>
                                     </div>
                                 </div>
                                 <div className="stat-card max">
                                     <div className="stat-icon">🔥</div>
                                     <div className="stat-content">
                                         <h3>{stats.max.toFixed(1)}%</h3>
-                                        <p>Highest Usage</p>
+                                        <p>Highest Daily Use</p>
                                     </div>
                                 </div>
                                 <div className="stat-card days">
@@ -178,7 +176,7 @@ const History = () => {
                         <div className="table-container">
                             <div className="table-header">
                                 <h2>Daily Consumption Details</h2>
-                                <p>Last {history.length} days of gas usage</p>
+                                <p>Daily gas usage percentage - Last {history.length} days</p>
                             </div>
                             
                             <div className="table-wrapper">
@@ -186,14 +184,15 @@ const History = () => {
                                     <thead>
                                         <tr>
                                             <th>Date</th>
-                                            <th>Gas Consumed</th>
-                                            <th>Usage Level</th>
+                                            <th>Gas Used</th>
+                                            <th>Usage Bar</th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {history.map((entry, index) => {
                                             const status = getConsumptionStatus(entry.gasConsumed);
+                                            const gasUsed = entry.gasConsumed;
                                             return (
                                                 <tr key={entry.date || index} className="table-row">
                                                     <td className="date-cell">
@@ -202,27 +201,26 @@ const History = () => {
                                                             {index === 0 && <span className="date-badge">Latest</span>}
                                                         </div>
                                                     </td>
+                                                    <td className="gas-used-cell">
+                                                        <div className="gas-used-text">
+                                                            <strong>{gasUsed < 0.01 ? '< 0.01' : gasUsed.toFixed(2)}%</strong>
+                                                        </div>
+                                                    </td>
                                                     <td className="consumption-cell">
                                                         <div className="consumption-bar-container">
                                                             <div 
                                                                 className={`consumption-bar ${status.class}`}
-                                                                style={{ width: `${Math.min(entry.gasConsumed * 10, 100)}%` }}
+                                                                style={{ width: `${Math.min(gasUsed * 5, 100)}%` }}
                                                             ></div>
-                                                            <span className="consumption-text">
-                                                                {entry.gasConsumed < 0.01 ? 'Negligible' : `${entry.gasConsumed.toFixed(2)}%`}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="level-cell">
-                                                        <div className="level-indicator">
-                                                            <div className={`level-dot ${status.class}`}></div>
-                                                            <span>{status.text}</span>
                                                         </div>
                                                     </td>
                                                     <td className="status-cell">
-                                                        <span className={`status-badge ${status.class}`}>
-                                                            {status.text}
-                                                        </span>
+                                                        <div className="level-indicator">
+                                                            <div className={`level-dot ${status.class}`}></div>
+                                                            <span className={`status-badge ${status.class}`}>
+                                                                {status.text}
+                                                            </span>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             );
