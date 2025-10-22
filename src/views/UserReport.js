@@ -71,10 +71,6 @@ const UserReport = () => {
     return typeMap[type] || formatStatus(type);
   };
 
-  const formatBookingType = (type) => {
-    return type === 'manual' ? 'Manual Booking' : 'Auto-Booking';
-  };
-
   const truncateId = (id) => {
     return id ? `${id.substring(0, 8)}...${id.substring(id.length - 4)}` : 'N/A';
   };
@@ -87,17 +83,9 @@ const UserReport = () => {
     return payments.reduce((total, payment) => total + (payment.amountDue || 0), 0);
   };
 
-  const getBookingStats = () => {
-    return {
-      total: bookings.length,
-      pending: bookings.filter(b => b.status === 'booking_pending' || b.status === 'refill_payment_pending').length,
-      paid: bookings.filter(b => b.status === 'paid').length,
-      fulfilled: bookings.filter(b => b.status === 'fulfilled').length,
-      cancelled: bookings.filter(b => b.status === 'cancelled').length,
-      automatic: bookings.filter(b => b.bookingType === 'automatic').length,
-      manual: bookings.filter(b => b.bookingType === 'manual').length
-    };
-  };
+  // Group bookings by type for clarity
+  const autoBookings = bookings.filter(b => b.bookingType === 'automatic');
+  const manualBookings = bookings.filter(b => b.bookingType === 'manual');
 
   if (loading) {
     return (
@@ -126,8 +114,6 @@ const UserReport = () => {
     );
   }
 
-  const bookingStats = getBookingStats();
-
   return (
     <div className="dashboard-container report-container">
       <header className="dashboard-header no-print">
@@ -142,151 +128,136 @@ const UserReport = () => {
 
       <main className="dashboard-main">
         <div className="report-header-title">
-          <h2>📊 Account Activity Report</h2>
-          <p className="report-subtitle">Comprehensive overview of your gas connection account</p>
+          <h2>Account Report for {userEmail}</h2>
         </div>
 
-        {/* Overview Summary Cards */}
-        <div className="overview-grid">
-          <div className="overview-card payments-card">
-            <div className="overview-icon">💳</div>
-            <div className="overview-content">
-              <h3>Total Payments</h3>
-              <p className="overview-value">{payments.length}</p>
-              <p className="overview-amount">₹{calculateTotalAmount()}</p>
-            </div>
-          </div>
-          <div className="overview-card bookings-card">
-            <div className="overview-icon">📋</div>
-            <div className="overview-content">
-              <h3>Total Bookings</h3>
-              <p className="overview-value">{bookingStats.total}</p>
-              <p className="overview-detail">{bookingStats.fulfilled} Fulfilled</p>
-            </div>
-          </div>
-          <div className="overview-card auto-card">
-            <div className="overview-icon">🤖</div>
-            <div className="overview-content">
-              <h3>Auto-Bookings</h3>
-              <p className="overview-value">{bookingStats.automatic}</p>
-              <p className="overview-detail">Automated Orders</p>
-            </div>
-          </div>
-          <div className="overview-card manual-card">
-            <div className="overview-icon">👤</div>
-            <div className="overview-content">
-              <h3>Manual Bookings</h3>
-              <p className="overview-value">{bookingStats.manual}</p>
-              <p className="overview-detail">Self-Placed Orders</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Payment History Section */}
+        {/* Simple Summary */}
         <div className="report-section">
-          <div className="section-header">
-            <h3>💳 Payment History</h3>
-            <p className="section-description">All your payment transactions</p>
+          <h3>Summary</h3>
+          <div className="summary-stats">
+            <div className="stat-item">
+              <span className="stat-label">Total Payments:</span>
+              <span className="stat-value">{payments.length}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Total Amount Paid:</span>
+              <span className="stat-value">₹{calculateTotalAmount()}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Total Bookings:</span>
+              <span className="stat-value">{bookings.length}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Auto-Booked:</span>
+              <span className="stat-value">{autoBookings.length}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Manual Booked:</span>
+              <span className="stat-value">{manualBookings.length}</span>
+            </div>
           </div>
+        </div>
+
+        {/* Payment History */}
+        <div className="report-section">
+          <h3>Payment History</h3>
           {payments.length > 0 ? (
-            <div className="cards-grid">
-              {payments.map((payment, index) => (
-                <div key={payment._id || index} className="info-card payment-card">
-                  <div className="card-header">
-                    <span className={`payment-type-badge ${payment.paymentType || 'unknown'}`}>
-                      {formatPaymentType(payment.paymentType)}
-                    </span>
-                    <span className="card-date">{formatDate(payment.createdAt)}</span>
-                  </div>
-                  <div className="card-body">
-                    <div className="card-row">
-                      <span className="card-label">Payment ID:</span>
-                      <span className="card-value">{truncateId(payment._id)}</span>
-                    </div>
-                    <div className="card-row">
-                      <span className="card-label">Amount Paid:</span>
-                      <span className="card-value amount">₹{payment.amountDue || 0}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Payment ID</th>
+                  <th>Date & Time</th>
+                  <th>Amount</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((payment, index) => (
+                  <tr key={payment._id || index}>
+                    <td data-label="Payment ID">{truncateId(payment._id)}</td>
+                    <td data-label="Date & Time">{formatDate(payment.createdAt)}</td>
+                    <td data-label="Amount">₹{payment.amountDue || 0}</td>
+                    <td data-label="Type">
+                      <span className={`payment-type ${payment.paymentType || 'unknown'}`}>
+                        {formatPaymentType(payment.paymentType)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
-            <div className="no-data-card">
-              <p className="no-data-icon">💳</p>
-              <p className="no-data-text">No payment records found</p>
-            </div>
+            <p className="no-data">No payment records found.</p>
           )}
         </div>
 
-        {/* Booking History Section */}
+        {/* Booking History - Organized by Type */}
         <div className="report-section">
-          <div className="section-header">
-            <h3>📋 Booking History</h3>
-            <p className="section-description">Track all your gas cylinder bookings</p>
+          <h3>Booking History</h3>
+          <div className="booking-history-organized">
+            <div className="booking-type-section">
+              <h4 className="booking-type-title autobook-title">Auto-Booked</h4>
+              {autoBookings.length > 0 ? (
+                <table className="report-table booking-table">
+                  <thead>
+                    <tr>
+                      <th>Booking ID</th>
+                      <th>Booked On</th>
+                      <th>Status</th>
+                      <th>Address</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {autoBookings.map((booking, index) => (
+                      <tr key={booking._id || index}>
+                        <td>{truncateId(booking._id)}</td>
+                        <td>{formatDate(booking.createdAt)}</td>
+                        <td>
+                          <span className={`status-pill ${booking.status || 'unknown'}`}>
+                            {formatStatus(booking.status)}
+                          </span>
+                        </td>
+                        <td className="booking-address">{booking.address}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="no-data">No auto-booked records found.</p>
+              )}
+            </div>
+            <div className="booking-type-section">
+              <h4 className="booking-type-title manualbook-title">Manually Booked</h4>
+              {manualBookings.length > 0 ? (
+                <table className="report-table booking-table">
+                  <thead>
+                    <tr>
+                      <th>Booking ID</th>
+                      <th>Booked On</th>
+                      <th>Status</th>
+                      <th>Address</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {manualBookings.map((booking, index) => (
+                      <tr key={booking._id || index}>
+                        <td>{truncateId(booking._id)}</td>
+                        <td>{formatDate(booking.createdAt)}</td>
+                        <td>
+                          <span className={`status-pill ${booking.status || 'unknown'}`}>
+                            {formatStatus(booking.status)}
+                          </span>
+                        </td>
+                        <td className="booking-address">{booking.address}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="no-data">No manual booking records found.</p>
+              )}
+            </div>
           </div>
-          
-          {/* Booking Status Summary */}
-          <div className="booking-status-summary">
-            <div className="status-item pending">
-              <span className="status-count">{bookingStats.pending}</span>
-              <span className="status-label">Pending</span>
-            </div>
-            <div className="status-item paid">
-              <span className="status-count">{bookingStats.paid}</span>
-              <span className="status-label">Paid</span>
-            </div>
-            <div className="status-item fulfilled">
-              <span className="status-count">{bookingStats.fulfilled}</span>
-              <span className="status-label">Fulfilled</span>
-            </div>
-            <div className="status-item cancelled">
-              <span className="status-count">{bookingStats.cancelled}</span>
-              <span className="status-label">Cancelled</span>
-            </div>
-          </div>
-
-          {bookings.length > 0 ? (
-            <div className="cards-grid">
-              {bookings.map((booking, index) => (
-                <div key={booking._id || index} className={`info-card booking-card ${booking.status}`}>
-                  <div className="card-header">
-                    <span className={`booking-type-badge ${booking.bookingType || 'automatic'}`}>
-                      {formatBookingType(booking.bookingType)}
-                    </span>
-                    <span className={`status-pill-small ${booking.status || 'unknown'}`}>
-                      {formatStatus(booking.status)}
-                    </span>
-                  </div>
-                  <div className="card-body">
-                    <div className="card-row">
-                      <span className="card-label">Booking ID:</span>
-                      <span className="card-value">{truncateId(booking._id)}</span>
-                    </div>
-                    <div className="card-row">
-                      <span className="card-label">Booked On:</span>
-                      <span className="card-value">{formatDate(booking.createdAt)}</span>
-                    </div>
-                    <div className="card-row">
-                      <span className="card-label">Last Updated:</span>
-                      <span className="card-value">{formatDate(booking.updatedAt)}</span>
-                    </div>
-                    {booking.customerName && (
-                      <div className="card-row">
-                        <span className="card-label">Customer:</span>
-                        <span className="card-value">{booking.customerName}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="no-data-card">
-              <p className="no-data-icon">📋</p>
-              <p className="no-data-text">No booking records found</p>
-            </div>
-          )}
         </div>
 
         {/* Print Button at Bottom */}
