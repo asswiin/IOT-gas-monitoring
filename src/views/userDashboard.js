@@ -156,31 +156,30 @@
 //   }, [userEmail, fetchGasLevel]);
 //   const handleBookNow = () => setShowRebookConfirmPopup(true);
 
+//   // ✅ --- THIS IS THE CORRECTED LOGIC --- ✅
 //   const handleConfirmRebook = useCallback(async () => {
 //     setShowRebookConfirmPopup(false);
 //     try {
+//       // Step 1: Wait for the manual booking to be created and saved in the database.
 //       await axios.post(getEndpoint.rebook(userEmail));
-//       setGasLevelData(prevData => ({
-//         ...prevData,
-//         autoBookingCancelled: false,
-//         bookingStatus: 'booking_pending',
-//         bookingType: 'manual' // Optimistically set type
-//       }));
+      
+//       // Step 2: After it's saved, immediately re-fetch the latest data from the server.
+//       // This ensures our component's state is 100% in sync with the database.
+//       await fetchGasLevel();
+
 //     } catch (err) {
-//       if (err.response?.status === 409) {
-//         setGasLevelData(prevData => ({
-//           ...prevData,
-//           autoBookingCancelled: false,
-//           bookingStatus: 'booking_pending'
-//         }));
-//       } else {
+//       // If the booking already exists (e.g., double click), that's okay.
+//       // We still proceed to payment. For other errors, we show a message.
+//       if (err.response?.status !== 409) {
 //         setErrorMessage(err.response?.data?.message || "Could not place a new booking.");
 //         setShowErrorPopup(true);
-//         return;
+//         return; // Stop execution on critical error
 //       }
 //     }
+    
+//     // Step 3: Only after the state is confirmed to be correct, navigate to payment.
 //     navigate('/payment', { state: { isRefill: true } });
-//   }, [userEmail, navigate]);
+//   }, [userEmail, navigate, fetchGasLevel]); // Added fetchGasLevel to dependencies
   
 //   const handleCancelClick = () => setShowCancelPopup(true);
 //   const getGasLevelColor = (level) => {
@@ -257,13 +256,11 @@
 //               <div className="auto-booking-content">
 //                 <div className="auto-booking-header">
 //                   <i className="warning-icon">🎯</i>
-//                   {/* ✅ MODIFIED: Conditional header text */}
 //                   <h4>
 //                     {gasLevelData.bookingType === 'manual' ? 'Gas Refill Booked!' : 'Gas Auto-Booked!'}
 //                   </h4>
 //                 </div>
 //                 <div className="auto-booking-message">
-//                    {/* ✅ MODIFIED: Conditional message text */}
 //                   <p>
 //                     {gasLevelData.bookingType === 'manual' ? 'A new cylinder is reserved for you.' : 'Your gas level is low. A new cylinder has been booked.'}
 //                   </p>
@@ -318,6 +315,16 @@
 // };
 
 // export default UserDashboard;
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -496,7 +503,6 @@ const UserDashboard = () => {
   }, [userEmail, fetchGasLevel]);
   const handleBookNow = () => setShowRebookConfirmPopup(true);
 
-  // ✅ --- THIS IS THE CORRECTED LOGIC --- ✅
   const handleConfirmRebook = useCallback(async () => {
     setShowRebookConfirmPopup(false);
     try {
@@ -504,7 +510,6 @@ const UserDashboard = () => {
       await axios.post(getEndpoint.rebook(userEmail));
       
       // Step 2: After it's saved, immediately re-fetch the latest data from the server.
-      // This ensures our component's state is 100% in sync with the database.
       await fetchGasLevel();
 
     } catch (err) {
@@ -517,9 +522,9 @@ const UserDashboard = () => {
       }
     }
     
-    // Step 3: Only after the state is confirmed to be correct, navigate to payment.
-    navigate('/payment', { state: { isRefill: true } });
-  }, [userEmail, navigate, fetchGasLevel]); // Added fetchGasLevel to dependencies
+    // Step 3: Navigate to payment WITH THE NEW FLAG
+    navigate('/payment', { state: { isRefill: true, fromManualRebook: true } });
+  }, [userEmail, navigate, fetchGasLevel]);
   
   const handleCancelClick = () => setShowCancelPopup(true);
   const getGasLevelColor = (level) => {
